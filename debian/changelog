@@ -1,5 +1,6 @@
-winusb (1.0.8) unstable; urgency=low
+winusb (1.0.9) unstable; urgency=low
 
-  * Show more error message in the logs.
+  * Fix debug in configure.in.
+  * Fix escaping of special chars.
 	
- -- Colin GILLE / congelli501 <colingille@hotmail.com>  Wed, 04 Jul 2012 23:44:14 +0200
+ -- Colin GILLE / congelli501 <colingille@hotmail.com>  Sun, 29 Jul 2012 14:44:34 +0200

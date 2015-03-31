@@ -1,3 +1,4 @@
-2012-07-04 Colin GILLE / congelli501 <colingille@hotmail.com>
+2012-07-29 Colin GILLE / congelli501 <colingille@hotmail.com>
 
-	* winusb: Show more error message in the logs.
+	* winusb: Fix debug in configure.in.
+	* winusb: Fix escaping of special chars.

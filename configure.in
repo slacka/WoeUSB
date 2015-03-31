@@ -1,4 +1,4 @@
-AC_INIT(winusb, 1.0.8)
+AC_INIT(winusb, 1.0.9)
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 AC_CONFIG_MACRO_DIR([m4])
@@ -20,6 +20,9 @@ AC_PROG_MAKE_SET	dnl indique que l'on doit disposer de make qui est utilisé par
 MY_DETECT_OS dnl Detect OS
 MY_INIT_DATA_PATH dnl Define data path for unix / win32 depending on the current target system
 AM_FIND_WINDRES dnl Find windres is needed
+
+MY_INIT_DEBUG_SWITCH([false]) dnl Allow the user tu build the program in debug mode ; doesn't edit any cpp options ; true to force debug
+MY_INIT_BUILD_OPTION([-g], [-s -O1]) dnl Init CXXFLAGS and CPPFLAGS
 
 dnl Libs
 MY_FIND_STDCPP

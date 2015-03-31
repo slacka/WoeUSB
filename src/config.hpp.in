@@ -1,5 +1,8 @@
 /* src/config.hpp.in.  Generated from configure.in by autoheader.  */
 
+/* Define is a debug version sould be build */
+#undef DEBUG
+
 /* Define to 1 if you have the <dlfcn.h> header file. */
 #undef HAVE_DLFCN_H
 

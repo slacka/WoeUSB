@@ -240,9 +240,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
             iso = m_dvdDriveDevList.at(m_dvdDriveList->GetSelection());
         }
 
-
-        //PipeManager pipe(std::string("gksudo --description 'WinUSB' -- \"$(readlink -f '") + StrWxToStd(findFile(_T("data/makebootiso"))) + "')\" --noColor --forGui --format '" + iso + "' '" + device + "' 2>&1");
-        PipeManager pipe(std::string("gksudo --description 'WinUSB' -- sh -c 'winusb --noColor --forGui --format '") + iso + "' '" + device + "' 2>&1'");
+        PipeManager pipe(std::string("gksudo --description 'WinUSB' -- sh -c 'winusb --noColor --forGui --format \"") + iso + "\" \"" + device + "\" 2>&1'");
 
         wxProgressDialog *dialog = new wxProgressDialog(_("Installing..."), _("Please wait..."), 100, GetParent(), wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_CAN_ABORT);
 
