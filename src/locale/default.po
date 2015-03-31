@@ -1,0 +1,147 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: memwrite\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-07-14 00:07+0100\n"
+"PO-Revision-Date: 2011-07-14 00:07+0100\n"
+"Last-Translator: GILLE Colin <colingille@hotmail.com>\n"
+"Language-Team: Colin GILLE / Congelli501 <colingille@hotmail.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ..\n"
+
+#: ../MainFrame.cpp:41
+msgid "Show all drive"
+msgstr ""
+
+#: ../MainFrame.cpp:41
+msgid "Show all drives, even those not detected as USB stick."
+msgstr ""
+
+#: ../MainFrame.cpp:53
+msgid "&File"
+msgstr ""
+
+#: ../MainFrame.cpp:54
+msgid "&Help"
+msgstr ""
+
+#: ../App.cpp:82
+msgid "Error : "
+msgstr ""
+
+#: ../App.cpp:82
+#: ../App.cpp:124
+msgid "Error..."
+msgstr ""
+
+#: ../App.cpp:117
+msgid "Unknown error as occured !"
+msgstr ""
+
+#: ../App.cpp:124
+msgid "Fatal error : "
+msgstr ""
+
+#: ../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr ""
+
+#: ../DialogAbout.cpp:55
+msgid "Developer"
+msgstr ""
+
+#: ../DialogAbout.cpp:58
+#, c-format
+msgid ""
+"%s is free software: you can redistribute it and/or modifyit under the terms of the GNU General Public License as published bythe Free Software Foundation, either version 3 of the License, or(at your option) any later version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty ofMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with %s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+
+#: ../DialogAbout.cpp:73
+msgid "License"
+msgstr ""
+
+#: ../MainPanel.cpp:45
+msgid "Source :"
+msgstr ""
+
+#: ../MainPanel.cpp:48
+msgid "From a disk image (iso)"
+msgstr ""
+
+#: ../MainPanel.cpp:53
+msgid "Please select a disk image"
+msgstr ""
+
+#: ../MainPanel.cpp:58
+msgid "From a CD/DVD drive"
+msgstr ""
+
+#: ../MainPanel.cpp:70
+msgid "Target device :"
+msgstr ""
+
+#: ../MainPanel.cpp:81
+msgid "Install"
+msgstr ""
+
+#: ../MainPanel.cpp:247
+msgid "Installing.."
+msgstr ""
+
+#: ../MainPanel.cpp:247
+msgid "Please wait..."
+msgstr ""
+
+#: ../MainPanel.cpp:270
+#: ../MainPanel.cpp:289
+msgid "Are you sure you want to cancel the insatallation ?"
+msgstr ""
+
+#: ../MainPanel.cpp:270
+#: ../MainPanel.cpp:289
+msgid "Cancel"
+msgstr ""
+
+#: ../MainPanel.cpp:312
+msgid "Installation succeded !"
+msgstr ""
+
+#: ../MainPanel.cpp:312
+#: ../MainPanel.cpp:316
+msgid "Installation"
+msgstr ""
+
+#: ../MainPanel.cpp:316
+msgid "Installation failed !"
+msgstr ""
+
+#: ../findFile.cpp:54
+msgid "File not Found : "
+msgstr ""
+
+#: ../findFile.cpp:54
+msgid "Error"
+msgstr ""
+
+#: ../strWxStdConv.hpp:106
+msgid "bytes"
+msgstr ""
+
+#: ../AppConfig.hpp:7
+msgid "WinUSB"
+msgstr ""
+
+#: ../DialogAbout.hpp:68
+msgid "About"
+msgstr ""
+

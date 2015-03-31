@@ -1,0 +1,413 @@
+#!/bin/bash
+
+# Config
+	# Le script quitte en cas d'erreur d'une commande
+set -o errexit
+
+	# Le script quitte en cas de variables non déclarée
+set -o nounset
+
+# Script path
+set +o nounset
+if [ "$scriptPath" = "" ]; then
+	scriptName=$(basename $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
+	scriptPath=$(dirname $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
+fi
+set -o nounset
+
+pulseCurrentPid=0
+function pulse()
+{
+	if [ "$forGui" -eq 1 ]; then
+		if [ ! "$pulseCurrentPid" -eq 0 ]; then
+			kill "$pulseCurrentPid"
+			#wait "$pulseCurrentPid"
+			pulseCurrentPid=0
+		fi
+
+		if [ "$1" = 'on' ]; then
+			cd /; while true; do sleep 0.05; echo 'pulse'; done &
+			pulseCurrentPid="$!"
+		elif [ "$1" != 'off' ]; then
+			echo "Pulse: bad argument" >&2
+			exit 1
+		fi
+	fi
+}
+
+# Fns
+function color()
+{
+	case "$1" in
+		none)
+			tput sgr0
+			;;
+		black)
+			echo -en "\033[0;30m"
+			;;
+		red)
+			echo -en "\033[0;31m"
+			;;
+		green)
+			echo -en "\033[0;32m"
+			;;
+		yellow)
+			echo -en "\033[0;33m"
+			;;
+		blue)
+			echo -en "\033[0;34m"
+			;;
+		white)
+			echo -en "\033[0;37m"
+			;;
+	esac
+}
+
+function echoC()
+{
+	if [ "$noColor" -eq 1 ]; then
+		echo -e "$2"
+	else
+		color "$1"
+		echo -e "$2"
+		color none
+	fi
+}
+
+function exitUmountIso()
+{
+	RETURN="$?"
+
+	set +o errexit # We need to clean up everything we can
+
+	trap - HUP QUIT KILL SEGV PIPE INT TERM EXIT
+
+	pulse off
+	if [ "$3" == 'kill' ]; then
+		echoC red "\nKilled !"  >&2
+	elif [ "$RETURN" -ne 0 ]; then
+		echoC red "Error occured !"  >&2
+	else
+		echoC green "Exiting..."
+	fi
+
+	echo "Syncing..."
+
+	pulse on
+	sync
+	pulse off
+	
+	echo "Cleaning..."
+
+	cd /
+	sync
+	wait 2> /dev/null
+	sleep 1
+
+	echoC green "Umounting and removing '$1'..."
+	umount "$1" && rm -rf "$1" || true
+
+	echoC green "Umounting and removing '$2'..."
+	umount "$2" && rm -rf "$2" || true
+
+	if [ "$3" = 'normalCleanup' ]; then
+		exit 0
+	else
+		exit 2
+	fi
+}
+
+function hideNoErr()
+{
+	set +o errexit
+	TEXT="$( "$@" 2>&1 )"
+	RETURN="$?"
+	set -o errexit
+
+	if [ "$RETURN" -ne 0 ]; then
+		echoC red "Error while running command '$*' (exit code : $RETURN) !" >&2
+		echoC red "Read command output (Y/n) ?" >&2
+
+		rep='y'
+		read rep || true # If we can't read, don't quit
+
+		if [ "$rep" != "n" ] && [ "$rep" != "N" ]; then
+			echo "$TEXT"
+		fi
+
+		echoC red "Press any key to exit (tmpDir will be removed)" >&2
+		read var
+	fi
+
+	return "$RETURN"
+}
+
+function printHelp()
+{
+	echo "$scriptName usage" >&2
+	echo "Install a windows ISO on an NTFS partition and edit MBR of the device" >&2
+	echo "  $scriptName --install <iso path> <partition>" >&2
+	echo "  Example: $scriptName win7_amd64.iso /dev/sdd1" >&2
+	echo "" >&2
+	echo "Completely format a drive and install the ISO on it" >&2
+	echo "  $scriptName --format <iso path> <device>" >&2
+	echo "  Example: $scriptName win7_amd64.iso /dev/sdd" >&2
+	echo "" >&2
+	echo "Options" >&2
+	echo " --verbose, -v        Verbose mode" >&2
+	echo " --help, -h           Show this help message and exit" >&2
+	echo " --noColor            Disable color" >&2
+}
+
+
+((blockSize = 4 * 1024 * 1024)) # 4Mo
+
+function copyFile()
+{
+	inFile="$1"
+	outFile="$2"
+	wholeCurrentSize="$3"
+
+	# Size
+	size=$(stat --format=%s "$inFile")
+	((stepNb = size / blockSize + 1))
+
+	# Rm
+	if [ -f "$outFile" ]; then
+		rm "$outFile"
+	fi
+
+	# Copy
+	i=0
+	while [ "$i" -lt "$stepNb" ]; do
+		dd if="$inFile" bs="$blockSize" skip="$i" seek="$i" of="$outFile" count=1 2> /dev/null 
+		((i = i + 1))
+
+		# Send current copied size
+		local copiedSize=$(stat --format=%s "$outFile")
+		((totalCopiedSize = copiedSize + wholeCurrentSize)) || true
+		#echo "$totalCopiedSize"
+
+		((percent = (totalCopiedSize * 100) / totalSize)) || true
+		echo -en "$percent%\r"
+	done
+
+	return 0
+}
+
+function progressCp()
+{
+	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
+	currentSize=0
+
+	targetDir="$2"
+	mkdir -p "$targetDir"
+	targetDir=$(readlink -f "$targetDir")
+
+	cd "$1"
+	fileList=$(find .)
+
+	while read inFile; do
+		if [ "$inFile" != '.' ]; then
+			outFile="$targetDir/$inFile"
+
+			fileSize=$(stat --format=%s "$inFile")
+
+			if [ -d "$inFile" ]; then
+				mkdir -p "$outFile"
+			elif [ -f "$inFile" ]; then
+				if [ "$fileSize" -lt "$blockSize" ]; then
+					cp "$inFile" "$outFile"
+				else
+					copyFile "$inFile" "$outFile" "$currentSize"
+				fi
+			else
+				echo "Error: Unknown type of '$inFile' !" >&2
+				exit 1
+			fi
+
+			# Mode
+			#chmod "$(stat --format=%a "$inFile")" "$outFile"
+
+			# Progress
+			((currentSize = currentSize + fileSize)) || true
+			((percent = (currentSize * 100) / totalSize)) || true
+			echo -en "$percent%\r"
+		fi
+	done < <(echo "$fileList")
+}
+
+# Args
+installMethod=''
+isoPath=''
+targetMedia=''
+verbose='0'
+forGui='0'
+noColor='0'
+
+
+while [ ! "$#" -eq 0 ]; do
+	case "$1" in
+		'--help'|'-h')
+			printHelp
+			exit 0;;
+		'--install')
+			installMethod='edit'
+			shift
+			isoPath=$(readlink -f "$1")
+			shift
+			targetMedia=$(readlink -f "$1");;
+		'--format')
+			installMethod='format'
+			shift
+			isoPath=$(readlink -f "$1")
+			shift
+			targetMedia=$(readlink -f "$1");;
+		'--verbose'|'-v')
+			verbose='1';;
+		'--forGui')
+			noColor='1'
+			forGui='1';;
+		'--noColor')
+			noColor='1';;
+		* )
+			echo "Error: Unknown argument \"$1\" !" >&2
+			exit 1;;
+	esac
+
+	shift
+done
+
+# Test
+if [ ! $(id -u) = 0 ]; then
+   echo "Warning: you should run this script as root !" >&2
+fi
+
+if [ -z "$installMethod" ]; then
+	echo "Error: No install method specified !" >&2
+	echo "" >&2
+	printHelp
+	exit 1
+fi
+
+if [ ! -f "$isoPath" ] && [ ! -b "$isoPath" ]; then
+	echo "Error: iso '$isoPath' not found or not a regular file or a block file !" >&2
+	exit 1
+fi
+
+if ! [ -b "$targetMedia" ]; then
+	echo "Error: the device "$targetMedia" is not special block !" >&2
+	exit 1
+fi
+
+trap "pulse off" HUP QUIT KILL SEGV PIPE INT TERM EXIT
+pulse on
+
+# Prepare install
+if [ "$installMethod" = 'edit' ]; then
+	device="$(echo "$targetMedia" | sed "s/[0-9]*$//")"
+	partition="$targetMedia"
+
+	if [ "$verbose" = '1' ]; then
+		echo "Target device is '$device'."
+	fi
+else
+	echo "Formating device..."
+	device="$targetMedia"
+
+	# Remove all partitions
+	while true; do
+		partId=$(env LANG='' parted -s "$device" print | tail --lines 2 | grep '^\s[0-9]\+\s\+.*$' | awk '{print $1}')
+		if [ -n "$partId" ]; then
+			if [ "$(mount | grep -c "${device}${partId}")" != 0 ]; then
+				umount "${device}${partId}"
+			fi
+
+			parted -s "$device" rm "$partId"
+		else
+			break
+		fi
+	done
+
+	# Create partiton
+	size=$(env LANG='' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
+	parted --align cylinder -s "$device" mkpart primary 1MB "$size" # We start at 1MB for grub (it needs a post-mbr gap for its code)
+	partition="${targetMedia}1" # first partition
+	
+	blockdev --rereadpt "$device" || true # Reload partition table
+	partprobe "$device" # Reload partition table
+
+	# Create the ntfs partition
+	mkfs.ntfs --quiet --fast --label 'Windows USB' "$partition"
+fi
+
+isoMountPath="/media/winusb_iso_$(date +%s)_$$"
+partitionMountPath="/media/winusb_target_$(date +%s)_$$"
+
+trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'kill'" INT TERM
+trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'exit'" EXIT
+trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'other signal'" HUP QUIT KILL SEGV PIPE
+
+# Mounting
+echo "Mounting..."
+mkdir -p "$isoMountPath"
+if [ -f "$isoPath" ]; then # ISO
+	mount -o loop "$isoPath" "$isoMountPath"
+else # Real DVD drive (block)
+	mount "$isoPath" "$isoMountPath"
+fi
+
+	# Umount partition
+if [ "$(mount | grep -c "$partition")" != 0 ]; then
+	umount "$partition"
+fi
+
+mkdir -p "$partitionMountPath"
+mount "$partition" "$partitionMountPath"
+
+freeSpace=$(df --block-size 1 "$partitionMountPath" | grep "$partition" | awk '{print $4}')
+neededSpace=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
+
+((neededSpace = neededSpace + 1000 * 1000 * 30)) # 10Mio more for grub
+
+if [ "$neededSpace" -gt "$freeSpace" ]; then
+	echo "Error: Not enough free space on '$partition' !" >&2
+	exit 1
+fi
+
+# Copy
+pulse off
+
+echo "Copying..."
+progressCp "$isoMountPath" "$partitionMountPath"
+
+pulse on
+
+# boot dir should be lower case
+if [ -d "$partitionMountPath/BOOT" ]; then mv "$partitionMountPath/BOOT" "$partitionMountPath/boot"; fi
+if [ -d "$partitionMountPath/Boot" ]; then mv "$partitionMountPath/Boot" "$partitionMountPath/boot"; fi
+
+# Grub
+echo "Installing grub..."
+grub-install --root-directory="$partitionMountPath" "$device" 
+
+uuid=$(blkid -o value -s UUID "$partition") 
+
+# grub.cfg 
+echo "Installing grub.cfg..."
+cfgFilename="$partitionMountPath/boot/grub/grub.cfg" 
+mkdir -p "$(dirname "$cfgFilename")"
+echo -n "" > "$cfgFilename"
+
+echo "echo '------------------------------------'" >> "$cfgFilename" 
+echo "echo '|      Windows USB - Loading...    |'" >> "$cfgFilename" 
+echo "echo '------------------------------------'" >> "$cfgFilename" 
+echo "insmod ntfs" >> "$cfgFilename" 
+echo "search --no-floppy --fs-uuid $uuid --set root" >> "$cfgFilename" 
+echo "chainloader +1" >> "$cfgFilename" 
+echo "boot" >> "$cfgFilename" 
+
+# End
+exitUmountIso "$isoMountPath" "$partitionMountPath" 'normalCleanup'
+pulse off
+exit 0

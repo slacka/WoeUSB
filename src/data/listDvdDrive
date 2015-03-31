@@ -1,0 +1,18 @@
+#!/bin/bash
+
+# Config
+	# Le script quitte en cas d'erreur d'une commande
+set -o errexit
+
+	# Le script quitte en cas de variables non déclarée
+set -o nounset
+
+while read path; do
+	if echo "$path" | grep '/block/sr' > /dev/null; then
+		devName="/dev/$(basename "$path")"
+		echo "$devName"
+		echo "$devName - $(cat "$path/device/model")"
+	fi
+done < <(find /sys/block -maxdepth 1 -mindepth 1)
+
+exit 0

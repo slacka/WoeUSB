@@ -1,0 +1,15 @@
+
+[Desktop Entry]
+Version=1.0
+Encoding=UTF-8
+Exec=winusbgui
+Icon=winusbgui-icon.png
+Terminal=false
+X-MultipleArgs=false
+Type=Application
+Categories=Application;System;
+StartupNotify=true
+Name=WinUSB
+Name[fr_FR]=WinUSB
+Comment=Create Windows USB stick installer from a real Windows DVD or an image.
+Comment[fr_FR]=Créer des clés USB d'installation de Windows depuis une image CD ou un dvd original.

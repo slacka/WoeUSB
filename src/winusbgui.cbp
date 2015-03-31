@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="winusbgui" />
+		<Option makefile_is_custom="1" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="winusbgui" prefix_auto="1" extension_auto="1" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Option projectLinkerOptionsRelation="2" />
+				<MakeCommands>
+					<Build command="$make -f $makefile -j8" />
+					<CompileFile command="$make -f $makefile $file -j8" />
+					<Clean command="$make -f $makefile clean -j8" />
+					<DistClean command="$make -f $makefile distclean -j8" />
+					<AskRebuildNeeded command="$make -q -f $makefile -j8" />
+					<SilentBuild command="$make -s -f $makefile -j8" />
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="App.cpp" />
+		<Unit filename="App.hpp" />
+		<Unit filename="AppConfig.hpp" />
+		<Unit filename="DialogAbout.cpp" />
+		<Unit filename="DialogAbout.hpp" />
+		<Unit filename="MainFrame.cpp" />
+		<Unit filename="MainFrame.hpp" />
+		<Unit filename="MainPanel.cpp" />
+		<Unit filename="MainPanel.hpp" />
+		<Unit filename="MyException.cpp" />
+		<Unit filename="MyException.hpp" />
+		<Unit filename="config.hpp" />
+		<Unit filename="findFile.cpp" />
+		<Unit filename="findFile.hpp" />
+		<Unit filename="processManager.cpp" />
+		<Unit filename="processManager.hpp" />
+		<Unit filename="strWxStdConv.cpp" />
+		<Unit filename="strWxStdConv.hpp" />
+		<Extensions>
+			<envvars />
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

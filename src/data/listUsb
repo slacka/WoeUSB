@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Config
+	# Le script quitte en cas d'erreur d'une commande
+set -o errexit
+
+	# Le script quitte en cas de variables non déclarée
+set -o nounset
+
+showAll=0
+if [ "$#" -ge 1 ] && [ "$1" = 'all' ]; then
+	showAll=1
+fi
+
+function isUSBStick()
+{
+	if [ "$showAll" -eq 1 ]; then
+		if echo "$path" | grep '/block/loop' > /dev/null; then
+			if [ -d "$path/loop" ]; then # Initialised loops
+				return 0
+			else
+				return 1
+			fi
+		else
+			return 0 # On prend tout
+		fi
+	else
+		if [ -f "$path/removable" ] && [ "$(cat "$path/removable")" -eq 1 ] && [ "$(cat "$path/ro")" -eq 0 ]; then
+			return 0
+		else
+			return 1
+		fi
+	fi
+}
+
+while read path; do
+	if echo "$path" | grep '/block/\(sd\|loop\)' > /dev/null; then
+		if isUSBStick; then
+			devName="/dev/$(basename "$path")"
+			size=$(env LANG='' parted -s "$devName" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
+			echo "$devName"
+			echo "$devName - $(cat "$path/device/model" 2> /dev/null | sed -e 's/\s\+$//g' ) - $size"
+		fi
+	fi
+done < <(find /sys/block -maxdepth 1 -mindepth 1)
+
+exit 0

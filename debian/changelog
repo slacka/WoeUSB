@@ -1,0 +1,5 @@
+winusb (1.0.8) unstable; urgency=low
+
+  * Show more error message in the logs.
+	
+ -- Colin GILLE / congelli501 <colingille@hotmail.com>  Wed, 04 Jul 2012 23:44:14 +0200

@@ -1,0 +1,154 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: memwrite\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-07-14 00:08+0100\n"
+"PO-Revision-Date: 2011-07-14 00:13+0100\n"
+"Last-Translator: GILLE Colin <colingille@hotmail.com>\n"
+"Language-Team: Colin GILLE / Congelli501 <colingille@hotmail.com>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-Language: French\n"
+"X-Poedit-Country: FRANCE\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drive"
+msgstr "Montrer tous les disques"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drives, even those not detected as USB stick."
+msgstr "Montrer tous les disques, même ceux qui ne sont pas détectés comme des clés USB."
+
+#: ../../../MainFrame.cpp:53
+msgid "&File"
+msgstr "$Fichier"
+
+#: ../../../MainFrame.cpp:54
+msgid "&Help"
+msgstr "&Aide"
+
+#: ../../../App.cpp:82
+msgid "Error : "
+msgstr "Erreur :"
+
+#: ../../../App.cpp:82
+#: ../../../App.cpp:124
+msgid "Error..."
+msgstr "Erreur..."
+
+#: ../../../App.cpp:117
+msgid "Unknown error as occured !"
+msgstr "Une erreur inconnue s'est produite !"
+
+#: ../../../App.cpp:124
+msgid "Fatal error : "
+msgstr "Erreur fatale :"
+
+#: ../../../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr "Version %s"
+
+#: ../../../DialogAbout.cpp:55
+msgid "Developer"
+msgstr "Développeur"
+
+#: ../../../DialogAbout.cpp:58
+#, c-format
+msgid ""
+"%s is free software: you can redistribute it and/or modifyit under the terms of the GNU General Public License as published bythe Free Software Foundation, either version 3 of the License, or(at your option) any later version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty ofMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with %s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+"%s est un logiciel libre ; vous pouvez le diffuser et/ou le modifier suivant les termes de la Licence Publique Générale GNU telle que publiée par la Free Software Foundation ; soit la version 3 de cette licence, soit (à votre convenance) une version ultérieure.\n"
+"\n"
+"%s est diffusé dans l'espoir qu'il sera utile, mais SANS AUCUNE GARANTIE ; sans même une garantie implicite de COMMERCIALISATION ou d'ADÉQUATION À UN USAGE PARTICULIER. Voyez la Licence Publique Générale GNU pour plus de détails.\n"
+"\n"
+"Vous devriez avoir reçu une copie de la Licence Publique Générale GNU avec %s ; sinon, veuillez écrire à la Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, États-Unis."
+
+#: ../../../DialogAbout.cpp:73
+msgid "License"
+msgstr "Licence"
+
+#: ../../../MainPanel.cpp:45
+msgid "Source :"
+msgstr "Source :"
+
+#: ../../../MainPanel.cpp:48
+msgid "From a disk image (iso)"
+msgstr "Depuis une image disque (iso)"
+
+#: ../../../MainPanel.cpp:53
+msgid "Please select a disk image"
+msgstr "Veuillez sélectionner une image disque"
+
+#: ../../../MainPanel.cpp:58
+msgid "From a CD/DVD drive"
+msgstr "Depuis un lecteur de CD/DVD"
+
+#: ../../../MainPanel.cpp:70
+msgid "Target device :"
+msgstr "Disque de destination :"
+
+#: ../../../MainPanel.cpp:81
+msgid "Install"
+msgstr "Installer"
+
+#: ../../../MainPanel.cpp:247
+msgid "Installing.."
+msgstr "Installation en cours..."
+
+#: ../../../MainPanel.cpp:247
+msgid "Please wait..."
+msgstr "Veuillez patienter..."
+
+#: ../../../MainPanel.cpp:270
+#: ../../../MainPanel.cpp:289
+msgid "Are you sure you want to cancel the insatallation ?"
+msgstr "Êtes-vous sûr de vouloir annuler l'installation ?"
+
+#: ../../../MainPanel.cpp:270
+#: ../../../MainPanel.cpp:289
+msgid "Cancel"
+msgstr "Annuler"
+
+#: ../../../MainPanel.cpp:312
+msgid "Installation succeded !"
+msgstr "Installation réussie !"
+
+#: ../../../MainPanel.cpp:312
+#: ../../../MainPanel.cpp:316
+msgid "Installation"
+msgstr "Installation"
+
+#: ../../../MainPanel.cpp:316
+msgid "Installation failed !"
+msgstr "Erreur lors de l'installation !"
+
+#: ../../../findFile.cpp:54
+msgid "File not Found : "
+msgstr "Fichier non trouvé :"
+
+#: ../../../findFile.cpp:54
+msgid "Error"
+msgstr "Erreur"
+
+#: ../../../strWxStdConv.hpp:106
+msgid "bytes"
+msgstr "octets"
+
+#: ../../../AppConfig.hpp:7
+msgid "WinUSB"
+msgstr "WinUSB"
+
+#: ../../../DialogAbout.hpp:68
+msgid "About"
+msgstr "À Propos"
+
