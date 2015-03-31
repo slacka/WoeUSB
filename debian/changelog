@@ -1,6 +1,5 @@
-winusb (1.0.9) unstable; urgency=low
+winusb (1.0.11) unstable; urgency=low
 
-  * Fix debug in configure.in.
-  * Fix escaping of special chars.
+  * Add dependency to grub-pc OR grub-efi.
 	
- -- Colin GILLE / congelli501 <colingille@hotmail.com>  Sun, 29 Jul 2012 14:44:34 +0200
+ -- Colin GILLE / congelli501 <colingille@hotmail.com>  Wed, 27 Mar 2013 22:35:31 +0100

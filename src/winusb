@@ -283,6 +283,16 @@ if [ ! $(id -u) = 0 ]; then
    echo "Warning: you should run this script as root !" >&2
 fi
 
+mkntfsProg=''
+if which 'mkntfs' > /dev/null; then
+	mkntfsProg='mkntfs'
+elif which 'make.ntfs' > /dev/null; then
+	mkntfsProg='mkfs.ntfs'
+else
+	echo 'Error: mkntfs or mkfs.ntfs program not found !' >&2
+	exit 1
+fi
+
 if [ -z "$installMethod" ]; then
 	echo "Error: No install method specified !" >&2
 	echo "" >&2
@@ -338,7 +348,7 @@ else
 	partprobe "$device" # Reload partition table
 
 	# Create the ntfs partition
-	mkfs.ntfs --quiet --fast --label 'Windows USB' "$partition"
+	"$mkntfsProg" --quiet --fast --label 'Windows USB' "$partition"
 fi
 
 isoMountPath="/media/winusb_iso_$(date +%s)_$$"

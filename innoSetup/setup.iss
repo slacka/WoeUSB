@@ -26,7 +26,7 @@
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{7B35966E-246C-4D0B-98E8-53F1F1C9D8F5}
 AppName=WinUSB
-AppVerName=WinUSB 1.0.9
+AppVerName=WinUSB 1.0.11
 AppPublisher=Congelli 501 / Colin GILLE
 AppPublisherURL=http://fr.congelli.eu/
 AppSupportURL=http://fr.congelli.eu/

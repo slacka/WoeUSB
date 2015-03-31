@@ -1,4 +1,3 @@
-2012-07-29 Colin GILLE / congelli501 <colingille@hotmail.com>
+2013-03-27 Colin GILLE / congelli501 <colingille@hotmail.com>
 
-	* winusb: Fix debug in configure.in.
-	* winusb: Fix escaping of special chars.
+	* winusb: Add dependency to grub-pc OR grub-efi
