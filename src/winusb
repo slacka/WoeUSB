@@ -362,7 +362,7 @@ trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'other signal'" HUP QU
 echo "Mounting..."
 mkdir -p "$isoMountPath"
 if [ -f "$isoPath" ]; then # ISO
-	mount -o loop "$isoPath" "$isoMountPath"
+	mount -o loop -t iso9660 "$isoPath" "$isoMountPath"
 else # Real DVD drive (block)
 	mount "$isoPath" "$isoMountPath"
 fi
