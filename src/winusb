@@ -342,10 +342,12 @@ else
 	# Create partiton
 	size=$(env LANG='' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
 	parted --align cylinder -s "$device" mkpart primary 1MB "$size" # We start at 1MB for grub (it needs a post-mbr gap for its code)
-	partition="${targetMedia}1" # first partition
 	
 	blockdev --rereadpt "$device" || true # Reload partition table
 	partprobe "$device" # Reload partition table
+
+	# get first partition
+	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
 
 	# Create the ntfs partition
 	"$mkntfsProg" --quiet --fast --label 'Windows USB' "$partition"
