@@ -401,7 +401,7 @@ if [ -d "$partitionMountPath/Boot" ]; then mv "$partitionMountPath/Boot" "$parti
 
 # Grub
 echo "Installing grub..."
-grub-install --root-directory="$partitionMountPath" "$device" 
+grub-install --target=i386-pc --root-directory="$partitionMountPath" "$device" 
 
 uuid=$(blkid -o value -s UUID "$partition") 
 
