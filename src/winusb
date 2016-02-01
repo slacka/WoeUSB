@@ -84,9 +84,9 @@ function exitUmountIso()
 
 	pulse off
 	if [ "$3" == 'kill' ]; then
-		echoC red "\nKilled !"  >&2
+		echoC red "\nKilled!"  >&2
 	elif [ "$RETURN" -ne 0 ]; then
-		echoC red "Error occured !"  >&2
+		echoC red "Error occured!"  >&2
 	else
 		echoC green "Exiting..."
 	fi
@@ -125,8 +125,8 @@ function hideNoErr()
 	set -o errexit
 
 	if [ "$RETURN" -ne 0 ]; then
-		echoC red "Error while running command '$*' (exit code : $RETURN) !" >&2
-		echoC red "Read command output (Y/n) ?" >&2
+		echoC red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echoC red "Read command output (Y/n)?" >&2
 
 		rep='y'
 		read rep || true # If we can't read, don't quit
@@ -222,7 +222,7 @@ function progressCp()
 					copyFile "$inFile" "$outFile" "$currentSize"
 				fi
 			else
-				echo "Error: Unknown type of '$inFile' !" >&2
+				echo "Error: Unknown type of '$inFile'!" >&2
 				exit 1
 			fi
 
@@ -271,7 +271,7 @@ while [ ! "$#" -eq 0 ]; do
 		'--noColor')
 			noColor='1';;
 		* )
-			echo "Error: Unknown argument \"$1\" !" >&2
+			echo "Error: Unknown argument \"$1\"!" >&2
 			exit 1;;
 	esac
 
@@ -280,7 +280,7 @@ done
 
 # Test
 if [ ! $(id -u) = 0 ]; then
-   echo "Warning: you should run this script as root !" >&2
+   echo "Warning: you should run this script as root!" >&2
 fi
 
 mkntfsProg=''
@@ -289,24 +289,24 @@ if which 'mkntfs' > /dev/null; then
 elif which 'make.ntfs' > /dev/null; then
 	mkntfsProg='mkfs.ntfs'
 else
-	echo 'Error: mkntfs or mkfs.ntfs program not found !' >&2
+	echo 'Error: mkntfs or mkfs.ntfs program not found!' >&2
 	exit 1
 fi
 
 if [ -z "$installMethod" ]; then
-	echo "Error: No install method specified !" >&2
+	echo "Error: No install method specified!" >&2
 	echo "" >&2
 	printHelp
 	exit 1
 fi
 
 if [ ! -f "$isoPath" ] && [ ! -b "$isoPath" ]; then
-	echo "Error: iso '$isoPath' not found or not a regular file or a block file !" >&2
+	echo "Error: iso '$isoPath' not found or not a regular file or a block file!" >&2
 	exit 1
 fi
 
 if ! [ -b "$targetMedia" ]; then
-	echo "Error: the device "$targetMedia" is not special block !" >&2
+	echo "Error: the device "$targetMedia" is not special block!" >&2
 	exit 1
 fi
 
@@ -383,7 +383,7 @@ neededSpace=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
 ((neededSpace = neededSpace + 1000 * 1000 * 30)) # 10Mio more for grub
 
 if [ "$neededSpace" -gt "$freeSpace" ]; then
-	echo "Error: Not enough free space on '$partition' !" >&2
+	echo "Error: Not enough free space on '$partition'!" >&2
 	exit 1
 fi
 
