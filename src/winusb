@@ -86,7 +86,7 @@ function exitUmountIso()
 	if [ "$3" == 'kill' ]; then
 		echoC red "\nKilled !"  >&2
 	elif [ "$RETURN" -ne 0 ]; then
-		echoC red "Error occured !"  >&2
+		echoC red "Error occurred !"  >&2
 	else
 		echoC green "Exiting..."
 	fi
@@ -104,10 +104,10 @@ function exitUmountIso()
 	wait 2> /dev/null
 	sleep 1
 
-	echoC green "Umounting and removing '$1'..."
+	echoC green "Unmounting and removing '$1'..."
 	umount "$1" && rm -rf "$1" || true
 
-	echoC green "Umounting and removing '$2'..."
+	echoC green "Unmounting and removing '$2'..."
 	umount "$2" && rm -rf "$2" || true
 
 	if [ "$3" = 'normalCleanup' ]; then
@@ -145,7 +145,7 @@ function hideNoErr()
 function printHelp()
 {
 	echo "$scriptName usage" >&2
-	echo "Install a windows ISO on an NTFS partition and edit MBR of the device" >&2
+	echo "Install a Windows ISO on an NTFS partition and edit MBR of the device" >&2
 	echo "  $scriptName --install <iso path> <partition>" >&2
 	echo "  Example: $scriptName win7_amd64.iso /dev/sdd1" >&2
 	echo "" >&2
@@ -322,7 +322,7 @@ if [ "$installMethod" = 'edit' ]; then
 		echo "Target device is '$device'."
 	fi
 else
-	echo "Formating device..."
+	echo "Formatting device..."
 	device="$targetMedia"
 
 	# Remove all partitions
