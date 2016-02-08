@@ -8,7 +8,7 @@ Homepage: http://www.congelli.eu/
 
 Package: winusb
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, parted, coreutils, bash, grub-pc | grub-efi, gksu, ntfsprogs | ntfs-3g (>= 1:2011)
+Depends: ${shlibs:Depends}, ${misc:Depends}, parted, coreutils, bash, grub-pc | grub-efi, grub-pc-bin, gksu, ntfsprogs | ntfs-3g (>= 1:2011)
 Description: WinUSB can create bootable windows installer on usb.
  This package contains two programs:
   - WinUSB-gui: a simple tool that enable you to create
