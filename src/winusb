@@ -327,7 +327,7 @@ else
 
 	# Remove all partitions
 	while true; do
-		partId=$(env LANG='' parted -s "$device" print | tail --lines 2 | grep '^\s[0-9]\+\s\+.*$' | awk '{print $1}')
+		partId=$(env LANG='C' parted -s "$device" print | tail --lines 2 | grep '^\s[0-9]\+\s\+.*$' | awk '{print $1}')
 		if [ -n "$partId" ]; then
 			if [ "$(mount | grep -c "${device}${partId}")" != 0 ]; then
 				umount "${device}${partId}"
@@ -340,7 +340,7 @@ else
 	done
 
 	# Create partiton
-	size=$(env LANG='' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
+	size=$(env LANG='C' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
 	parted --align cylinder -s "$device" mkpart primary 1MB "$size" # We start at 1MB for grub (it needs a post-mbr gap for its code)
 	
 	blockdev --rereadpt "$device" || true # Reload partition table
