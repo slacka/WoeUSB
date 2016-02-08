@@ -345,6 +345,8 @@ else
 	
 	blockdev --rereadpt "$device" || true # Reload partition table
 	partprobe "$device" # Reload partition table
+	echo "Wait 3 seconds for block device nodes to populate..."
+	sleep 3
 
 	# get first partition
 	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
