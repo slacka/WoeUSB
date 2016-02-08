@@ -397,13 +397,9 @@ progressCp "$isoMountPath" "$partitionMountPath"
 
 pulse on
 
-# boot dir should be lower case
-if [ -d "$partitionMountPath/BOOT" ]; then mv "$partitionMountPath/BOOT" "$partitionMountPath/boot"; fi
-if [ -d "$partitionMountPath/Boot" ]; then mv "$partitionMountPath/Boot" "$partitionMountPath/boot"; fi
-
 # Grub
 echo "Installing grub..."
-grub-install --target=i386-pc --root-directory="$partitionMountPath" "$device" 
+grub-install --target=i386-pc --boot-directory="$partitionMountPath" "$device" 
 
 uuid=$(blkid -o value -s UUID "$partition") 
 
