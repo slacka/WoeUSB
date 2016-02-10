@@ -329,8 +329,8 @@ else
 	parted -s "$device" mklabel msdos
 
 	# Create partiton
-	size=$(env LANG='C' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
-	parted --align cylinder -s "$device" mkpart primary 1MB "$size" # We start at 1MB for grub (it needs a post-mbr gap for its code)
+	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+	parted -s "$device" mkpart primary fat32 4MiB -- -1s
 	
 	blockdev --rereadpt "$device" || true # Reload partition table
 	partprobe "$device" # Reload partition table
@@ -341,7 +341,7 @@ else
 	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
 
 	# Create the FAT partition
-	"$mkdosfsProg" -n 'Windows USB' "$partition"
+	"$mkdosfsProg" -F 32 -n 'Windows USB' "$partition"
 fi
 
 isoMountPath="/media/winusb_iso_$(date +%s)_$$"
