@@ -325,19 +325,8 @@ else
 	echo "Formatting device..."
 	device="$targetMedia"
 
-	# Remove all partitions
-	while true; do
-		partId=$(env LANG='C' parted -s "$device" print | tail --lines 2 | grep '^\s[0-9]\+\s\+.*$' | awk '{print $1}')
-		if [ -n "$partId" ]; then
-			if [ "$(mount | grep -c "${device}${partId}")" != 0 ]; then
-				umount "${device}${partId}"
-			fi
-
-			parted -s "$device" rm "$partId"
-		else
-			break
-		fi
-	done
+	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+	parted -s "$device" mklabel msdos
 
 	# Create partiton
 	size=$(env LANG='C' parted -s "$device" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
