@@ -2,7 +2,7 @@ Source: winusb
 Section: x11
 Priority: extra
 Maintainer: Colin GILLE / congelli501 <colingille@hotmail.com>
-Build-Depends: debhelper (>= 7), autotools-dev, libwxgtk2.8-dev
+Build-Depends: debhelper (>= 7), autotools-dev, libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev
 Standards-Version: 3.8.1
 Homepage: http://www.congelli.eu/
 
