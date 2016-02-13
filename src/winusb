@@ -145,7 +145,7 @@ function hideNoErr()
 function printHelp()
 {
 	echo "$scriptName usage" >&2
-	echo "Install a Windows ISO on an NTFS partition and edit MBR of the device" >&2
+	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
 	echo "  $scriptName --install <iso path> <partition>" >&2
 	echo "  Example: $scriptName win7_amd64.iso /dev/sdd1" >&2
 	echo "" >&2
@@ -283,13 +283,13 @@ if [ ! $(id -u) = 0 ]; then
    echo "Warning: you should run this script as root!" >&2
 fi
 
-mkntfsProg=''
-if which 'mkntfs' > /dev/null; then
-	mkntfsProg='mkntfs'
-elif which 'make.ntfs' > /dev/null; then
-	mkntfsProg='mkfs.ntfs'
+mkdosfsProg=''
+if which 'mkdosfs' > /dev/null; then
+	mkdosfsProg='mkdosfs'
+elif which 'make.msdos' > /dev/null; then
+	mkdosfsProg='mkfs.msdos'
 else
-	echo 'Error: mkntfs or mkfs.ntfs program not found!' >&2
+	echo 'Error: mkdosfs or mkfs.msdos program not found!' >&2
 	exit 1
 fi
 
@@ -351,8 +351,8 @@ else
 	# get first partition
 	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
 
-	# Create the ntfs partition
-	"$mkntfsProg" --quiet --fast --label 'Windows USB' "$partition"
+	# Create the FAT partition
+	"$mkdosfsProg" -n 'Windows USB' "$partition"
 fi
 
 isoMountPath="/media/winusb_iso_$(date +%s)_$$"
@@ -412,9 +412,9 @@ echo -n "" > "$cfgFilename"
 echo "echo '------------------------------------'" >> "$cfgFilename" 
 echo "echo '|      Windows USB - Loading...    |'" >> "$cfgFilename" 
 echo "echo '------------------------------------'" >> "$cfgFilename" 
-echo "insmod ntfs" >> "$cfgFilename" 
+echo "insmod fat" >> "$cfgFilename"
 echo "search --no-floppy --fs-uuid $uuid --set root" >> "$cfgFilename" 
-echo "chainloader +1" >> "$cfgFilename" 
+echo "ntldr /bootmgr" >> "$cfgFilename"
 echo "boot" >> "$cfgFilename" 
 
 # End
