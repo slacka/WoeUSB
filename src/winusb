@@ -405,7 +405,7 @@ uuid=$(blkid -o value -s UUID "$partition")
 
 # grub.cfg 
 echo "Installing grub.cfg..."
-cfgFilename="$partitionMountPath/boot/grub/grub.cfg" 
+cfgFilename="$partitionMountPath/grub/grub.cfg" 
 mkdir -p "$(dirname "$cfgFilename")"
 echo -n "" > "$cfgFilename"
 
