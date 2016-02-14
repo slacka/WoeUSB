@@ -18,6 +18,7 @@
 */
 //------------------------------------------------------------------------------
 #include "findFile.hpp"
+#include <wx/version.h> 
 //------------------------------------------------------------------------------
 
 wxString findFile(const wxString &str)
@@ -36,15 +37,26 @@ wxString findFile(const wxString &str)
         return testPath;
     }
 
-    #if defined(__UNIX__)
+    #if (defined(__UNIX__) && wxCHECK_VERSION(3, 0, 0))
     testPath = wxString(wxStandardPaths::Get().GetInstallPrefix() + _T("/share/") + _T(PACKAGE) + _T("/") + str);
     if(wxFileExists(testPath) || wxDirExists(testPath)) // Si c'est dans le dossier /usr/.../share/nomprog
     {
         return testPath;
     }
+    //FIXME: remove when 2.8 depreciated 
+    #elif (defined(__UNIX__) && wxCHECK_VERSION(2, 8, 0))
+    testPath = wxString(wxStandardPaths().GetInstallPrefix() + _T("/share/") + _T(PACKAGE) + _T("/") + str);
+    {
+        return testPath;
+    }
     #endif // defined(__UNIX__)
 
+    #if wxCHECK_VERSION(3, 0, 0)
     testPath = wxString(wxStandardPaths::Get().GetDataDir() + _T("/") + str);
+    //FIXME: remove when 2.8 depreciated 
+    #else
+    testPath = wxString(wxStandardPaths().GetDataDir() + _T("/") + str);
+    #endif //wx2 legacy
     if(wxFileExists(testPath) || wxDirExists(testPath)) // Si c'est dans le dossier /usr/.../share/nomPaquet
     {
         return testPath;
