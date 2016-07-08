@@ -1,0 +1,149 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: memwrite\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2011-07-14 00:08+0100\n"
+"PO-Revision-Date: 2016-07-09 20:51+0800\n"
+"Last-Translator: Ｖ字龍 <Vdragon.Taiwan@gmail.com>\n"
+"Language-Team: chinese-l10n <chinese-l10n@googlegroups.com>\n"
+"Language: zh_TW\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: .\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drive"
+msgstr "秀出所有磁碟機"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drives, even those not detected as USB stick."
+msgstr "秀出所有磁碟機，就算沒有識別為 USB 記憶碟也一樣。"
+
+#: ../../../MainFrame.cpp:53
+msgid "&File"
+msgstr "檔案(&F)"
+
+#: ../../../MainFrame.cpp:54
+msgid "&Help"
+msgstr "尋求幫助(&H)"
+
+#: ../../../App.cpp:82
+msgid "Error : "
+msgstr "錯誤："
+
+#: ../../../App.cpp:82 ../../../App.cpp:124
+msgid "Error..."
+msgstr "錯誤……"
+
+#: ../../../App.cpp:117
+msgid "Unknown error as occured !"
+msgstr "發生了未知的錯誤！"
+
+#: ../../../App.cpp:124
+msgid "Fatal error : "
+msgstr "致命錯誤："
+
+#: ../../../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr "第 %s 版"
+
+#: ../../../DialogAbout.cpp:55
+msgid "Developer"
+msgstr "軟體開發者"
+
+#: ../../../DialogAbout.cpp:58
+#, c-format
+msgid ""
+"%s is free software: you can redistribute it and/or modifyit under the terms of the GNU General Public License as published bythe Free Software Foundation, either version 3 of the License, or(at your option) any later version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful,but WITHOUT ANY WARRANTY; without even the implied warranty ofMERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with %s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+"%s 為自由軟體：您可以在 Free Software Foundation 所發表的 GNU General Public License 授權條款第 3 版或任意（您所中意之）更近期版本的規定下進行本軟體的再散佈與修改。\n"
+"\n"
+"%s 以其會有所用的期望下而散佈，但**不做任何擔保**；甚至於不包含暗示其對於**商業價值**或是**特定需求的適用性**的保證。更多相關細節請參考 GNU General Public License 授權條款。\n"
+"\n"
+"您應該已經隨 %s 得到一份 GNU General Public License 授權條款的副本。如果沒有的話請上 <http://www.gnu.org/licenses/> 瀏覽。"
+
+#: ../../../DialogAbout.cpp:73
+msgid "License"
+msgstr "授權條款"
+
+#: ../../../MainPanel.cpp:45
+msgid "Source :"
+msgstr "來源可開機媒體："
+
+#: ../../../MainPanel.cpp:48
+msgid "From a disk image (iso)"
+msgstr "從一個光碟映像檔(iso)"
+
+#: ../../../MainPanel.cpp:53
+msgid "Please select a disk image"
+msgstr "請選取一個光碟映像檔"
+
+#: ../../../MainPanel.cpp:58
+msgid "From a CD/DVD drive"
+msgstr "從一個 CD/DVD 光碟機"
+
+#: ../../../MainPanel.cpp:70
+msgid "Target device :"
+msgstr "目標裝置："
+
+#: ../../../MainPanel.cpp:81
+msgid "Install"
+msgstr "開始安裝"
+
+#: ../../../MainPanel.cpp:247
+msgid "Installing.."
+msgstr "正在安裝……"
+
+#: ../../../MainPanel.cpp:247
+msgid "Please wait..."
+msgstr "請稍候……"
+
+#: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
+msgid "Are you sure you want to cancel the insatallation ?"
+msgstr "請問您確定要取消安裝程序嗎？"
+
+#: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
+msgid "Cancel"
+msgstr "取消"
+
+#: ../../../MainPanel.cpp:312
+msgid "Installation succeded !"
+msgstr "安裝成功！"
+
+#: ../../../MainPanel.cpp:312 ../../../MainPanel.cpp:316
+msgid "Installation"
+msgstr "安裝程序"
+
+#: ../../../MainPanel.cpp:316
+msgid "Installation failed !"
+msgstr "安裝失敗！"
+
+#: ../../../findFile.cpp:54
+msgid "File not Found : "
+msgstr "找不到檔案："
+
+#: ../../../findFile.cpp:54
+msgid "Error"
+msgstr "錯誤"
+
+#: ../../../strWxStdConv.hpp:106
+msgid "bytes"
+msgstr "位元組"
+
+#: ../../../AppConfig.hpp:7
+msgid "WinUSB"
+msgstr "WinUSB Windows 可開機 USB 製作工具"
+
+#: ../../../DialogAbout.hpp:68
+msgid "About"
+msgstr "關於本軟體"
