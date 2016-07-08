@@ -1,10 +1,10 @@
 #!/bin/bash
 
 # Config
-	# Le script quitte en cas d'erreur d'une commande
+	# Quit the script if a command fails
 set -o errexit
 
-	# Le script quitte en cas de variables non déclarée
+	# Quit the script if a non-declared variable is referenced
 set -o nounset
 
 # Script path
