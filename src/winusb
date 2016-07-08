@@ -371,7 +371,7 @@ mount "$partition" "$partitionMountPath"
 freeSpace=$(df --block-size 1 "$partitionMountPath" | grep "$partition" | awk '{print $4}')
 neededSpace=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
 
-((neededSpace = neededSpace + 1000 * 1000 * 30)) # 10Mio more for grub
+((neededSpace = neededSpace + 1000 * 1000 * 10)) # 10MB more for grub installation
 
 if [ "$neededSpace" -gt "$freeSpace" ]; then
 	echo "Error: Not enough free space on '$partition'!" >&2
