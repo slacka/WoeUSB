@@ -37,7 +37,7 @@ while read path; do
 	if echo "$path" | grep '/block/\(sd\|loop\)' > /dev/null; then
 		if isUSBStick; then
 			devName="/dev/$(basename "$path")"
-			size=$(env LANG='' parted -s "$devName" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
+			size=$(env LANG='C' parted -s "$devName" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
 			echo "$devName"
 			echo "$devName - $(cat "$path/device/model" 2> /dev/null | sed -e 's/\s\+$//g' ) - $size"
 		fi
