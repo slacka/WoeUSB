@@ -2,7 +2,7 @@ SUBDIRS = data locale win32 linux-menu
 
 bin_PROGRAMS=winusbgui
 
-INCLUDES = $(CFLAGS_ALL)
+AM_CPPFLAGS = $(CFLAGS_ALL)
 
 winusbgui_LDFLAGS = $(EXTRA_LDFLAGS)
 	
