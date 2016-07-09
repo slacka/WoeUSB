@@ -50,7 +50,7 @@ MainPanel::MainPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const 
 
 	wxBoxSizer *tmpSizer = new wxBoxSizer( wxHORIZONTAL );
 	tmpSizer->AddSpacer(20);
-	m_isoFile = new wxFilePickerCtrl(this, wxID_ANY, _T(""), _("Please select a disk image"), _T("Iso images (*.iso)|*.iso|All files|*"));
+	m_isoFile = new wxFilePickerCtrl(this, wxID_ANY, _T(""), _("Please select a disk image"), _T("Iso images (*.iso)|*.iso;*.ISO|All files|*"));
 	tmpSizer->Add(m_isoFile, 1, wxLEFT | wxRIGHT | wxBOTTOM, 3);
 	MainSizer->Add(tmpSizer, 0, wxEXPAND, 0);
 
