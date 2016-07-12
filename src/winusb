@@ -147,11 +147,11 @@ function printHelp()
 	echo "$scriptName usage" >&2
 	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
 	echo "  $scriptName --install <iso path> <partition>" >&2
-	echo "  Example: $scriptName win7_amd64.iso /dev/sdd1" >&2
+	echo "  Example: $scriptName --install win7_amd64.iso /dev/sdd1" >&2
 	echo "" >&2
 	echo "Completely format a drive and install the ISO on it" >&2
 	echo "  $scriptName --format <iso path> <device>" >&2
-	echo "  Example: $scriptName win7_amd64.iso /dev/sdd" >&2
+	echo "  Example: $scriptName --format win7_amd64.iso /dev/sdd" >&2
 	echo "" >&2
 	echo "Options" >&2
 	echo " --verbose, -v        Verbose mode" >&2
