@@ -134,7 +134,7 @@ void MainPanel::RefreshListContent()
         {
             command << "all ";
         }
-        command << "2>&1";
+        command << "2>/dev/null";
 
         PipeManager pipe(command.str());
 
@@ -165,7 +165,7 @@ void MainPanel::RefreshListContent()
         m_dvdDriveDevList.clear();
         m_dvdDriveList->Clear();
 
-        PipeManager pipe(std::string("\"$(readlink -f '") + StrWxToStd(findFile(_T("data/listDvdDrive"))) + "')\" 2>&1");
+        PipeManager pipe(std::string("\"$(readlink -f '") + StrWxToStd(findFile(_T("data/listDvdDrive"))) + "')\" 2>/dev/null");
 
         while(! pipe.IsEof())
         {
