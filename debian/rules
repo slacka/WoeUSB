@@ -40,7 +40,7 @@ build-stamp:  config.status
 	dh_testdir
 
 	# Add here commands to compile the package.
-	$(MAKE) -j8
+	$(MAKE)
 
 	touch $@
 
