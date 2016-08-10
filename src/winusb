@@ -386,6 +386,17 @@ progressCp "$isoMountPath" "$partitionMountPath"
 
 pulse on
 
+# Copy the EFI file for Windows 7
+if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
+	# It's Windows 7 with EFI support (and thus 64-Bit)
+	if command -v "7z" >/dev/null 2>&1; then
+		mkdir -p "$partitionMountPath/EFI/Boot"
+		7z e -so "$isoMountPath/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
+	else
+		echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
+	fi
+fi
+
 # Grub
 echo "Installing grub..."
 grub-install --target=i386-pc --boot-directory="$partitionMountPath" "$device" 
