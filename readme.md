@@ -2,7 +2,7 @@
 [![WinUSB Version](https://img.shields.io/badge/winusb-1.0.11-orange.svg)](https://github.com/slacka/WinUSB) 
 [![WinUSB License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSB/blob/master/COPYING) 
 
-<img src="/doc/winusb.jpg" align="right" />
+<img src="winusb.jpg" align="right" />
 <br>
 _A Linux program to create Windows USB stick installer from a real Windows DVD or an image._
 
