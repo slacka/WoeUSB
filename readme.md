@@ -20,7 +20,7 @@ Windows Vista, Windows 7, Window 8, Windows 10. All languages and any version (h
 ## Installation:
 ```
 git clone https://github.com/slacka/WinUSB.git
-sudo apt install libwxgtk3.0-dev 
+sudo apt-get install gcc build-essential libwxbase3.0-dev libwxgtk3.0-dev
 ./configure
 make
 sudo make install
