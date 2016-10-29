@@ -18,9 +18,16 @@ Supported images:
 Windows Vista, Windows 7, Window 8, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
 
 ## Installation:
+### Dependencies installation
+```shell
+# For Ubuntu
+$ sudo apt install libwxgtk3.0-dev 
+# For Fedora
+$ sudo dnf install wxGTK3-devel
+```
+### Building and installing WinUSB
 ```
 git clone https://github.com/slacka/WinUSB.git
-sudo apt install libwxgtk3.0-dev 
 ./configure
 make
 sudo make install
