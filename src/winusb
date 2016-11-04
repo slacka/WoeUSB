@@ -399,7 +399,15 @@ fi
 
 # Grub
 echo "Installing grub..."
-grub-install --target=i386-pc --boot-directory="$partitionMountPath" "$device" 
+if which 'grub-install' &> /dev/null; then
+	grubInsProg='grub-install'
+elif which 'grub2-install' &> /dev/null; then
+	grubInsProg='grub2-install'
+else
+	echo 'Error: grub-install or grub2-install program not found!' >&2
+	exit 1
+fi
+"$grubInsProg" --target=i386-pc --boot-directory="$partitionMountPath" "$device" 
 
 uuid=$(blkid -o value -s UUID "$partition") 
 
