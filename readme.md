@@ -17,14 +17,14 @@ Supported images:
 
 Windows Vista, Windows 7, Window 8, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
 
-## Installation:
+## Installation
 ### Acquire WinUSB's source code
 Choose one of the following method:
 
 * Download and extract source code archive from GitHub
 * Cloning WinUSB's Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
 
-### Dependencies installation
+### Install WinUSB's build dependencies
 ```shell
 # For Ubuntu
 $ sudo apt-get install devscripts equivs gdebi-core
@@ -35,7 +35,7 @@ $ sudo gdebi winusb-build-deps_<version>_all.deb
 # For Fedora
 $ sudo dnf install wxGTK3-devel
 ```
-### Building and installing WinUSB
+### Build and then install WinUSB
 ```
 # For Ubuntu
 $ dpkg-buildpackage -us -b
@@ -45,10 +45,6 @@ $ sudo gdebi ../winusb_<version>_<architecture>
 ./configure
 make
 sudo make install
-```
-## Running
-```
-winusb
 ```
 
 ## License
