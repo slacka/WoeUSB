@@ -39,7 +39,7 @@ $ sudo dnf install wxGTK3-devel
 ```
 # For Ubuntu
 $ dpkg-buildpackage -us -b
-$ sudo gdebi ../winusb_<version>_<architecture>
+$ sudo gdebi ../winusb_<version>_<architecture>.deb
 
 # Generic
 ./configure
