@@ -22,6 +22,8 @@ Supported bootmodes:
 * Legacy/MBR-style/IBM PC compatible bootmode
 * Native UEFI booting is supported for Windows 7 and later images(with a limitation of only FAT filesystem can be used as target filesystem)
 
+This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/prog_info_winusb.html), which is not maintained since 2012, according to the official website.
+
 ## Installation
 Following is the instructions to install WinUSB if your Linux distro's packaged version is not available or too old.
 
