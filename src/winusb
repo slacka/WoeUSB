@@ -10,8 +10,8 @@ set -o nounset
 # Script path
 set +o nounset
 if [ "$scriptPath" = "" ]; then
-	scriptName=$(basename $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
-	scriptPath=$(dirname $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
+	scriptName="$(basename "$(readlink -f "$0")")" # readlink -f $0 ne marche pas en cas de "source"
+	scriptPath="$(dirname "$(readlink -f "$0")")" # readlink -f $0 ne marche pas en cas de "source"
 fi
 set -o nounset
 
@@ -80,7 +80,7 @@ function exitUmountIso()
 
 	set +o errexit # We need to clean up everything we can
 
-	trap - HUP QUIT KILL SEGV PIPE INT TERM EXIT
+	trap - HUP QUIT SEGV PIPE INT TERM EXIT
 
 	pulse off
 	if [ "$3" == 'kill' ]; then
@@ -105,9 +105,11 @@ function exitUmountIso()
 	sleep 1
 
 	echoC green "Unmounting and removing '$1'..."
+	# shellcheck disable=2015
 	umount "$1" && rm -rf "$1" || true
 
 	echoC green "Unmounting and removing '$2'..."
+	# shellcheck disable=2015
 	umount "$2" && rm -rf "$2" || true
 
 	if [ "$3" = 'normalCleanup' ]; then
@@ -129,14 +131,14 @@ function hideNoErr()
 		echoC red "Read command output (Y/n)?" >&2
 
 		rep='y'
-		read rep || true # If we can't read, don't quit
+		read -r rep || true # If we can't read, don't quit
 
 		if [ "$rep" != "n" ] && [ "$rep" != "N" ]; then
 			echo "$TEXT"
 		fi
 
-		echoC red "Press any key to exit (tmpDir will be removed)" >&2
-		read var
+		echoC red "Press ENTER to exit (tmpDir will be removed)" >&2
+		read -r
 	fi
 
 	return "$RETURN"
@@ -184,7 +186,8 @@ function copyFile()
 		((i = i + 1))
 
 		# Send current copied size
-		local copiedSize=$(stat --format=%s "$outFile")
+		local copiedSize
+		copiedSize=$(stat --format=%s "$outFile")
 		((totalCopiedSize = copiedSize + wholeCurrentSize)) || true
 		#echo "$totalCopiedSize"
 
@@ -207,7 +210,7 @@ function progressCp()
 	cd "$1"
 	fileList=$(find .)
 
-	while read inFile; do
+	while read -r inFile; do
 		if [ "$inFile" != '.' ]; then
 			outFile="$targetDir/$inFile"
 
@@ -279,7 +282,7 @@ while [ ! "$#" -eq 0 ]; do
 done
 
 # Test
-if [ ! $(id -u) = 0 ]; then
+if [ ! "$(id -u)" = 0 ]; then
    echo "Warning: you should run this script as root!" >&2
 fi
 
@@ -306,11 +309,11 @@ if [ ! -f "$isoPath" ] && [ ! -b "$isoPath" ]; then
 fi
 
 if ! [ -b "$targetMedia" ]; then
-	echo "Error: the device "$targetMedia" is not special block!" >&2
+	echo "Error: the device \"$targetMedia\" is not special block!" >&2
 	exit 1
 fi
 
-trap "pulse off" HUP QUIT KILL SEGV PIPE INT TERM EXIT
+trap "pulse off" HUP QUIT SEGV PIPE INT TERM EXIT
 pulse on
 
 # Prepare install
@@ -338,7 +341,7 @@ else
 	sleep 3
 
 	# get first partition
-	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
+	partition=$(ls --color=no -1 "$device"* | grep -ve "$device"'$')
 
 	# Create the FAT partition
 	"$mkdosfsProg" -F 32 -n 'Windows USB' "$partition"
@@ -347,9 +350,9 @@ fi
 isoMountPath="/media/winusb_iso_$(date +%s)_$$"
 partitionMountPath="/media/winusb_target_$(date +%s)_$$"
 
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'kill'" INT TERM
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'exit'" EXIT
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'other signal'" HUP QUIT KILL SEGV PIPE
+trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "kill"' INT TERM
+trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "exit"' EXIT
+trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "other signal"' HUP QUIT SEGV PIPE
 
 # Mounting
 echo "Mounting..."
@@ -416,14 +419,15 @@ echo "Installing grub.cfg..."
 cfgFilename="$partitionMountPath/grub/grub.cfg" 
 mkdir -p "$(dirname "$cfgFilename")"
 echo -n "" > "$cfgFilename"
-
-echo "echo '------------------------------------'" >> "$cfgFilename" 
-echo "echo '|      Windows USB - Loading...    |'" >> "$cfgFilename" 
-echo "echo '------------------------------------'" >> "$cfgFilename" 
-echo "insmod fat" >> "$cfgFilename"
-echo "search --no-floppy --fs-uuid $uuid --set root" >> "$cfgFilename" 
-echo "ntldr /bootmgr" >> "$cfgFilename"
-echo "boot" >> "$cfgFilename" 
+{
+	echo "echo '------------------------------------'"
+	echo "echo '|      Windows USB - Loading...    |'"
+	echo "echo '------------------------------------'"
+	echo "insmod fat"
+	echo "search --no-floppy --fs-uuid $uuid --set root"
+	echo "ntldr /bootmgr"
+	echo "boot"
+} >> "$cfgFilename"
 
 # End
 exitUmountIso "$isoMountPath" "$partitionMountPath" 'normalCleanup'
