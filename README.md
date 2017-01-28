@@ -18,6 +18,8 @@ Supported images:
 Windows Vista, Windows 7, Window 8, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
 
 ## Installation
+Following is the instructions to install WinUSB if your Linux distro's packaged version is not available or too old.
+
 ### Acquire WinUSB's source code
 Choose one of the following method:
 
@@ -35,13 +37,13 @@ $ sudo gdebi winusb-build-deps_<version>_all.deb
 # For Fedora
 $ sudo dnf install wxGTK3-devel
 ```
-### Build and then install WinUSB
+### Build & install WinUSB
 ```
 # For Ubuntu
 $ dpkg-buildpackage -uc -b
 $ sudo gdebi ../winusb_<version>_<architecture>.deb
 
-# Generic
+# Generic method
 ./configure
 make
 sudo make install
