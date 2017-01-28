@@ -38,7 +38,7 @@ $ sudo dnf install wxGTK3-devel
 ### Build and then install WinUSB
 ```
 # For Ubuntu
-$ dpkg-buildpackage -us -b
+$ dpkg-buildpackage -uc -b
 $ sudo gdebi ../winusb_<version>_<architecture>.deb
 
 # Generic
