@@ -17,6 +17,11 @@ Supported images:
 
 Windows Vista, Windows 7, Window 8, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
 
+Supported bootmodes:
+
+* Legacy/MBR-style/IBM PC compatible bootmode
+* Native UEFI booting is supported for Windows 7 and later images(with a limitation of only FAT filesystem can be used as target filesystem)
+
 ## Installation
 Following is the instructions to install WinUSB if your Linux distro's packaged version is not available or too old.
 
