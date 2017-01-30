@@ -47,7 +47,7 @@ $ sudo dnf install wxGTK3-devel
 ### Build & install WinUSB
 ```
 # For Ubuntu
-$ dpkg-buildpackage -uc -b
+$ dpkg-buildpackage -uc -b # NOTE: Currently due to bug in the build system this command will fail if source's path contains space or single quotes, refer issue #84 for details
 $ sudo gdebi ../winusb_<version>_<architecture>.deb
 
 # Generic method
