@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-# Config
+# Modify intepreter's behavior for better debugging and error handling
 	# Quit the script if a command fails
 set -o errexit
 
 	# Quit the script if a non-declared variable is referenced
 set -o nounset
 
-# Script path
+# Retrieve runtime environment information
 set +o nounset
 if [ "$scriptPath" = "" ]; then
 	scriptName="$(basename "$(readlink -f "$0")")" # readlink -f $0 ne marche pas en cas de "source"
@@ -35,7 +35,10 @@ function pulse()
 	fi
 }
 
-# Fns
+# Configure terminal to print next message with certain color
+# $1:
+#     <color>: color of the next message
+#     none: reset color to default
 function color()
 {
 	case "$1" in
@@ -63,6 +66,9 @@ function color()
 	esac
 }
 
+# Print message with color
+# $1: message color
+# $2: message body
 function echoC()
 {
 	if [ "$noColor" -eq 1 ]; then
@@ -74,6 +80,10 @@ function echoC()
 	fi
 }
 
+# Unmount mounted filesystems and clean-up mountpoints before exiting program
+# $1: Windows ISO mountpoint
+# $2: Target mountpoint
+# $3: Exit reason
 function exitUmountIso()
 {
 	RETURN="$?"
@@ -162,24 +172,24 @@ function printHelp()
 }
 
 
-((blockSize = 4 * 1024 * 1024)) # 4Mo
+((blockSize = 4 * 1024 * 1024)) # 4MiB
 
+# Copy a file from A to B, overwrite file if B exists
 function copyFile()
 {
-	inFile="$1"
-	outFile="$2"
+	inFile="$1" # A
+	outFile="$2" # B
 	wholeCurrentSize="$3"
 
-	# Size
+	# Calculate block count of the source file
 	size=$(stat --format=%s "$inFile")
 	((stepNb = size / blockSize + 1))
 
-	# Rm
 	if [ -f "$outFile" ]; then
 		rm "$outFile"
 	fi
 
-	# Copy
+	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
 		dd if="$inFile" bs="$blockSize" skip="$i" seek="$i" of="$outFile" count=1 2> /dev/null 
@@ -198,6 +208,9 @@ function copyFile()
 	return 0
 }
 
+# Copying all files from one filesystem to another, with progress reporting
+# $1: Source filesystem's mountpoint
+# $2: Target filesystem's mountpoint
 function progressCp()
 {
 	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
@@ -240,7 +253,7 @@ function progressCp()
 	done < <(echo "$fileList")
 }
 
-# Args
+# Runtime configuration
 installMethod=''
 isoPath=''
 targetMedia=''
@@ -281,7 +294,7 @@ while [ ! "$#" -eq 0 ]; do
 	shift
 done
 
-# Test
+# Check environment and runtime dependencies
 if [ ! "$(id -u)" = 0 ]; then
    echo "Warning: you should run this script as root!" >&2
 fi
@@ -316,7 +329,7 @@ fi
 trap "pulse off" HUP QUIT SEGV PIPE INT TERM EXIT
 pulse on
 
-# Prepare install
+# Start modifying target device
 if [ "$installMethod" = 'edit' ]; then
 	device="$(echo "$targetMedia" | sed "s/[0-9]*$//")"
 	partition="$targetMedia"
@@ -331,7 +344,7 @@ else
 	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
 	parted -s "$device" mklabel msdos
 
-	# Create partiton
+	# Create partition
 	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
 	parted -s "$device" mkpart primary fat32 4MiB -- -1s
 	
@@ -354,16 +367,16 @@ trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "kill"' INT TERM
 trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "exit"' EXIT
 trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "other signal"' HUP QUIT SEGV PIPE
 
-# Mounting
 echo "Mounting..."
 mkdir -p "$isoMountPath"
-if [ -f "$isoPath" ]; then # ISO
+if [ -f "$isoPath" ]; then # ${isoPath} is an ISO image
 	mount -o loop,ro -t udf,iso9660 "$isoPath" "$isoMountPath"
-else # Real DVD drive (block)
+else # ${isoPath} is a real DVD drive (block device)
 	mount -o ro "$isoPath" "$isoMountPath"
 fi
 
-	# Umount partition
+	# If target partition is mounted in the first place, unmount it
+	# TODO: This should only be needed in edit mode, maybe move it to above?
 if [ "$(mount | grep -c "$partition")" != 0 ]; then
 	umount "$partition"
 fi
@@ -381,7 +394,7 @@ if [ "$neededSpace" -gt "$freeSpace" ]; then
 	exit 1
 fi
 
-# Copy
+# Copy files from Windows installation media to disk
 pulse off
 
 echo "Copying..."
@@ -389,7 +402,7 @@ progressCp "$isoMountPath" "$partitionMountPath"
 
 pulse on
 
-# Copy the EFI file for Windows 7
+# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
 if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
 	# It's Windows 7 with EFI support (and thus 64-Bit)
 	if command -v "7z" >/dev/null 2>&1; then
@@ -400,7 +413,7 @@ if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini"
 	fi
 fi
 
-# Grub
+# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
 echo "Installing grub..."
 if which 'grub-install' &> /dev/null; then
 	grubInsProg='grub-install'
@@ -414,7 +427,6 @@ fi
 
 uuid=$(blkid -o value -s UUID "$partition") 
 
-# grub.cfg 
 echo "Installing grub.cfg..."
 cfgFilename="$partitionMountPath/grub/grub.cfg" 
 mkdir -p "$(dirname "$cfgFilename")"
@@ -429,7 +441,6 @@ echo -n "" > "$cfgFilename"
 	echo "boot"
 } >> "$cfgFilename"
 
-# End
 exitUmountIso "$isoMountPath" "$partitionMountPath" 'normalCleanup'
 pulse off
 exit 0
