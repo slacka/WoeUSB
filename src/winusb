@@ -251,9 +251,6 @@ function progressCp()
 				exit 1
 			fi
 
-			# Mode
-			#chmod "$(stat --format=%a "$inFile")" "$outFile"
-
 			# Progress
 			((currentSize = currentSize + fileSize)) || true
 			((percent = (currentSize * 100) / totalSize)) || true
