@@ -8,12 +8,21 @@ set -o errexit
 set -o nounset
 
 # Retrieve runtime environment information
-set +o nounset
-if [ "$scriptPath" = "" ]; then
-	scriptName="$(basename "$(readlink -f "$0")")" # readlink -f $0 ne marche pas en cas de "source"
-	scriptPath="$(dirname "$(readlink -f "$0")")" # readlink -f $0 ne marche pas en cas de "source"
+RUNTIME_SCRIPTNAME="$(basename "$0")"
+readonly RUNTIME_SCRIPTNAME
+RUNTIME_SCRIPTDIR="$(realpath --no-symlinks "$(dirname "${0}")")"
+readonly RUNTIME_SCRIPTDIR
+declare -r RUNTIME_SCRIPTPATH="${RUNTIME_SCRIPTDIR}/${RUNTIME_SCRIPTNAME}"
+RUNTIME_SCRIPTPATH_RELATIVE="$(realpath --relative-to="$(pwd)" --no-symlinks "${RUNTIME_SCRIPTPATH}")"
+readonly RUNTIME_SCRIPTPATH_RELATIVE
+declare -ir RUNTIME_COMMANDLINE_ARGUMENT_NUMBER="${#}"
+declare -a RUNTIME_COMMANDLINE_ARGUMENT_LIST
+if [ "${RUNTIME_COMMANDLINE_ARGUMENT_NUMBER}" -eq 0 ]; then
+	RUNTIME_COMMANDLINE_ARGUMENT_LIST=(nothing)
+else
+	RUNTIME_COMMANDLINE_ARGUMENT_LIST=("$@")
 fi
-set -o nounset
+readonly RUNTIME_COMMANDLINE_ARGUMENT_LIST
 
 pulseCurrentPid=0
 function pulse()
@@ -156,14 +165,14 @@ function hideNoErr()
 
 function printHelp()
 {
-	echo "$scriptName usage" >&2
+	echo "${RUNTIME_SCRIPTNAME} usage" >&2
 	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
-	echo "  $scriptName --install <iso path> <partition>" >&2
-	echo "  Example: $scriptName --install win7_amd64.iso /dev/sdd1" >&2
+	echo "  ${RUNTIME_SCRIPTNAME} --install <iso path> <partition>" >&2
+	echo "  Example: ${RUNTIME_SCRIPTNAME} --install win7_amd64.iso /dev/sdd1" >&2
 	echo "" >&2
 	echo "Completely format a drive and install the ISO on it" >&2
-	echo "  $scriptName --format <iso path> <device>" >&2
-	echo "  Example: $scriptName --format win7_amd64.iso /dev/sdd" >&2
+	echo "  ${RUNTIME_SCRIPTNAME} --format <iso path> <device>" >&2
+	echo "  Example: ${RUNTIME_SCRIPTNAME} --format win7_amd64.iso /dev/sdd" >&2
 	echo "" >&2
 	echo "Options" >&2
 	echo " --verbose, -v        Verbose mode" >&2
@@ -262,8 +271,8 @@ forGui='0'
 noColor='0'
 
 
-while [ ! "$#" -eq 0 ]; do
-	case "$1" in
+while [ ! "${RUNTIME_COMMANDLINE_ARGUMENT_NUMBER}" -eq 0 ]; do
+	case "${RUNTIME_COMMANDLINE_ARGUMENT_LIST[0]}" in
 		'--help'|'-h')
 			printHelp
 			exit 0;;
