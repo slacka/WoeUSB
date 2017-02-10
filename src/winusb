@@ -315,6 +315,15 @@ else
 	exit 1
 fi
 
+if which 'grub-install' &> /dev/null; then
+	grubInsProg='grub-install'
+elif which 'grub2-install' &> /dev/null; then
+	grubInsProg='grub2-install'
+else
+	echo 'Error: grub-install or grub2-install program not found!' >&2
+	exit 1
+fi
+
 if [ -z "$installMethod" ]; then
 	echo "Error: No install method specified!" >&2
 	echo "" >&2
@@ -421,14 +430,6 @@ fi
 
 # Install GRUB Bootloader for Legacy IBM PC-compatible booting support
 echo "Installing grub..."
-if which 'grub-install' &> /dev/null; then
-	grubInsProg='grub-install'
-elif which 'grub2-install' &> /dev/null; then
-	grubInsProg='grub2-install'
-else
-	echo 'Error: grub-install or grub2-install program not found!' >&2
-	exit 1
-fi
 "$grubInsProg" --target=i386-pc --boot-directory="$partitionMountPath" --force "$device" 
 
 uuid=$(blkid -o value -s UUID "$partition") 
