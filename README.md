@@ -51,9 +51,9 @@ $ dpkg-buildpackage -uc -b # NOTE: Currently due to bug in the build system this
 $ sudo gdebi ../winusb_<version>_<architecture>.deb
 
 # Generic method
-./configure
-make
-sudo make install
+$ ./configure
+$ make
+$ sudo make install
 ```
 
 ## License
