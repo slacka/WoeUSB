@@ -57,4 +57,4 @@ $ sudo make install
 ```
 
 ## License
-winusb is sold under [GPL licence](https://github.com/slacka/WinUSB/blob/master/COPYING).
+WinUSB is sold under the [GPL license](https://github.com/slacka/WinUSB/blob/master/COPYING).
