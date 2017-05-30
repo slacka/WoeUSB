@@ -71,7 +71,7 @@ init(){
 	if [ -z "${install_method}" ]; then
 		echo "Error: No install method specified!" >&2
 		echo "" >&2
-		printHelp
+		print_help
 		exit 1
 	fi
 
