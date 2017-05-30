@@ -25,7 +25,6 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-# Runtime configuration
 install_method=''
 source_media=''
 target_media=''
