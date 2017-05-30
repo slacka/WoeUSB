@@ -420,6 +420,7 @@ print_help(){
 	echo -e "\t--verbose, -v        ""Verbose mode"
 	echo -e "\t--help, -h           ""Show this help message and exit"
 	echo -e "\t--no-color           ""Disable color"
+	echo -e "\t--debug, -d          ""Enable script debugging"
 }; declare -fr print_help
 
 process_commandline_parameters(){
