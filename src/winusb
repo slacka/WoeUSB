@@ -407,19 +407,19 @@ copy_filesystem_files(){
 }
 
 print_help(){
-	echo "${RUNTIME_EXECUTABLE_NAME} usage" >&2
-	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
-	echo "  ${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>" >&2
-	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1" >&2
-	echo "" >&2
-	echo "Completely format a drive and install the ISO on it" >&2
-	echo "  ${RUNTIME_EXECUTABLE_NAME} --format <iso path> <device>" >&2
-	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdd" >&2
-	echo "" >&2
-	echo "Options" >&2
-	echo " --verbose, -v        Verbose mode" >&2
-	echo " --help, -h           Show this help message and exit" >&2
-	echo " --no-color            Disable color" >&2
+	echo "${RUNTIME_EXECUTABLE_NAME} usage"
+	echo "Install a Windows ISO on an FAT partition and edit MBR of the device"
+	echo "  ${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>"
+	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1"
+	echo ""
+	echo "Completely format a drive and install the ISO on it"
+	echo "  ${RUNTIME_EXECUTABLE_NAME} --format <iso path> <device>"
+	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdd"
+	echo ""
+	echo "Options"
+	echo " --verbose, -v        Verbose mode"
+	echo " --help, -h           Show this help message and exit"
+	echo " --no-color            Disable color"
 }; declare -fr print_help
 
 process_commandline_parameters(){
