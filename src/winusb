@@ -483,14 +483,14 @@ process_commandline_parameters(){
 shift_array(){
 	if [ "${#}" -ne 1 ]; then
 		printf "%s: Error: argument quantity illegal\n" "${FUNCNAME[0]}" 1>&2
-		exit "${COMMON_RESULT_FAILURE}"
+		exit 1
 	fi
 
 	local -n array_ref="${1}"
 
 	if [ "${#array_ref[@]}" -eq 0 ]; then
 		printf "ERROR: array is empty!\n" 1>&2
-		return "${COMMON_RESULT_FAILURE}"
+		return 1
 	fi
 
 	# Unset the 1st element
@@ -501,7 +501,7 @@ shift_array(){
 		array_ref=("${array_ref[@]}")
 	fi
 
-	return "${COMMON_RESULT_SUCCESS}"
+	return 0
 }; declare -fr shift_array
 
 ## Traps: Functions that are triggered when certain condition occurred
