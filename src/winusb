@@ -1,33 +1,206 @@
 #!/usr/bin/env bash
+#shellcheck disable=SC2034
 
-# Modify intepreter's behavior for better debugging and error handling
-	# Quit the script if a command fails
+## Makes debuggers' life easier - Unofficial Bash Strict Mode
+## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
 set -o errexit
-
-	# Quit the script if a non-declared variable is referenced
+set -o errtrace
 set -o nounset
+set -o pipefail
 
-# Retrieve runtime environment information
-RUNTIME_SCRIPTNAME="$(basename "$0")"
-readonly RUNTIME_SCRIPTNAME
-RUNTIME_SCRIPTDIR="$(realpath --no-symlinks "$(dirname "${0}")")"
-readonly RUNTIME_SCRIPTDIR
-declare -r RUNTIME_SCRIPTPATH="${RUNTIME_SCRIPTDIR}/${RUNTIME_SCRIPTNAME}"
-RUNTIME_SCRIPTPATH_RELATIVE="$(realpath --relative-to="$(pwd)" --no-symlinks "${RUNTIME_SCRIPTPATH}")"
-readonly RUNTIME_SCRIPTPATH_RELATIVE
-declare -ir RUNTIME_COMMANDLINE_ARGUMENT_NUMBER="${#}"
-declare -a RUNTIME_COMMANDLINE_ARGUMENT_LIST
-if [ "${RUNTIME_COMMANDLINE_ARGUMENT_NUMBER}" -eq 0 ]; then
-	RUNTIME_COMMANDLINE_ARGUMENT_LIST=(nothing)
-else
-	RUNTIME_COMMANDLINE_ARGUMENT_LIST=("$@")
+## Non-overridable Primitive Variables
+## BASHDOC: Shell Variables » Bash Variables
+## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
+if [ -v "BASH_SOURCE[0]" ]; then
+	RUNTIME_EXECUTABLE_PATH="$(realpath --strip "${BASH_SOURCE[0]}")"
+	RUNTIME_EXECUTABLE_FILENAME="$(basename "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_EXECUTABLE_NAME="${RUNTIME_EXECUTABLE_FILENAME%.*}"
+	RUNTIME_EXECUTABLE_DIRECTORY="$(dirname "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_COMMANDLINE_BASECOMMAND="${0}"
+	declare -r\
+		RUNTIME_EXECUTABLE_FILENAME\
+		RUNTIME_EXECUTABLE_DIRECTORY\
+		RUNTIME_EXECUTABLE_PATHABSOLUTE\
+		RUNTIME_COMMANDLINE_BASECOMMAND
 fi
-readonly RUNTIME_COMMANDLINE_ARGUMENT_LIST
+declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
+# Runtime configuration
+install_method=''
+source_media=''
+target_media=''
+verbose='0'
+only_for_gui='0'
+no_color='0'
 pulseCurrentPid=0
-function pulse()
-{
-	if [ "$forGui" -eq 1 ]; then
+block_size="((4 * 1024 * 1024))" # 4MiB
+
+init(){
+	if ! process_commandline_parameters; then
+		printf\
+			"Error: %s: Invalid command-line parameters.\n"\
+			"${FUNCNAME[0]}"\
+			1>&2
+		print_help
+		exit 1
+	fi
+
+	# Check environment and runtime dependencies
+	if [ ! "$(id -u)" = 0 ]; then
+		echo "Warning: you should run this script as root!" >&2
+	fi
+
+	command_mkdosfs=''
+	if which 'mkdosfs' > /dev/null; then
+		command_mkdosfs='mkdosfs'
+	elif which 'make.msdos' > /dev/null; then
+		command_mkdosfs='mkfs.msdos'
+	else
+		echo 'Error: mkdosfs or mkfs.msdos program not found!' >&2
+		exit 1
+	fi
+
+	if which 'grub-install' &> /dev/null; then
+		command_grubinstall='grub-install'
+	elif which 'grub2-install' &> /dev/null; then
+		command_grubinstall='grub2-install'
+	else
+		echo 'Error: grub-install or grub2-install program not found!' >&2
+		exit 1
+	fi
+
+	if [ -z "${install_method}" ]; then
+		echo "Error: No install method specified!" >&2
+		echo "" >&2
+		printHelp
+		exit 1
+	fi
+
+	if [ ! -f "${source_media}" ] && [ ! -b "${source_media}" ]; then
+		echo "Error: iso '${source_media}' not found or not a regular file or a block file!" >&2
+		exit 1
+	fi
+
+	if ! [ -b "${target_media}" ]; then
+		echo "Error: the device \"${target_media}\" is not special block!" >&2
+		exit 1
+	fi
+
+	trap "pulse off" HUP QUIT SEGV PIPE INT TERM EXIT
+	pulse on
+
+	# Start modifying target device
+	if [ "${install_method}" = 'edit' ]; then
+		device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
+		partition="${target_media}"
+
+		if [ "$verbose" = '1' ]; then
+			echo "Target device is '$device'."
+		fi
+	else
+		echo "Formatting device..."
+		device="${target_media}"
+
+		# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+		parted -s "$device" mklabel msdos
+
+		# Create partition
+		# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+		parted -s "$device" mkpart primary fat32 4MiB -- -1s
+
+		blockdev --rereadpt "$device" || true # Reload partition table
+		partprobe "$device" # Reload partition table
+		echo "Wait 3 seconds for block device nodes to populate..."
+		sleep 3
+
+		# get first partition
+		partition=$(ls --color=no -1 "$device"* | grep -ve "$device"'$')
+
+		# Create the FAT partition
+		"$command_mkdosfs" -F 32 -n 'Windows USB' "${partition}"
+	fi
+
+	isoMountPath="/media/winusb_iso_$(date +%s)_$$"
+	partitionMountPath="/media/winusb_target_$(date +%s)_$$"
+
+	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "kill"' INT TERM
+	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "exit"' EXIT
+	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "other signal"' HUP QUIT SEGV PIPE
+
+	echo "Mounting..."
+	mkdir -p "$isoMountPath"
+	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
+		mount -o loop,ro -t udf,iso9660 "${source_media}" "$isoMountPath"
+	else # ${source_media} is a real DVD drive (block device)
+		mount -o ro "${source_media}" "$isoMountPath"
+	fi
+
+		# If target partition is mounted in the first place, unmount it
+		# TODO: This should only be needed in edit mode, maybe move it to above?
+	if [ "$(mount | grep -c "${partition}")" != 0 ]; then
+		umount "${partition}"
+	fi
+
+	mkdir -p "${target_media_mountpoint}"
+	mount "${partition}" "${target_media_mountpoint}"
+
+	free_space=$(df --block-size 1 "${target_media_mountpoint}" | grep "${partition}" | awk '{print $4}')
+	needed_space=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
+
+	((needed_space = needed_space + 1000 * 1000 * 10)) # 10MB more for grub installation
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on '${partition}'!" >&2
+		exit 1
+	fi
+
+	# Copy files from Windows installation media to disk
+	pulse off
+
+	echo "Copying..."
+	copy_filesystem_files "$isoMountPath" "${target_media_mountpoint}"
+
+	pulse on
+
+	# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
+	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
+		# It's Windows 7 with EFI support (and thus 64-Bit)
+		if command -v "7z" >/dev/null 2>&1; then
+			mkdir -p "$partitionMountPath/EFI/Boot"
+			7z e -so "$isoMountPath/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
+		else
+			echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
+		fi
+	fi
+
+	# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
+	echo "Installing grub..."
+	"$command_grubinstall" --target=i386-pc --boot-directory="${target_media_mountpoint}" --force "$device"
+
+	uuid=$(blkid -o value -s UUID "${partition}")
+
+	echo "Installing grub.cfg..."
+	cfgFilename="$partitionMountPath/grub/grub.cfg"
+	mkdir -p "$(dirname "$cfgFilename")"
+	echo -n "" > "$cfgFilename"
+	{
+		echo "echo '------------------------------------'"
+		echo "echo '|      Windows USB - Loading...    |'"
+		echo "echo '------------------------------------'"
+		echo "insmod fat"
+		echo "search --no-floppy --fs-uuid $uuid --set root"
+		echo "ntldr /bootmgr"
+		echo "boot"
+	} >> "$cfgFilename"
+
+	cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" 'normalCleanup'
+	pulse off
+
+	exit 0
+}; declare -fr init
+
+pulse(){
+	if [ "$only_for_gui" -eq 1 ]; then
 		if [ ! "$pulseCurrentPid" -eq 0 ]; then
 			kill "$pulseCurrentPid"
 			#wait "$pulseCurrentPid"
@@ -42,13 +215,13 @@ function pulse()
 			exit 1
 		fi
 	fi
-}
+}; declare -fr pulse
 
-# Configure terminal to print next message with certain color
+# Configure the terminal to print future messages with certain color
 # $1:
 #     <color>: color of the next message
 #     none: reset color to default
-function color()
+switch_terminal_text_color()
 {
 	case "$1" in
 		none)
@@ -73,19 +246,18 @@ function color()
 			echo -en "\033[0;37m"
 			;;
 	esac
-}
+}; declare -fr switch_terminal_text_color
 
 # Print message with color
 # $1: message color
 # $2: message body
-function echoC()
-{
-	if [ "$noColor" -eq 1 ]; then
+echo_with_color(){
+	if [ "${no_color}" -eq 1 ]; then
 		echo -e "$2"
 	else
-		color "$1"
+		switch_terminal_text_color "$1"
 		echo -e "$2"
-		color none
+		switch_terminal_text_color none
 	fi
 }
 
@@ -93,8 +265,7 @@ function echoC()
 # $1: Windows ISO mountpoint
 # $2: Target mountpoint
 # $3: Exit reason
-function exitUmountIso()
-{
+cleanup_mountpoints(){
 	RETURN="$?"
 
 	set +o errexit # We need to clean up everything we can
@@ -103,11 +274,11 @@ function exitUmountIso()
 
 	pulse off
 	if [ "$3" == 'kill' ]; then
-		echoC red "\nKilled!"  >&2
+		echo_with_color red "\nKilled!"  >&2
 	elif [ "$RETURN" -ne 0 ]; then
-		echoC red "Error occured!"  >&2
+		echo_with_color red "Error occured!"  >&2
 	else
-		echoC green "Exiting..."
+		echo_with_color green "Exiting..."
 	fi
 
 	echo "Syncing..."
@@ -115,7 +286,7 @@ function exitUmountIso()
 	pulse on
 	sync
 	pulse off
-	
+
 	echo "Cleaning..."
 
 	cd /
@@ -123,11 +294,11 @@ function exitUmountIso()
 	wait 2> /dev/null
 	sleep 1
 
-	echoC green "Unmounting and removing '$1'..."
+	echo_with_color green "Unmounting and removing '$1'..."
 	# shellcheck disable=2015
 	umount "$1" && rm -rf "$1" || true
 
-	echoC green "Unmounting and removing '$2'..."
+	echo_with_color green "Unmounting and removing '$2'..."
 	# shellcheck disable=2015
 	umount "$2" && rm -rf "$2" || true
 
@@ -138,90 +309,83 @@ function exitUmountIso()
 	fi
 }
 
-function hideNoErr()
-{
+hideNoErr(){
 	set +o errexit
 	TEXT="$( "$@" 2>&1 )"
 	RETURN="$?"
 	set -o errexit
 
 	if [ "$RETURN" -ne 0 ]; then
-		echoC red "Error while running command '$*' (exit code : $RETURN)!" >&2
-		echoC red "Read command output (Y/n)?" >&2
+		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echo_with_color red "Read command output (Y/n)?" >&2
 
 		rep='y'
 		read -r rep || true # If we can't read, don't quit
 
-		if [ "$rep" != "n" ] && [ "$rep" != "N" ]; then
+		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
 			echo "$TEXT"
 		fi
 
-		echoC red "Press ENTER to exit (tmpDir will be removed)" >&2
+		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
 		read -r
 	fi
 
 	return "$RETURN"
 }
 
-function printHelp()
-{
-	echo "${RUNTIME_SCRIPTNAME} usage" >&2
+print_help(){
+	echo "${RUNTIME_EXECUTABLE_NAME} usage" >&2
 	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
-	echo "  ${RUNTIME_SCRIPTNAME} --install <iso path> <partition>" >&2
-	echo "  Example: ${RUNTIME_SCRIPTNAME} --install win7_amd64.iso /dev/sdd1" >&2
+	echo "  ${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>" >&2
+	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1" >&2
 	echo "" >&2
 	echo "Completely format a drive and install the ISO on it" >&2
-	echo "  ${RUNTIME_SCRIPTNAME} --format <iso path> <device>" >&2
-	echo "  Example: ${RUNTIME_SCRIPTNAME} --format win7_amd64.iso /dev/sdd" >&2
+	echo "  ${RUNTIME_EXECUTABLE_NAME} --format <iso path> <device>" >&2
+	echo "  Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdd" >&2
 	echo "" >&2
 	echo "Options" >&2
 	echo " --verbose, -v        Verbose mode" >&2
 	echo " --help, -h           Show this help message and exit" >&2
-	echo " --noColor            Disable color" >&2
-}
-
-
-((blockSize = 4 * 1024 * 1024)) # 4MiB
+	echo " --no_color            Disable color" >&2
+}; declare -fr print_help
 
 # Copy a file from A to B, overwrite file if B exists
-function copyFile()
-{
-	inFile="$1" # A
-	outFile="$2" # B
-	wholeCurrentSize="$3"
+copy_file(){
+	source_file="$1" # A
+	dest_file="$2" # B
+	whole_current_size="$3"
 
 	# Calculate block count of the source file
-	size=$(stat --format=%s "$inFile")
-	((stepNb = size / blockSize + 1))
+	size=$(stat --format=%s "$source_file")
+	((stepNb = size / block_size + 1))
 
-	if [ -f "$outFile" ]; then
-		rm "$outFile"
+	if [ -f "$dest_file" ]; then
+		rm "$dest_file"
 	fi
 
 	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
-		dd if="$inFile" bs="$blockSize" skip="$i" seek="$i" of="$outFile" count=1 2> /dev/null 
+		dd if="$source_file" bs="$block_size" skip="$i" seek="$i" of="$dest_file" count=1 2> /dev/null
 		((i = i + 1))
 
 		# Send current copied size
-		local copiedSize
-		copiedSize=$(stat --format=%s "$outFile")
-		((totalCopiedSize = copiedSize + wholeCurrentSize)) || true
-		#echo "$totalCopiedSize"
+		local copied_size
+		copied_size=$(stat --format=%s "$dest_file")
+		((copied_size_total = copied_size + whole_current_size)) || true
+		#echo "$copied_size_total"
 
-		((percent = (totalCopiedSize * 100) / totalSize)) || true
+		((percent = (copied_size_total * 100) / totalSize)) || true
 		echo -en "$percent%\r"
 	done
 
 	return 0
-}
+}; declare -fr copy_file
 
 # Copying all files from one filesystem to another, with progress reporting
 # $1: Source filesystem's mountpoint
 # $2: Target filesystem's mountpoint
-function progressCp()
-{
+copy_filesystem_files(){
 	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
 	currentSize=0
 
@@ -230,24 +394,24 @@ function progressCp()
 	targetDir=$(readlink -f "$targetDir")
 
 	cd "$1"
-	fileList=$(find .)
+	file_list=$(find .)
 
-	while read -r inFile; do
-		if [ "$inFile" != '.' ]; then
-			outFile="$targetDir/$inFile"
+	while read -r source_file; do
+		if [ "$source_file" != '.' ]; then
+			dest_file="$targetDir/$source_file"
 
-			fileSize=$(stat --format=%s "$inFile")
+			fileSize=$(stat --format=%s "$source_file")
 
-			if [ -d "$inFile" ]; then
-				mkdir -p "$outFile"
-			elif [ -f "$inFile" ]; then
-				if [ "$fileSize" -lt "$blockSize" ]; then
-					cp "$inFile" "$outFile"
+			if [ -d "$source_file" ]; then
+				mkdir -p "$dest_file"
+			elif [ -f "$source_file" ]; then
+				if [ "$fileSize" -lt "$block_size" ]; then
+					cp "$source_file" "$dest_file"
 				else
-					copyFile "$inFile" "$outFile" "$currentSize"
+					copyFile "$source_file" "$dest_file" "$currentSize"
 				fi
 			else
-				echo "Error: Unknown type of '$inFile'!" >&2
+				echo "Error: Unknown type of '$source_file'!" >&2
 				exit 1
 			fi
 
@@ -256,198 +420,112 @@ function progressCp()
 			((percent = (currentSize * 100) / totalSize)) || true
 			echo -en "$percent%\r"
 		fi
-	done < <(echo "$fileList")
+	done < <(echo "$file_list")
 }
 
-# Runtime configuration
-installMethod=''
-isoPath=''
-targetMedia=''
-verbose='0'
-forGui='0'
-noColor='0'
+## Traps: Functions that are triggered when certain condition occurred
+## Shell Builtin Commands » Bourne Shell Builtins » trap
+trap_errexit(){
+	printf "An error occurred and the script is prematurely aborted\n" 1>&2
+	return 0
+}; declare -fr trap_errexit; trap trap_errexit ERR
 
+trap_exit(){
+	cleanup_mountpoints
+	return 0
+}; declare -fr trap_exit; trap trap_exit EXIT
 
-while [ ! "${RUNTIME_COMMANDLINE_ARGUMENT_NUMBER}" -eq 0 ]; do
-	case "${RUNTIME_COMMANDLINE_ARGUMENT_LIST[0]}" in
-		'--help'|'-h')
-			printHelp
-			exit 0;;
-		'--install')
-			installMethod='edit'
-			shift
-			isoPath=$(readlink -f "$1")
-			shift
-			targetMedia=$(readlink -f "$1");;
-		'--format')
-			installMethod='format'
-			shift
-			isoPath=$(readlink -f "$1")
-			shift
-			targetMedia=$(readlink -f "$1");;
-		'--verbose'|'-v')
-			verbose='1';;
-		'--forGui')
-			noColor='1'
-			forGui='1';;
-		'--noColor')
-			noColor='1';;
-		* )
-			echo "Error: Unknown argument \"$1\"!" >&2
-			exit 1;;
-	esac
+trap_return(){
+	local returning_function="${1}"
 
-	shift
-done
+	printf "DEBUG: %s: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
+}; declare -fr trap_return
 
-# Check environment and runtime dependencies
-if [ ! "$(id -u)" = 0 ]; then
-   echo "Warning: you should run this script as root!" >&2
-fi
+trap_interrupt(){
+	printf "Recieved SIGINT, script is interrupted.\n" 1>&2
+	return 0
+}; declare -fr trap_interrupt; trap trap_interrupt INT
 
-mkdosfsProg=''
-if which 'mkdosfs' > /dev/null; then
-	mkdosfsProg='mkdosfs'
-elif which 'make.msdos' > /dev/null; then
-	mkdosfsProg='mkfs.msdos'
-else
-	echo 'Error: mkdosfs or mkfs.msdos program not found!' >&2
-	exit 1
-fi
-
-if which 'grub-install' &> /dev/null; then
-	grubInsProg='grub-install'
-elif which 'grub2-install' &> /dev/null; then
-	grubInsProg='grub2-install'
-else
-	echo 'Error: grub-install or grub2-install program not found!' >&2
-	exit 1
-fi
-
-if [ -z "$installMethod" ]; then
-	echo "Error: No install method specified!" >&2
-	echo "" >&2
-	printHelp
-	exit 1
-fi
-
-if [ ! -f "$isoPath" ] && [ ! -b "$isoPath" ]; then
-	echo "Error: iso '$isoPath' not found or not a regular file or a block file!" >&2
-	exit 1
-fi
-
-if ! [ -b "$targetMedia" ]; then
-	echo "Error: the device \"$targetMedia\" is not special block!" >&2
-	exit 1
-fi
-
-trap "pulse off" HUP QUIT SEGV PIPE INT TERM EXIT
-pulse on
-
-# Start modifying target device
-if [ "$installMethod" = 'edit' ]; then
-	device="$(echo "$targetMedia" | sed "s/[0-9]*$//")"
-	partition="$targetMedia"
-
-	if [ "$verbose" = '1' ]; then
-		echo "Target device is '$device'."
+process_commandline_parameters(){
+	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
+		return 0
 	fi
-else
-	echo "Formatting device..."
-	device="$targetMedia"
 
-	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
-	parted -s "$device" mklabel msdos
+	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
+	local enable_debug=N
 
-	# Create partition
-	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	parted -s "$device" mkpart primary fat32 4MiB -- -1s
-	
-	blockdev --rereadpt "$device" || true # Reload partition table
-	partprobe "$device" # Reload partition table
-	echo "Wait 3 seconds for block device nodes to populate..."
-	sleep 3
+	while [ "${#parameters[@]}" -ne 0 ]; do
+		case "${parameters[0]}" in
+			"--help"\
+			|"-h")
+				print_help;
+				exit 0
+				;;
+			"--debug"\
+			|"-d")
+				enable_debug="Y"
+				;;
+			'--install')
+				install_method='edit'
+				shift_array parameters
+				source_media="${parameters[0]}"
+				shift_array parameters
+				target_media="${parameters[0]}"
+				;;
+			'--format')
+				install_method='format'
+				shift_array parameters
+				source_media="${parameters[0]}"
+				shift_array parameters
+				target_media="${parameters[0]}"
+				;;
+			'--verbose'|'-v')
+				verbose='1'
+				;;
+			'--forGui')
+				no_color='1'
+				only_for_gui='1'
+				;;
+			'--no_color')
+				no_color='1'
+				;;
+			*)
+				printf "ERROR: Unknown command-line argument \"%s\"\n" "${parameters[0]}" >&2
+				return 1
+				;;
+		esac
+		shift_array parameters
+	done
 
-	# get first partition
-	partition=$(ls --color=no -1 "$device"* | grep -ve "$device"'$')
-
-	# Create the FAT partition
-	"$mkdosfsProg" -F 32 -n 'Windows USB' "$partition"
-fi
-
-isoMountPath="/media/winusb_iso_$(date +%s)_$$"
-partitionMountPath="/media/winusb_target_$(date +%s)_$$"
-
-trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "kill"' INT TERM
-trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "exit"' EXIT
-trap 'exitUmountIso "$isoMountPath" "$partitionMountPath" "other signal"' HUP QUIT SEGV PIPE
-
-echo "Mounting..."
-mkdir -p "$isoMountPath"
-if [ -f "$isoPath" ]; then # ${isoPath} is an ISO image
-	mount -o loop,ro -t udf,iso9660 "$isoPath" "$isoMountPath"
-else # ${isoPath} is a real DVD drive (block device)
-	mount -o ro "$isoPath" "$isoMountPath"
-fi
-
-	# If target partition is mounted in the first place, unmount it
-	# TODO: This should only be needed in edit mode, maybe move it to above?
-if [ "$(mount | grep -c "$partition")" != 0 ]; then
-	umount "$partition"
-fi
-
-mkdir -p "$partitionMountPath"
-mount "$partition" "$partitionMountPath"
-
-freeSpace=$(df --block-size 1 "$partitionMountPath" | grep "$partition" | awk '{print $4}')
-neededSpace=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
-
-((neededSpace = neededSpace + 1000 * 1000 * 10)) # 10MB more for grub installation
-
-if [ "$neededSpace" -gt "$freeSpace" ]; then
-	echo "Error: Not enough free space on '$partition'!" >&2
-	exit 1
-fi
-
-# Copy files from Windows installation media to disk
-pulse off
-
-echo "Copying..."
-progressCp "$isoMountPath" "$partitionMountPath"
-
-pulse on
-
-# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
-if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
-	# It's Windows 7 with EFI support (and thus 64-Bit)
-	if command -v "7z" >/dev/null 2>&1; then
-		mkdir -p "$partitionMountPath/EFI/Boot"
-		7z e -so "$isoMountPath/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
-	else
-		echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
+	if [ "${enable_debug}" = "Y" ]; then
+		trap 'trap_return "${FUNCNAME[0]}"' RETURN
+		set -o xtrace
 	fi
-fi
+	return 0
+}; declare -fr process_commandline_parameters;
 
-# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
-echo "Installing grub..."
-"$grubInsProg" --target=i386-pc --boot-directory="$partitionMountPath" --force "$device" 
+shift_array(){
+	if [ "${#}" -ne 1 ]; then
+		printf "%s: Error: argument quantity illegal\n" "${FUNCNAME[0]}" 1>&2
+		exit "${COMMON_RESULT_FAILURE}"
+	fi
 
-uuid=$(blkid -o value -s UUID "$partition") 
+	local -n array_ref="${1}"
 
-echo "Installing grub.cfg..."
-cfgFilename="$partitionMountPath/grub/grub.cfg" 
-mkdir -p "$(dirname "$cfgFilename")"
-echo -n "" > "$cfgFilename"
-{
-	echo "echo '------------------------------------'"
-	echo "echo '|      Windows USB - Loading...    |'"
-	echo "echo '------------------------------------'"
-	echo "insmod fat"
-	echo "search --no-floppy --fs-uuid $uuid --set root"
-	echo "ntldr /bootmgr"
-	echo "boot"
-} >> "$cfgFilename"
+	if [ "${#array_ref[@]}" -eq 0 ]; then
+		printf "ERROR: array is empty!\n" 1>&2
+		return "${COMMON_RESULT_FAILURE}"
+	fi
 
-exitUmountIso "$isoMountPath" "$partitionMountPath" 'normalCleanup'
-pulse off
-exit 0
+	# Unset the 1st element
+	unset "array_ref[0]"
+
+	# Repack array if element still available in array
+	if [ "${#array_ref[@]}" -ne 0 ]; then
+		array_ref=("${array_ref[@]}")
+	fi
+
+	return "${COMMON_RESULT_SUCCESS}"
+}; declare -fr shift_array
+
+init "${@}"
