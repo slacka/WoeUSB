@@ -419,7 +419,7 @@ print_help(){
 	echo "Options" >&2
 	echo " --verbose, -v        Verbose mode" >&2
 	echo " --help, -h           Show this help message and exit" >&2
-	echo " --no_color            Disable color" >&2
+	echo " --no-color            Disable color" >&2
 }; declare -fr print_help
 
 process_commandline_parameters(){
@@ -462,7 +462,7 @@ process_commandline_parameters(){
 				no_color='1'
 				only_for_gui='1'
 				;;
-			'--no_color')
+			'--no-color')
 				no_color='1'
 				;;
 			*)
