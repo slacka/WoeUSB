@@ -332,10 +332,10 @@ hideNoErr(){
 	return "$RETURN"
 }
 
-# Copy a file from A to B, overwrite file if B exists
+# Copy source_file to dest_file, overwrite file if dest_file exists
 copy_file(){
-	source_file="$1" # A
-	dest_file="$2" # B
+	source_file="$1"
+	dest_file="$2"
 	whole_current_size="$3"
 
 	# Calculate block count of the source file
