@@ -505,27 +505,10 @@ shift_array(){
 	return 0
 }; declare -fr shift_array
 
-## Traps: Functions that are triggered when certain condition occurred
-## Shell Builtin Commands » Bourne Shell Builtins » trap
-trap_errexit(){
-	printf "An error occurred and the script is prematurely aborted\n" 1>&2
-	return 0
-}; declare -fr trap_errexit; trap trap_errexit ERR
-
-trap_exit(){
-	cleanup_mountpoints
-	return 0
-}; declare -fr trap_exit; trap trap_exit EXIT
-
 trap_return(){
 	local returning_function="${1}"
 
 	printf "DEBUG: %s: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
 }; declare -fr trap_return
-
-trap_interrupt(){
-	printf "Recieved SIGINT, script is interrupted.\n" 1>&2
-	return 0
-}; declare -fr trap_interrupt; trap trap_interrupt INT
 
 init "${@}"
