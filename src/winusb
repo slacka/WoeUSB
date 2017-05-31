@@ -75,7 +75,7 @@ init(){
 		device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
 		partition="${target_media}"
 
-		if [ "$verbose" = '1' ]; then
+		if [ "${verbose}" = '1' ]; then
 			echo "Target device is '${device}'."
 		fi
 	else
