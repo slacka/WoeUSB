@@ -65,7 +65,7 @@ init(){
 		exit 1
 	fi
 
-	trap "pulse off" HUP QUIT SEGV PIPE INT TERM EXIT
+	trap "pulse off" HUP QUIT PIPE INT TERM EXIT
 	pulse on
 
 	# Start modifying target device
