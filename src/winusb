@@ -33,6 +33,8 @@ only_for_gui='0'
 no_color='0'
 pulseCurrentPid=0
 block_size="((4 * 1024 * 1024))" # 4MiB
+command_mkdosfs=''
+command_grubinstall=''
 
 init(){
 	if ! process_commandline_parameters; then
@@ -40,29 +42,11 @@ init(){
 		exit 1
 	fi
 
-	# Check environment and runtime dependencies
 	if [ ! "$(id -u)" = 0 ]; then
 		echo "Warning: you should run this script as root!" >&2
 	fi
 
-	command_mkdosfs=''
-	if which 'mkdosfs' > /dev/null; then
-		command_mkdosfs='mkdosfs'
-	elif which 'make.msdos' > /dev/null; then
-		command_mkdosfs='mkfs.msdos'
-	else
-		echo 'Error: mkdosfs or mkfs.msdos program not found!' >&2
-		exit 1
-	fi
-
-	if which 'grub-install' &> /dev/null; then
-		command_grubinstall='grub-install'
-	elif which 'grub2-install' &> /dev/null; then
-		command_grubinstall='grub2-install'
-	else
-		echo 'Error: grub-install or grub2-install program not found!' >&2
-		exit 1
-	fi
+	check_runtime_dependencies
 
 	if [ -z "${install_method}" ]; then
 		echo "Error: No install method specified!" >&2
@@ -193,6 +177,29 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+check_runtime_dependencies(){
+	if which 'mkdosfs' > /dev/null; then
+		command_mkdosfs='mkdosfs'
+	elif which 'make.msdos' > /dev/null; then
+		command_mkdosfs='mkfs.msdos'
+	else
+		echo '${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!' >&2
+		echo '${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!' >&2
+		exit 1
+	fi
+
+	if which 'grub-install' &> /dev/null; then
+		command_grubinstall='grub-install'
+	elif which 'grub2-install' &> /dev/null; then
+		command_grubinstall='grub2-install'
+	else
+		echo '${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!' >&2
+		echo '${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!' >&2
+		exit 1
+	fi
+
+}; declare -fr check_runtime_dependencies
 
 pulse(){
 	if [ "$only_for_gui" -eq 1 ]; then
