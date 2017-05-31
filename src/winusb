@@ -134,8 +134,8 @@ init(){
 		mount -o ro "${source_media}" "$isoMountPath"
 	fi
 
-		# If target partition is mounted in the first place, unmount it
-		# TODO: This should only be needed in edit mode, maybe move it to above?
+	# If target partition is mounted in the first place, unmount it
+	# TODO: This should only be needed in edit mode, maybe move it to above?
 	if [ "$(mount | grep -c "${partition}")" != 0 ]; then
 		umount "${partition}"
 	fi
