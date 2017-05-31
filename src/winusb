@@ -46,7 +46,9 @@ init(){
 		echo "Warning: you should run this script as root!" >&2
 	fi
 
-	check_runtime_dependencies
+	if ! check_runtime_dependencies; then
+		exit 1
+	fi
 
 	if [ -z "${install_method}" ]; then
 		echo "Error: No install method specified!" >&2
@@ -179,6 +181,8 @@ init(){
 }; declare -fr init
 
 check_runtime_dependencies(){
+	local result="success"
+
 	if which 'mkdosfs' > /dev/null; then
 		command_mkdosfs='mkdosfs'
 	elif which 'make.msdos' > /dev/null; then
@@ -186,7 +190,7 @@ check_runtime_dependencies(){
 	else
 		echo '${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!' >&2
 		echo '${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!' >&2
-		exit 1
+		result="failed"
 	fi
 
 	if which 'grub-install' &> /dev/null; then
@@ -196,9 +200,14 @@ check_runtime_dependencies(){
 	else
 		echo '${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!' >&2
 		echo '${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!' >&2
-		exit 1
+		result="failed"
 	fi
 
+	if [ "${result}" == "failed" ]; then
+		return 1
+	else
+		return 0
+	fi
 }; declare -fr check_runtime_dependencies
 
 pulse(){
