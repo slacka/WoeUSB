@@ -101,7 +101,7 @@ init(){
 		"$command_mkdosfs" -F 32 -n 'Windows USB' "${partition}"
 	fi
 
-	source_fs_mountpoint="/media/winusb_iso_$(date +%s)_$$"
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
