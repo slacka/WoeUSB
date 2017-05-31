@@ -36,10 +36,6 @@ block_size="((4 * 1024 * 1024))" # 4MiB
 
 init(){
 	if ! process_commandline_parameters; then
-		printf\
-			"Error: %s: Invalid command-line parameters.\n"\
-			"${FUNCNAME[0]}"\
-			1>&2
 		print_help
 		exit 1
 	fi
