@@ -94,26 +94,26 @@ init(){
 		partition="${target_media}"
 
 		if [ "$verbose" = '1' ]; then
-			echo "Target device is '$device'."
+			echo "Target device is '${device}'."
 		fi
 	else
 		echo "Formatting device..."
 		device="${target_media}"
 
 		# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
-		parted -s "$device" mklabel msdos
+		parted -s "${device}" mklabel msdos
 
 		# Create partition
 		# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-		parted -s "$device" mkpart primary fat32 4MiB -- -1s
+		parted -s "${device}" mkpart primary fat32 4MiB -- -1s
 
-		blockdev --rereadpt "$device" || true # Reload partition table
-		partprobe "$device" # Reload partition table
+		blockdev --rereadpt "${device}" || true # Reload partition table
+		partprobe "${device}" # Reload partition table
 		echo "Wait 3 seconds for block device nodes to populate..."
 		sleep 3
 
 		# get first partition
-		partition=$(ls --color=no -1 "$device"* | grep -ve "$device"'$')
+		partition=$(ls --color=no -1 "${device}"* | grep -ve "${device}"'$')
 
 		# Create the FAT partition
 		"$command_mkdosfs" -F 32 -n 'Windows USB' "${partition}"
@@ -122,16 +122,16 @@ init(){
 	isoMountPath="/media/winusb_iso_$(date +%s)_$$"
 	partitionMountPath="/media/winusb_target_$(date +%s)_$$"
 
-	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "kill"' INT TERM
-	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "exit"' EXIT
-	trap 'cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" "other signal"' HUP QUIT SEGV PIPE
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT SEGV PIPE
 
 	echo "Mounting..."
-	mkdir -p "$isoMountPath"
+	mkdir -p "${source_fs_mountpoint}"
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
-		mount -o loop,ro -t udf,iso9660 "${source_media}" "$isoMountPath"
+		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
 	else # ${source_media} is a real DVD drive (block device)
-		mount -o ro "${source_media}" "$isoMountPath"
+		mount -o ro "${source_media}" "${source_fs_mountpoint}"
 	fi
 
 	# If target partition is mounted in the first place, unmount it
@@ -140,11 +140,11 @@ init(){
 		umount "${partition}"
 	fi
 
-	mkdir -p "${target_media_mountpoint}"
-	mount "${partition}" "${target_media_mountpoint}"
+	mkdir -p "${target_fs_mountpoint}"
+	mount "${partition}" "${target_fs_mountpoint}"
 
-	free_space=$(df --block-size 1 "${target_media_mountpoint}" | grep "${partition}" | awk '{print $4}')
-	needed_space=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
+	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${partition}" | awk '{print $4}')
+	needed_space=$(du -s "${source_fs_mountpoint}" --bytes | awk '{print $1}')
 
 	((needed_space = needed_space + 1000 * 1000 * 10)) # 10MB more for grub installation
 
@@ -157,16 +157,16 @@ init(){
 	pulse off
 
 	echo "Copying..."
-	copy_filesystem_files "$isoMountPath" "${target_media_mountpoint}"
+	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
 
 	pulse on
 
 	# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
-	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
+	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		# It's Windows 7 with EFI support (and thus 64-Bit)
 		if command -v "7z" >/dev/null 2>&1; then
 			mkdir -p "$partitionMountPath/EFI/Boot"
-			7z e -so "$isoMountPath/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
+			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
 		else
 			echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
 		fi
@@ -174,7 +174,7 @@ init(){
 
 	# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
 	echo "Installing grub..."
-	"$command_grubinstall" --target=i386-pc --boot-directory="${target_media_mountpoint}" --force "$device"
+	"$command_grubinstall" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
 
 	uuid=$(blkid -o value -s UUID "${partition}")
 
@@ -192,7 +192,7 @@ init(){
 		echo "boot"
 	} >> "$cfgFilename"
 
-	cleanup_mountpoints "$isoMountPath" "${target_media_mountpoint}" 'normalCleanup'
+	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
 	pulse off
 
 	exit 0
@@ -339,27 +339,27 @@ copy_file(){
 	whole_current_size="$3"
 
 	# Calculate block count of the source file
-	size=$(stat --format=%s "$source_file")
+	size=$(stat --format=%s "${source_file}")
 	((stepNb = size / block_size + 1))
 
-	if [ -f "$dest_file" ]; then
-		rm "$dest_file"
+	if [ -f "${dest_file}" ]; then
+		rm "${dest_file}"
 	fi
 
 	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
-		dd if="$source_file" bs="$block_size" skip="$i" seek="$i" of="$dest_file" count=1 2> /dev/null
+		dd if="${source_file}" bs="${block_size}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
 		((i = i + 1))
 
 		# Send current copied size
 		local copied_size
-		copied_size=$(stat --format=%s "$dest_file")
+		copied_size=$(stat --format=%s "${dest_file}")
 		((copied_size_total = copied_size + whole_current_size)) || true
 		#echo "$copied_size_total"
 
 		((percent = (copied_size_total * 100) / totalSize)) || true
-		echo -en "$percent%\r"
+		echo -en "${percent}%\r"
 	done
 
 	return 0
@@ -380,28 +380,28 @@ copy_filesystem_files(){
 	file_list=$(find .)
 
 	while read -r source_file; do
-		if [ "$source_file" != '.' ]; then
-			dest_file="$targetDir/$source_file"
+		if [ "${source_file}" != '.' ]; then
+			dest_file="$targetDir/${source_file}"
 
-			fileSize=$(stat --format=%s "$source_file")
+			file_size=$(stat --format=%s "${source_file}")
 
-			if [ -d "$source_file" ]; then
-				mkdir -p "$dest_file"
-			elif [ -f "$source_file" ]; then
-				if [ "$fileSize" -lt "$block_size" ]; then
-					cp "$source_file" "$dest_file"
+			if [ -d "${source_file}" ]; then
+				mkdir -p "${dest_file}"
+			elif [ -f "${source_file}" ]; then
+				if [ "${file_size}" -lt "${block_size}" ]; then
+					cp "${source_file}" "${dest_file}"
 				else
-					copyFile "$source_file" "$dest_file" "$currentSize"
+					copy_file "${source_file}" "${dest_file}" "$currentSize"
 				fi
 			else
-				echo "Error: Unknown type of '$source_file'!" >&2
+				echo "Error: Unknown type of '${source_file}'!" >&2
 				exit 1
 			fi
 
 			# Progress
-			((currentSize = currentSize + fileSize)) || true
+			((currentSize = currentSize + file_size)) || true
 			((percent = (currentSize * 100) / totalSize)) || true
-			echo -en "$percent%\r"
+			echo -en "${percent}%\r"
 		fi
 	done < <(echo "$file_list")
 }
