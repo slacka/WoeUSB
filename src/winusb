@@ -99,8 +99,8 @@ init(){
 		"$command_mkdosfs" -F 32 -n 'Windows USB' "${partition}"
 	fi
 
-	isoMountPath="/media/winusb_iso_$(date +%s)_$$"
-	partitionMountPath="/media/winusb_target_$(date +%s)_$$"
+	source_fs_mountpoint="/media/winusb_iso_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
@@ -145,8 +145,8 @@ init(){
 	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		# It's Windows 7 with EFI support (and thus 64-Bit)
 		if command -v "7z" >/dev/null 2>&1; then
-			mkdir -p "$partitionMountPath/EFI/Boot"
-			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
+			mkdir -p "${target_fs_mountpoint}/EFI/Boot"
+			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 		else
 			echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
 		fi
@@ -154,14 +154,14 @@ init(){
 
 	# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
 	echo "Installing grub..."
-	"$command_grubinstall" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
+	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
 
 	uuid=$(blkid -o value -s UUID "${partition}")
 
 	echo "Installing grub.cfg..."
-	cfgFilename="$partitionMountPath/grub/grub.cfg"
-	mkdir -p "$(dirname "$cfgFilename")"
-	echo -n "" > "$cfgFilename"
+	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
+	mkdir -p "$(dirname "${grub_cfg}")"
+	echo -n "" > "${grub_cfg}"
 	{
 		echo "echo '------------------------------------'"
 		echo "echo '|      Windows USB - Loading...    |'"
@@ -170,7 +170,7 @@ init(){
 		echo "search --no-floppy --fs-uuid $uuid --set root"
 		echo "ntldr /bootmgr"
 		echo "boot"
-	} >> "$cfgFilename"
+	} >> "${grub_cfg}"
 
 	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
 	pulse off
