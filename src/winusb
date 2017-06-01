@@ -51,20 +51,7 @@ init(){
 		exit 1
 	fi
 
-	if [ -z "${install_method}" ]; then
-		echo "Error: No install method specified!" >&2
-		echo "" >&2
-		print_help
-		exit 1
-	fi
-
-	if [ ! -f "${source_media}" ] && [ ! -b "${source_media}" ]; then
-		echo "Error: iso '${source_media}' not found or not a regular file or a block file!" >&2
-		exit 1
-	fi
-
-	if ! [ -b "${target_media}" ]; then
-		echo "Error: the device \"${target_media}\" is not special block!" >&2
+	if ! check_runtime_parameters; then
 		exit 1
 	fi
 
@@ -210,6 +197,30 @@ check_runtime_dependencies(){
 		return 0
 	fi
 }; declare -fr check_runtime_dependencies
+
+check_runtime_parameters(){
+	local -i result="0" # success
+
+	if [ -z "${install_method}" ]; then
+		echo "Error: No install method specified!" >&2
+		echo "" >&2
+		print_help
+		result="1"
+	fi
+
+	if [ ! -f "${source_media}" ] \
+		&& [ ! -b "${source_media}" ]; then
+		echo "Error: iso '${source_media}' not found or not a regular file or a block file!" >&2
+		result="1"
+	fi
+
+	if ! [ -b "${target_media}" ]; then
+		echo "Error: the device \"${target_media}\" is not special block!" >&2
+		result="1"
+	fi
+
+	return "${result}"
+}; declare -fr check_runtime_parameters
 
 pulse(){
 	if [ "$only_for_gui" -eq 1 ]; then
