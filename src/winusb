@@ -43,12 +43,12 @@ init(){
 		exit 1
 	fi
 
-	if [ ! "$(id -u)" = 0 ]; then
-		echo "Warning: you should run this script as root!" >&2
-	fi
-
 	if ! check_runtime_dependencies; then
 		exit 1
+	fi
+
+	if [ ! "$(id -u)" = 0 ]; then
+		echo "Warning: You are not running WinUSB as root!  This might be the reason of the following failure." >&2
 	fi
 
 	if ! check_runtime_parameters; then
