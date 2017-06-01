@@ -154,7 +154,6 @@ init(){
 	echo "Installing grub.cfg..."
 	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
 	mkdir -p "$(dirname "${grub_cfg}")"
-	echo -n "" > "${grub_cfg}"
 	{
 		echo "echo '------------------------------------'"
 		echo "echo '|      Windows USB - Loading...    |'"
@@ -163,7 +162,7 @@ init(){
 		echo "search --no-floppy --fs-uuid $uuid --set root"
 		echo "ntldr /bootmgr"
 		echo "boot"
-	} >> "${grub_cfg}"
+	} > "${grub_cfg}"
 
 	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
 	pulse off
