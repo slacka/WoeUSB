@@ -155,13 +155,15 @@ init(){
 	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
 	mkdir -p "$(dirname "${grub_cfg}")"
 	{
-		echo "echo '------------------------------------'"
-		echo "echo '|      Windows USB - Loading...    |'"
-		echo "echo '------------------------------------'"
-		echo "insmod fat"
-		echo "search --no-floppy --fs-uuid $uuid --set root"
-		echo "ntldr /bootmgr"
-		echo "boot"
+		cat <<- END_OF_FILE
+			echo '------------------------------------'
+			echo '|      Windows USB - Loading...    |'
+			echo '------------------------------------'
+			insmod fat
+			search --no-floppy --fs-uuid $uuid --set root
+			ntldr /bootmgr
+			boot
+		END_OF_FILE
 	} > "${grub_cfg}"
 
 	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
