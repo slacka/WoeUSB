@@ -69,26 +69,7 @@ init(){
 			echo "Target device is '${device}'."
 		fi
 	else
-		echo "Formatting device..."
-		device="${target_media}"
-
-		# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
-		parted -s "${device}" mklabel msdos
-
-		# Create partition
-		# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-		parted -s "${device}" mkpart primary fat32 4MiB -- -1s
-
-		blockdev --rereadpt "${device}" || true # Reload partition table
-		partprobe "${device}" # Reload partition table
-		echo "Wait 3 seconds for block device nodes to populate..."
-		sleep 3
-
-		# get first partition
-		partition=$(ls --color=no -1 "${device}"* | grep -ve "${device}"'$')
-
-		# Create the FAT partition
-		"$command_mkdosfs" -F 32 -n 'Windows USB' "${partition}"
+		destroy_and_rebuild_entire_disk
 	fi
 
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
@@ -170,6 +151,50 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+destroy_and_rebuild_entire_disk(){
+	local storage_device="${target_media}"
+
+	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+	parted --script\
+		"${storage_device}"\
+		mklabel\
+		msdos
+
+	# Create partition
+	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+	parted --script\
+		"${storage_device}"\
+		mkpart\
+		primary\
+		fat32\
+		4MiB\
+		-- -1s # last sector of the disk
+
+	# Reload the new partition table
+	# FIXME: Is `blockdev` and `partprobe` both required?
+	blockdev\
+		--rereadpt\
+		"${storage_device}"\
+		|| true
+	partprobe\
+		"${storage_device}"
+	echo "Wait 3 seconds for block device nodes to populate..."
+	sleep 3
+
+	# get first partition
+	local partition
+	partition=$(\
+		ls --color=no -1 "${storage_device}"*\
+			| grep -ve "${storage_device}"'$'\
+	)
+
+	# Create filesystem on partition
+	"$command_mkdosfs"\
+		-F 32\
+		-n 'Windows USB' \
+		"${partition}"
+}; declare -fr destroy_and_rebuild_entire_disk
 
 check_runtime_dependencies(){
 	local result="success"
