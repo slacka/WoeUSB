@@ -48,7 +48,10 @@ init(){
 	fi
 
 	if [ ! "$(id -u)" = 0 ]; then
-		echo "Warning: You are not running WinUSB as root!  This might be the reason of the following failure." >&2
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
 	fi
 
 	if ! check_runtime_parameters; then
