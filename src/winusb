@@ -120,6 +120,8 @@ init(){
 		destroy_and_rebuild_entire_disk
 	fi
 
+	mount_source_and_target_filesystem
+
 	setup_traps
 
 	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
