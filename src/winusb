@@ -103,36 +103,6 @@ init(){
 
 	setup_traps
 
-	echo_with_color blue "Mounting..."
-	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
-	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
-
-	mkdir -p "${source_fs_mountpoint}"
-	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
-		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
-	else # ${source_media} is a real DVD drive (block device)
-		mount -o ro "${source_media}" "${source_fs_mountpoint}"
-	fi
-
-	# If target partition is mounted in the first place, unmount it
-	# TODO: This should only be needed in edit mode, maybe move it to above?
-	if [ "$(mount | grep -c "${partition}")" != 0 ]; then
-		umount "${partition}"
-	fi
-
-	mkdir -p "${target_fs_mountpoint}"
-	mount "${partition}" "${target_fs_mountpoint}"
-
-	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${partition}" | awk '{print $4}')
-	needed_space=$(du -s "${source_fs_mountpoint}" --bytes | awk '{print $1}')
-
-	((needed_space = needed_space + 1000 * 1000 * 10)) # 10MB more for grub installation
-
-	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on '${partition}'!" >&2
-		echo "Error: We required ${neededspace} bytes but '${partition}' only has ${free_space} bytes." >&2
-		exit 1
-	fi
 
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
@@ -181,6 +151,40 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+mount_source_and_target_filesystem(){
+	echo_with_color blue "Mounting..."
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+
+	mkdir -p "${source_fs_mountpoint}"
+	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
+		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
+	else # ${source_media} is a real DVD drive (block device)
+		mount -o ro "${source_media}" "${source_fs_mountpoint}"
+	fi
+
+	# If target partition is mounted in the first place, unmount it
+	# TODO: This should only be needed in edit mode, maybe move it to above?
+	if [ "$(mount | grep -c "${partition}")" != 0 ]; then
+		umount "${partition}"
+	fi
+
+	mkdir -p "${target_fs_mountpoint}"
+	mount "${partition}" "${target_fs_mountpoint}"
+
+	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${partition}" | awk '{print $4}')
+	needed_space=$(du -s "${source_fs_mountpoint}" --bytes | awk '{print $1}')
+
+	additional_space_required_for_grub_installation=
+	((needed_space = needed_space + 1000 * 1000 * 10)) # 10MB more for grub installation
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on '${partition}'!" >&2
+		echo "Error: We required ${neededspace} bytes but '${partition}' only has ${free_space} bytes." >&2
+		exit 1
+	fi
+}; declare -fr mount_source_and_target_filesystem
 
 setup_traps(){
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
