@@ -79,7 +79,7 @@ init(){
 		exit 1
 	fi
 
-	if [ ! "$(id -u)" = 0 ]; then
+	if [ ! "$(id --user)" = 0 ]; then
 		printf --\
 			"%s\n%s\n"\
 			"Warning: You are not running WinUSB as root!"\
