@@ -75,11 +75,7 @@ init(){
 		destroy_and_rebuild_entire_disk
 	fi
 
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
+	setup_traps
 
 	echo "Mounting..."
 	mkdir -p "${source_fs_mountpoint}"
@@ -154,6 +150,14 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+setup_traps(){
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
+}; declare -fr setup_traps
 
 destroy_and_rebuild_entire_disk(){
 	local storage_device="${target_media}"
