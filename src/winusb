@@ -283,9 +283,9 @@ check_runtime_dependencies(){
 		result="failed"
 	fi
 
-	if which 'grub-install' &> /dev/null; then
+	if which 'grub-install' > /dev/null; then
 		command_grubinstall='grub-install'
-	elif which 'grub2-install' &> /dev/null; then
+	elif which 'grub2-install' > /dev/null; then
 		command_grubinstall='grub2-install'
 	else
 		echo "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
