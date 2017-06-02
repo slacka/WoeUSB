@@ -151,7 +151,7 @@ init(){
 
 install_bootloader_grub(){
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
-	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
+	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${target_device}"
 
 	uuid=$(blkid -o value -s UUID "${partition}")
 
@@ -189,17 +189,17 @@ mount_source_and_target_filesystem(){
 	fi
 
 	mkdir -p "${target_fs_mountpoint}"
-	mount "${partition}" "${target_fs_mountpoint}"
+	mount "${target_partition}" "${target_fs_mountpoint}"
 
-	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${partition}" | awk '{print $4}')
+	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${target_partition}" | awk '{print $4}')
 	needed_space=$(du -s "${source_fs_mountpoint}" --bytes | awk '{print $1}')
 
 	additional_space_required_for_grub_installation=((1000 * 1000 * 10)) # 10MiB
 	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
 	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on '${partition}'!" >&2
-		echo "Error: We required ${needed_space} bytes but '${partition}' only has ${free_space} bytes." >&2
+		echo "Error: Not enough free space on '${target_partition}'!" >&2
+		echo "Error: We required ${needed_space} bytes but '${target_partition}' only has ${free_space} bytes." >&2
 		exit 1
 	fi
 }; declare -fr mount_source_and_target_filesystem
