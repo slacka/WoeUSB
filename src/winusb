@@ -153,8 +153,7 @@ init(){
 		fi
 	fi
 
-	# Install GRUB Bootloader for Legacy IBM PC-compatible booting support
-	echo "Installing grub..."
+	echo "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
 
 	uuid=$(blkid -o value -s UUID "${partition}")
