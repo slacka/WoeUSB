@@ -400,10 +400,12 @@ fi
 
 # Grub
 echo "Installing grub..."
-if which 'grub-install' &> /dev/null; then
-	grubInsProg='grub-install'
-elif which 'grub2-install' &> /dev/null; then
+if which 'grub2-install' &> /dev/null; then
 	grubInsProg='grub2-install'
+	grubcfgDir='grub2'
+elif which 'grub-install' &> /dev/null; then
+	grubInsProg='grub-install'
+	grubcfgDir='grub'
 else
 	echo 'Error: grub-install or grub2-install program not found!' >&2
 	exit 1
@@ -414,7 +416,7 @@ uuid=$(blkid -o value -s UUID "$partition")
 
 # grub.cfg 
 echo "Installing grub.cfg..."
-cfgFilename="$partitionMountPath/grub/grub.cfg" 
+cfgFilename="$partitionMountPath/$grubcfgDir/grub.cfg"
 mkdir -p "$(dirname "$cfgFilename")"
 echo -n "" > "$cfgFilename"
 
