@@ -26,18 +26,22 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-install_method=''
-source_media=''
-target_media=''
-verbose='0'
-only_for_gui='0'
-no_color='0'
-pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
-block_size="((4 * 1024 * 1024))" # 4MiB
-command_mkdosfs=''
-command_grubinstall=''
-source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
-target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+declare install_method=''
+declare\
+	source_media=''\
+	target_media=''
+declare -i\
+	verbose='0'\
+	only_for_gui='0'\
+	no_color='0'
+declare\
+	command_mkdosfs=''\
+	command_grubinstall=''
+declare\
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+declare -i block_size="((4 * 1024 * 1024))" # 4MiB
+declare -i pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
 
 init(){
 	if ! process_commandline_parameters; then
