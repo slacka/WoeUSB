@@ -26,20 +26,20 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-declare install_method=''
+declare install_method
 declare\
-	source_media=''\
-	target_media=''
+	source_media\
+	target_media
 declare -i\
 	verbose='0'\
 	only_for_gui='0'\
 	no_color='0'
 declare\
-	command_mkdosfs=''\
-	command_grubinstall=''
+	command_mkdosfs\
+	command_grubinstall
 declare\
-	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
-	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+	source_fs_mountpoint
+	target_fs_mountpoint
 declare -i block_size="((4 * 1024 * 1024))" # 4MiB
 declare -i pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
 
@@ -82,6 +82,9 @@ init(){
 	setup_traps
 
 	echo "Mounting..."
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+
 	mkdir -p "${source_fs_mountpoint}"
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
 		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
