@@ -184,10 +184,7 @@ destroy_and_rebuild_entire_disk(){
 
 	# get first partition
 	local partition
-	partition=$(\
-		ls --color=no -1 "${storage_device}"*\
-			| grep -ve "${storage_device}"'$'\
-	)
+	partition="${storage_device}1"
 
 	# Create filesystem on partition
 	"$command_mkdosfs"\
