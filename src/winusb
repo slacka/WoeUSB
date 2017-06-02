@@ -114,14 +114,7 @@ init(){
 
 	setup_traps
 
-
-	# FIXME: Why do we `pulse off` and on here?
-	pulse off
-
-	echo_with_color blue "Copying files from Windows installation media..."
 	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
-
-	pulse on
 
 	# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
 	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
@@ -486,6 +479,10 @@ copy_file(){
 # $1: Source filesystem's mountpoint
 # $2: Target filesystem's mountpoint
 copy_filesystem_files(){
+	# FIXME: Why do we `pulse off` and on here?
+	pulse off
+
+	echo_with_color blue "Copying files from Windows installation media..."
 	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
 	currentSize=0
 
@@ -521,6 +518,10 @@ copy_filesystem_files(){
 			echo -en "${percent}%\r"
 		fi
 	done < <(echo "$file_list")
+
+	pulse on
+
+	return 0
 }
 
 print_help(){
