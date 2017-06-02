@@ -318,7 +318,7 @@ echo_with_color(){
 cleanup_mountpoints(){
 	set +o errexit # We need to clean up everything we can
 
-	trap - HUP QUIT SEGV PIPE INT TERM EXIT
+	trap - HUP QUIT PIPE INT TERM EXIT
 
 	pulse off
 
