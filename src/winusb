@@ -40,7 +40,7 @@ declare\
 declare\
 	source_fs_mountpoint
 	target_fs_mountpoint
-declare -i block_size="((4 * 1024 * 1024))" # 4MiB
+declare -i BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 declare -i pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
 
 init(){
@@ -405,7 +405,7 @@ copy_file(){
 
 	# Calculate block count of the source file
 	size=$(stat --format=%s "${source_file}")
-	((stepNb = size / block_size + 1))
+	((stepNb = size / BLOCK_SIZE + 1))
 
 	if [ -f "${dest_file}" ]; then
 		rm "${dest_file}"
@@ -414,7 +414,7 @@ copy_file(){
 	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
-		dd if="${source_file}" bs="${block_size}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
+		dd if="${source_file}" bs="${BLOCK_SIZE}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
 		((i = i + 1))
 
 		# Send current copied size
@@ -453,7 +453,7 @@ copy_filesystem_files(){
 			if [ -d "${source_file}" ]; then
 				mkdir -p "${dest_file}"
 			elif [ -f "${source_file}" ]; then
-				if [ "${file_size}" -lt "${block_size}" ]; then
+				if [ "${file_size}" -lt "${BLOCK_SIZE}" ]; then
 					cp "${source_file}" "${dest_file}"
 				else
 					copy_file "${source_file}" "${dest_file}" "$currentSize"
