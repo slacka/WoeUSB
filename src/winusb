@@ -333,7 +333,7 @@ cleanup_mountpoints(){
 		echo_with_color green "Exiting..."
 	fi
 
-	echo "Syncing..."
+	echo "Synchronizing cached writes to persistent storage..."
 
 	pulse on
 	sync
