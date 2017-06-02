@@ -90,26 +90,31 @@ init(){
 		exit 1
 	fi
 
+	declare\
+		target_device\
+		target_partition
+
 	pulse on
 
 	if [ "${install_method}" = 'edit' ]; then
-		device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
-		partition="${target_media}"
-
+		target_partition="${target_media}"
+		target_device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
 		if [ "${verbose}" = '1' ]; then
-			echo "Target device is '${device}'."
+			echo "Target device is '${target_device}'."
 		fi
 
 		# If target partition is mounted in the first place, bail out
-		if [ "$(mount | grep -c "${partition}")" != 0 ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
 			echo_with_color red "Error: target partition is currently mounted, unmount the partition then try again"
 			exit 1
 		fi
 
-	else
+	else # install_method = format
+		target_device="${target_media}"
+		target_partition="${target_device}1"
 		# If target media busy, bail out
-		if [ "$(mount | grep -c "${target_media}")" != 0 ]; then
-			echo_with_color red "Error: target media is currently busy, unmount all mounted partitions in target media then try again"
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: target device is currently busy, unmount all mounted partitions in target device then try again"
 			exit 1
 		fi
 		destroy_and_rebuild_entire_disk
