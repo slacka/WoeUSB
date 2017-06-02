@@ -88,7 +88,6 @@ init(){
 
 	pulse on
 
-	# Start modifying target device
 	if [ "${install_method}" = 'edit' ]; then
 		device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
 		partition="${target_media}"
