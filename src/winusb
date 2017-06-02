@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-#shellcheck disable=SC2034
 
 ## Makes debuggers' life easier - Unofficial Bash Strict Mode
 ## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
@@ -17,6 +16,8 @@ if [ -v "BASH_SOURCE[0]" ]; then
 	RUNTIME_EXECUTABLE_NAME="${RUNTIME_EXECUTABLE_FILENAME%.*}"
 	RUNTIME_EXECUTABLE_DIRECTORY="$(dirname "${RUNTIME_EXECUTABLE_PATH}")"
 	RUNTIME_COMMANDLINE_BASECOMMAND="${0}"
+	# Keep these partially unused variables declared
+	# shellcheck disable=SC2034
 	declare -r\
 		RUNTIME_EXECUTABLE_PATH\
 		RUNTIME_EXECUTABLE_FILENAME\
