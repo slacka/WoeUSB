@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2026
+# SC2026 disabled because of false positives(ShellCheck issue #923)
+
 # A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
 # Copyright © 2013 Colin GILLE / congelli501
 # Copyright © 2017 slacka et. al.
