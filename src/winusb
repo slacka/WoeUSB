@@ -104,7 +104,11 @@ init(){
 		fi
 
 	else
-		# FIXME: Before destroying disk we should unmount all of it's mountpoints(if there's any)
+		# If target media busy, bail out
+		if [ "$(mount | grep -c "${target_media}")" != 0 ]; then
+			echo_with_color red "Error: target media is currently busy, unmount all mounted partitions in target media then try again"
+			exit 1
+		fi
 		destroy_and_rebuild_entire_disk
 	fi
 
