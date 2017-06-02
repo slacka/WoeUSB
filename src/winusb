@@ -128,6 +128,18 @@ init(){
 		fi
 	fi
 
+	install_bootloader_grub
+
+	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
+
+	echo_with_color green "Done :-)  You may detach the usb storage now."
+
+	pulse off
+
+	exit 0
+}; declare -fr init
+
+install_bootloader_grub(){
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
 
@@ -147,15 +159,7 @@ init(){
 			boot
 		END_OF_FILE
 	} > "${grub_cfg}"
-
-	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
-
-	echo_with_color green "Done :-)  You may detach the usb storage now."
-
-	pulse off
-
-	exit 0
-}; declare -fr init
+}; declare -fr install_bootloader_grub
 
 workaround_support_windows_7_uefi_boot(){
 	mkdir -p "${target_fs_mountpoint}/EFI/Boot"
