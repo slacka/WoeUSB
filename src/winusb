@@ -322,7 +322,7 @@ cleanup_mountpoints(){
 	if [ "$3" == 'kill' ]; then
 		echo_with_color red "\nKilled!"  >&2
 	elif [ "$3" == 'error' ]; then
-		echo_with_color red "Error occurred!"  >&2
+		echo_with_color red "Internal error occurred!"  >&2
 	else
 		echo_with_color green "Exiting..."
 	fi
