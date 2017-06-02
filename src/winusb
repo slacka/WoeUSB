@@ -109,10 +109,10 @@ init(){
 		exit 1
 	fi
 
-	# Copy files from Windows installation media to disk
+	# FIXME: Why do we `pulse off` and on here?
 	pulse off
 
-	echo "Copying..."
+	echo "Copying files from Windows installation media..."
 	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
 
 	pulse on
