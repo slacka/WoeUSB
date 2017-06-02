@@ -97,9 +97,10 @@ init(){
 			echo "Target device is '${device}'."
 		fi
 
-		# If target partition is mounted in the first place, unmount it
+		# If target partition is mounted in the first place, bail out
 		if [ "$(mount | grep -c "${partition}")" != 0 ]; then
-			umount "${partition}"
+			echo_with_color red "Error: target partition is currently mounted, unmount the partition then try again"
+			exit 1
 		fi
 
 	else
