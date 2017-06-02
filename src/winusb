@@ -10,8 +10,9 @@ set -o nounset
 # Script path
 set +o nounset
 if [ "$scriptPath" = "" ]; then
-	scriptName=$(basename $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
-	scriptPath=$(dirname $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
+	# readlink -f $0 doesn't work when using "source"
+	scriptName=$(basename $(readlink -f $0))
+	scriptPath=$(dirname $(readlink -f $0))
 fi
 set -o nounset
 
