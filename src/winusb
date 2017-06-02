@@ -175,7 +175,7 @@ init(){
 
 	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normalCleanup'
 
-	echo_with_color green "Done :-)"
+	echo_with_color green "Done :-)  You may detach the usb storage now."
 
 	pulse off
 
