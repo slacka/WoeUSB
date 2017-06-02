@@ -118,12 +118,12 @@ init(){
 
 	# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
 	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
-		# It's Windows 7 with EFI support (and thus 64-Bit)
+		echo_with_color yellow "Source media is Windows 7-based, applying workaround to make it support UEFI booting"
+
 		if command -v "7z" >/dev/null 2>&1; then
-			mkdir -p "${target_fs_mountpoint}/EFI/Boot"
-			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+			workaround_support_windows_7_uefi_boot
 		else
-			echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
+			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
 		fi
 	fi
 
@@ -155,6 +155,11 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+workaround_support_windows_7_uefi_boot(){
+	mkdir -p "${target_fs_mountpoint}/EFI/Boot"
+	7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+}; declare -fr workaround_support_windows_7_uefi_boot
 
 mount_source_and_target_filesystem(){
 	echo_with_color blue "Mounting source and target filesystems..."
