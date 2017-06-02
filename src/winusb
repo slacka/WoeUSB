@@ -103,7 +103,7 @@ init(){
 
 	setup_traps
 
-	echo_with_color green "Mounting..."
+	echo_with_color blue "Mounting..."
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
@@ -137,7 +137,7 @@ init(){
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
 
-	echo_with_color green "Copying files from Windows installation media..."
+	echo_with_color blue "Copying files from Windows installation media..."
 	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
 
 	pulse on
@@ -153,12 +153,12 @@ init(){
 		fi
 	fi
 
-	echo_with_color green "Installing GRUB bootloader for legacy boot support..."
+	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${device}"
 
 	uuid=$(blkid -o value -s UUID "${partition}")
 
-	echo_with_color green "Installing grub.cfg..."
+	echo_with_color blue "Installing grub.cfg..."
 	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
 	mkdir -p "$(dirname "${grub_cfg}")"
 	{
