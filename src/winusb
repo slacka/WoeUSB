@@ -74,6 +74,7 @@ init(){
 		destroy_and_rebuild_entire_disk
 	fi
 
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
@@ -313,8 +314,6 @@ echo_with_color(){
 # $2: Target mountpoint
 # $3: Exit reason
 cleanup_mountpoints(){
-	RETURN="$?"
-
 	set +o errexit # We need to clean up everything we can
 
 	trap - HUP QUIT SEGV PIPE INT TERM EXIT
@@ -322,7 +321,7 @@ cleanup_mountpoints(){
 	pulse off
 	if [ "$3" == 'kill' ]; then
 		echo_with_color red "\nKilled!"  >&2
-	elif [ "$RETURN" -ne 0 ]; then
+	elif [ "$3" == 'error' ]; then
 		echo_with_color red "Error occured!"  >&2
 	else
 		echo_with_color green "Exiting..."
