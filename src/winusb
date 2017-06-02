@@ -117,6 +117,7 @@ init(){
 	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
 
 	# As Windows 7's installation media doesn't place the required EFI bootloaders in the right location, we extract them from the system image manually
+	# TODO: Functionize Windows 7 checking
 	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		echo_with_color yellow "Source media is Windows 7-based, applying workaround to make it support UEFI booting"
 
