@@ -280,8 +280,10 @@ check_runtime_dependencies(){
 	elif which 'make.msdos' > /dev/null; then
 		command_mkdosfs='mkfs.msdos'
 	else
-		echo_with_color red "${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
-		echo_with_color red  "${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
 		result="failed"
 	fi
 
