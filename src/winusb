@@ -96,6 +96,12 @@ init(){
 		if [ "${verbose}" = '1' ]; then
 			echo "Target device is '${device}'."
 		fi
+
+		# If target partition is mounted in the first place, unmount it
+		if [ "$(mount | grep -c "${partition}")" != 0 ]; then
+			umount "${partition}"
+		fi
+
 	else
 		# FIXME: Before destroying disk we should unmount all of it's mountpoints(if there's any)
 		destroy_and_rebuild_entire_disk
@@ -162,12 +168,6 @@ mount_source_and_target_filesystem(){
 		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
 	else # ${source_media} is a real DVD drive (block device)
 		mount -o ro "${source_media}" "${source_fs_mountpoint}"
-	fi
-
-	# If target partition is mounted in the first place, unmount it
-	# TODO: This should only be needed in edit mode, maybe move it to above?
-	if [ "$(mount | grep -c "${partition}")" != 0 ]; then
-		umount "${partition}"
 	fi
 
 	mkdir -p "${target_fs_mountpoint}"
