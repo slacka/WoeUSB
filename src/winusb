@@ -71,6 +71,7 @@ init(){
 			echo "Target device is '${device}'."
 		fi
 	else
+		# FIXME: Before destroying disk we should unmount all of it's mountpoints(if there's any)
 		destroy_and_rebuild_entire_disk
 	fi
 
