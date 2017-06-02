@@ -36,6 +36,8 @@ pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
 block_size="((4 * 1024 * 1024))" # 4MiB
 command_mkdosfs=''
 command_grubinstall=''
+source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 init(){
 	if ! process_commandline_parameters; then
@@ -71,9 +73,6 @@ init(){
 	else
 		destroy_and_rebuild_entire_disk
 	fi
-
-	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
-	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
