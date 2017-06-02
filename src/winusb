@@ -75,7 +75,8 @@ init(){
 	fi
 
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' INT TERM
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
 
@@ -323,9 +324,11 @@ cleanup_mountpoints(){
 
 	printf "\n" # Proactively separate from previous command output
 	if [ "$3" == 'kill' ]; then
-		echo_with_color red "Killed!"  >&2
+		echo_with_color yellow "Terminated by external signal!"  >&2
 	elif [ "$3" == 'error' ]; then
 		echo_with_color red "Internal error occurred!"  >&2
+	elif [ "$3" == 'interrupt' ]; then
+		echo_with_color yellow "Interrupted by user"
 	else
 		echo_with_color green "Exiting..."
 	fi
