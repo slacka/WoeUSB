@@ -376,14 +376,16 @@ switch_terminal_text_color()
 }; declare -fr switch_terminal_text_color
 
 # Print message with color
-# $1: message color
-# $2: message body
 echo_with_color(){
+	check_function_parameters_quantity "${FUNCNAME[0]}" 2 "${#}"
+	local -r message_color="${1}"; shift
+	local -r message_body="${1}"
+
 	if [ "${no_color}" -eq 1 ]; then
-		echo -e "$2"
+		echo -e "${message_body}"
 	else
-		switch_terminal_text_color "$1"
-		echo -e "$2"
+		switch_terminal_text_color "${message_color}"
+		echo -e "${message_body}"
 		switch_terminal_text_color none
 	fi
 }
