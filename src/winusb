@@ -215,8 +215,11 @@ setup_traps(){
 # Utility function to check if function parameters quantity is legal
 # NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
 check_function_parameters_quantity(){
+	# The name of the function, simply pass "${FUNCNAME[0]}" will do
 	local function_name="${1}"; shift
+	# The expected given quantity
 	local -i expected_parameter_quantity="${1}"; shift
+	# The actual given parameter quantity, simply pass "${#}" will do
 	local -i given_parameter_quantity="${1}"
 
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
