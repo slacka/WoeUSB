@@ -141,7 +141,9 @@ init(){
 
 	setup_traps
 
-	copy_filesystem_files "${source_fs_mountpoint}" "${target_fs_mountpoint}"
+	copy_filesystem_files\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"
 
 	# As Windows 7's installation media doesn't place the required EFI
 	# bootloaders in the right location, we extract them from the
