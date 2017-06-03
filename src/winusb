@@ -150,6 +150,8 @@ init(){
 }; declare -fr init
 
 install_bootloader_grub(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${target_device}"
 
@@ -172,11 +174,15 @@ install_bootloader_grub(){
 }; declare -fr install_bootloader_grub
 
 workaround_support_windows_7_uefi_boot(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	mkdir -p "${target_fs_mountpoint}/EFI/Boot"
 	7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 mount_source_and_target_filesystem(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	echo_with_color blue "Mounting source and target filesystems..."
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
@@ -205,6 +211,8 @@ mount_source_and_target_filesystem(){
 }; declare -fr mount_source_and_target_filesystem
 
 setup_traps(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
@@ -215,6 +223,15 @@ setup_traps(){
 # Utility function to check if function parameters quantity is legal
 # NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
 util_check_function_parameters_quantity(){
+	if [ "${#}" -ne 3 ]; then
+		printf --\
+			"%s: Error: Function requires %u parameters, but %u is given\n"\
+			"${FUNCNAME[0]}"\
+			3\
+			"${#}"
+		exit 1
+	fi
+
 	# The name of the function, simply pass "${FUNCNAME[0]}" will do
 	local function_name="${1}"; shift
 	# The expected given quantity
@@ -382,7 +399,7 @@ switch_terminal_text_color()
 
 # Print message with color
 echo_with_color(){
-	check_function_parameters_quantity "${FUNCNAME[0]}" 2 "${#}"
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 2 "${#}"
 	local -r message_color="${1}"; shift
 	local -r message_body="${1}"
 
@@ -400,6 +417,8 @@ echo_with_color(){
 # $2: Target mountpoint
 # $3: Exit reason
 cleanup_mountpoints(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 3 "${#}"
+
 	set +o errexit # We need to clean up everything we can
 
 	trap - HUP QUIT PIPE INT TERM EXIT
@@ -471,6 +490,7 @@ hideNoErr(){
 
 # Copy source_file to dest_file, overwrite file if dest_file exists
 copy_file(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 3 "${#}"
 	source_file="$1"
 	dest_file="$2"
 	whole_current_size="$3"
@@ -506,6 +526,8 @@ copy_file(){
 # $1: Source filesystem's mountpoint
 # $2: Target filesystem's mountpoint
 copy_filesystem_files(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 2 "${#}"
+
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
 
@@ -552,6 +574,8 @@ copy_filesystem_files(){
 }
 
 print_help(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	echo -e "${RUNTIME_EXECUTABLE_NAME} usage"
 	echo -e "Install a Windows ISO on an FAT partition and edit MBR of the device"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>"
@@ -569,6 +593,8 @@ print_help(){
 }; declare -fr print_help
 
 process_commandline_parameters(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		return 0
 	fi
@@ -627,10 +653,7 @@ process_commandline_parameters(){
 }; declare -fr process_commandline_parameters;
 
 shift_array(){
-	if [ "${#}" -ne 1 ]; then
-		printf "%s: Error: argument quantity illegal\n" "${FUNCNAME[0]}" 1>&2
-		exit 1
-	fi
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 1 "${#}"
 
 	local -n array_ref="${1}"
 
@@ -651,6 +674,8 @@ shift_array(){
 }; declare -fr shift_array
 
 trap_return(){
+	util_check_function_parameters_quantity "${FUNCNAME[0]}" 1 "${#}"
+
 	local returning_function="${1}"
 
 	printf "DEBUG: %s: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
