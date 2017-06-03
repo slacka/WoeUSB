@@ -324,8 +324,17 @@ workaround_support_windows_7_uefi_boot(){
 	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		echo_with_color yellow "Source media is Windows 7-based, applying workaround to make it support UEFI booting"
 		if command -v "7z" >/dev/null 2>&1; then
-			mkdir --parents "${target_fs_mountpoint}/EFI/Boot"
-			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+			mkdir\
+				--parents\
+				"${target_fs_mountpoint}/EFI/Boot"
+			7z\
+				# extract \
+				e\
+				# Write data to StdOut \
+				-so\
+				"${source_fs_mountpoint}/sources/install.wim"\
+				"1/Windows/Boot/EFI/bootmgfw.efi"\
+				> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 		else
 			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
 		fi
