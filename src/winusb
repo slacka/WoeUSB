@@ -553,7 +553,7 @@ pulse(){
 			cd /; while true; do sleep 0.05; echo 'pulse'; done &
 			pulse_current_pid="$!"
 		elif [ "$1" != 'off' ]; then
-			echo "Pulse: bad argument" >&2
+			echo "${FUNCNAME[0]}: Error: Illegal function parameter" >&2
 			exit 1
 		fi
 	fi
