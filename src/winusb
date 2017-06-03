@@ -310,7 +310,7 @@ install_bootloader_grub(){
 
 	echo_with_color blue "Installing grub.cfg..."
 	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
-	mkdir -p "$(dirname "${grub_cfg}")"
+	mkdir --parents "$(dirname "${grub_cfg}")"
 	{
 		cat <<- END_OF_FILE
 			echo '------------------------------------'
@@ -327,7 +327,7 @@ install_bootloader_grub(){
 workaround_support_windows_7_uefi_boot(){
 	util_check_function_parameters_quantity 0 "${#}"
 
-	mkdir -p "${target_fs_mountpoint}/EFI/Boot"
+	mkdir --parents "${target_fs_mountpoint}/EFI/Boot"
 	7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 }; declare -fr workaround_support_windows_7_uefi_boot
 
@@ -770,7 +770,7 @@ copy_filesystem_files(){
 		)
 
 		if [ -d "${source_file}" ]; then
-			mkdir -p "${dest_file}"
+			mkdir --parents "${dest_file}"
 		elif [ -f "${source_file}" ]; then
 			if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
