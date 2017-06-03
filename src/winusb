@@ -716,10 +716,10 @@ copy_file(){
 }; declare -fr copy_file
 
 # Copying all files from one filesystem to another, with progress reporting
-# $1: Source filesystem's mountpoint
-# $2: Target filesystem's mountpoint
 copy_filesystem_files(){
 	util_check_function_parameters_quantity 2 "${#}"
+	local source_fs_mountpoint="${1}"; shift
+	local target_fs_mountpoint="${1}"
 
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
