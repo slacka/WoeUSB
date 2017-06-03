@@ -110,7 +110,10 @@ init(){
 
 	check_permission
 
-	if ! check_runtime_parameters; then
+	if ! check_runtime_parameters\
+			install_mode\
+			source_media\
+			target_media; then
 		exit 1
 	fi
 
