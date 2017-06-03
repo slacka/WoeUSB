@@ -752,11 +752,6 @@ copy_filesystem_files(){
 	local source_fs_mountpoint="${1}"; shift
 	local target_fs_mountpoint="${1}"
 
-	# FIXME: Why do we `pulse off` and on here?
-	pulse off
-
-	echo_with_color blue "Copying files from source media..."
-
 	local -i total_size
 	total_size=$(\
 		du\
@@ -766,6 +761,11 @@ copy_filesystem_files(){
 		| awk '{print $1}'\
 	)
 	local -i current_size=0
+
+	# FIXME: Why do we `pulse off` and on here?
+	pulse off
+
+	echo_with_color blue "Copying files from source media..."
 
 	pushd "${source_fs_mountpoint}"
 	file_list=$(\
