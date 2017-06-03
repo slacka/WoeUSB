@@ -228,14 +228,14 @@ mount_source_and_target_filesystem(){
 	)
 	needed_space=$(\
 		du\
-			-s\
+			--summarize\
 			--bytes\
 			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
 	)
 	needed_space_human_readable=$(\
 		du\
-			-s\
+			--summarize\
 			--human-readable\
 			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
