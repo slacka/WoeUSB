@@ -131,6 +131,10 @@ init(){
 		destroy_and_rebuild_entire_disk "${target_device}"
 	fi
 
+	if [ "${install_mode}" = 'partition' ]; then
+		check_target_filesystem "${target_partition}"
+	fi
+
 	mount_source_and_target_filesystem\
 		"${source_media}"\
 		"${source_fs_mountpoint}"\
@@ -167,6 +171,24 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+check_target_filesystem(){
+	util_check_function_parameters_quantity 1 $#
+	local target_partition="${1}"
+
+	local target_filesystem="$(\
+		lsblk\
+			--output FSTYPE\
+			--noheadings\
+			"${target_partition}"\
+	)"
+
+	if [ "${target_partition}" != "vfat" ]; then
+		echo_with_color "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		return 1
+	fi
+	return 0
+}; declare -fr check_target_filesystem
 
 check_permission(){
 	if [ ! "$(id --user)" = 0 ]; then
@@ -425,7 +447,8 @@ check_runtime_dependencies(){
 		rm\
 		readlink\
 		find\
-		blkid
+		blkid\
+		lsblk
 		do
 		if ! command -v "${required_command}" >/dev/null; then
 			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
