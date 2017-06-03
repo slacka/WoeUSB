@@ -254,7 +254,7 @@ mount_source_and_target_filesystem(){
 	mkdir -p "${source_fs_mountpoint}"
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
 		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
-	else # ${source_media} is a real DVD drive (block device)
+	else # ${source_media} is a real optical disk drive (block device)
 		mount -o ro "${source_media}" "${source_fs_mountpoint}"
 	fi
 
