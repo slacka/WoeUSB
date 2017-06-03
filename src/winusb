@@ -90,6 +90,10 @@ init(){
 		source_media\
 		target_media
 
+	declare\
+		target_device\
+		target_partition
+
 	if ! process_commandline_parameters source_media target_media; then
 		print_help
 		exit 1
@@ -109,10 +113,6 @@ init(){
 	if ! check_runtime_parameters; then
 		exit 1
 	fi
-
-	declare\
-		target_device\
-		target_partition
 
 	pulse on
 
