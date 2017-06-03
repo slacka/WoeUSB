@@ -409,8 +409,7 @@ pulse(){
 # $1:
 #     <color>: color of the next message
 #     none: reset color to default
-switch_terminal_text_color()
-{
+switch_terminal_text_color(){
 	case "$1" in
 		none)
 			tput sgr0
