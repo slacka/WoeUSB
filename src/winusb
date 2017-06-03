@@ -141,8 +141,8 @@ init(){
 		"${source_media}"\
 		"${source_fs_mountpoint}"\
 		"${target_partition}"\
-		"${target_fs_mountpoint}"
-		|| echo_with_color red "Error: Failed to mount filesystems"
+		"${target_fs_mountpoint}"\
+		|| echo_with_color red "Error: Failed to mount filesystems"\
 		&& exit 1
 
 	check_target_filesystem_free_space\
@@ -344,7 +344,7 @@ mount_source_and_target_filesystem(){
 	mkdir\
 		--parents\
 		"${source_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${source_fs_mountpoint}" mountpoint directory"
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${source_fs_mountpoint}" mountpoint directory"\
 		&& return 1
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
 		mount\
@@ -352,26 +352,26 @@ mount_source_and_target_filesystem(){
 			--types udf,iso9660\
 			"${source_media}"\
 			"${source_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"\
 		&& return 1
 	else # ${source_media} is a real optical disk drive (block device)
 		mount\
 			--options ro\
 			"${source_media}"\
 			"${source_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"\
 		&& return 1
 	fi
 
 	mkdir\
 		--parents\
 		"${target_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${target_fs_mountpoint}" mountpoint directory"
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${target_fs_mountpoint}" mountpoint directory"\
 		&& return 1
 	mount\
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"\
 		&& return 1
 
 }; declare -fr mount_source_and_target_filesystem
