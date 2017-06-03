@@ -756,11 +756,11 @@ copy_filesystem_files(){
 		find\
 			.\
 			-not -path "."\
-			-print\
+			-print0\
 	)
 	popd
 
-	while read -r source_file; do
+	while IFS="\0" read -r source_file; do
 		dest_file="$target_fs_mountpoint/${source_file}"
 
 		file_size=$(stat --format=%s "${source_file}")
