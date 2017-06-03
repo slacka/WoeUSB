@@ -135,6 +135,8 @@ init(){
 		check_target_filesystem "${target_partition}"
 	fi
 
+	setup_traps
+
 	mount_source_and_target_filesystem\
 		"${source_media}"\
 		"${source_fs_mountpoint}"\
@@ -145,8 +147,6 @@ init(){
 
 	check_target_filesystem_free_space\
 		|| exit 1
-
-	setup_traps
 
 	copy_filesystem_files\
 		"${source_fs_mountpoint}"\
