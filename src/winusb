@@ -86,11 +86,11 @@ init(){
 		source_media\
 		target_media
 
-	declare\
+	local\
 		target_device\
 		target_partition
 
-	declare\
+	local\
 		source_fs_mountpoint\
 		target_fs_mountpoint
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
