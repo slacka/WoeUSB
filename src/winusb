@@ -323,7 +323,8 @@ workaround_support_windows_7_uefi_boot(){
 
 	if \
 		grep\
-			-Eq\
+			--extended-regexp\
+			--quiet\
 			"^MinServer=7[0-9]{3}\.[0-9]"\
 			"${source_fs_mountpoint}/sources/cversion.ini"
 		&& [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
