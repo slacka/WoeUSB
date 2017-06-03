@@ -466,7 +466,7 @@ check_runtime_parameters(){
 	local result="unknown"
 
 	if [ -z "${install_mode}" ]; then
-		echo "Error: No install method specified!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
 		result="failed"
@@ -474,12 +474,12 @@ check_runtime_parameters(){
 
 	if [ ! -f "${source_media}" ] \
 		&& [ ! -b "${source_media}" ]; then
-		echo "Error: source media '${source_media}' not found or not a regular file or a block device!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media}\" not found or not a regular file or a block device!" >&2
 		result="failed"
 	fi
 
 	if ! [ -b "${target_media}" ]; then
-		echo "Error: the device \"${target_media}\" is not special block!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media}\" is not block device file!" >&2
 		result="failed"
 	fi
 
