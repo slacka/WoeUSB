@@ -364,6 +364,25 @@ check_runtime_dependencies(){
 		result="failed"
 	fi
 
+	for required_command in\
+		mount\
+		grep\
+		dd\
+		id\
+		mkdir\
+		df\
+		du\
+		awk\
+		parted\
+		blockdev\
+		partprobe
+		do
+		if ! command -v "${required_command}"; then
+			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
+			result=failed
+		fi
+	done
+
 	if [ "${result}" == "failed" ]; then
 		return 1
 	else
