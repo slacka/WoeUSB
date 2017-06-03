@@ -225,7 +225,7 @@ setup_traps(){
 util_check_function_parameters_quantity(){
 	if [ "${#}" -ne 3 ]; then
 		printf --\
-			"%s: Error: Function requires %u parameters, but %u is given\n"\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
 			"${FUNCNAME[0]}"\
 			3\
 			"${#}"
@@ -241,7 +241,7 @@ util_check_function_parameters_quantity(){
 
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
 		printf --\
-			"%s: Error: Function requires %u parameters, but %u is given\n"\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
 			"${function_name}"\
 			"${expected_parameter_quantity}"\
 			"${given_parameter_quantity}"\
