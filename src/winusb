@@ -214,7 +214,7 @@ setup_traps(){
 
 # Utility function to check if function parameters quantity is legal
 # NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
-check_function_parameters_quantity(){
+util_check_function_parameters_quantity(){
 	# The name of the function, simply pass "${FUNCNAME[0]}" will do
 	local function_name="${1}"; shift
 	# The expected given quantity
@@ -232,7 +232,7 @@ check_function_parameters_quantity(){
 		exit 1
 	fi
 	return 0
-}; declare -fr check_function_parameters_quantity
+}; declare -fr util_check_function_parameters_quantity
 
 destroy_and_rebuild_entire_disk(){
 	local storage_device="${target_media}"
