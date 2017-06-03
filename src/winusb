@@ -342,9 +342,9 @@ check_runtime_dependencies(){
 	util_check_function_parameters_quantity 0 $#
 	local result="unknown"
 
-	if which 'mkdosfs' > /dev/null; then
+	if command -v 'mkdosfs' &> /dev/null; then
 		command_mkdosfs='mkdosfs'
-	elif which 'make.msdos' > /dev/null; then
+	elif command -v 'make.msdos' &> /dev/null; then
 		command_mkdosfs='mkfs.msdos'
 	else
 		echo_with_color red\
@@ -354,9 +354,9 @@ check_runtime_dependencies(){
 		result="failed"
 	fi
 
-	if which 'grub-install' > /dev/null; then
+	if command -v 'grub-install' &> /dev/null; then
 		command_grubinstall='grub-install'
-	elif which 'grub2-install' > /dev/null; then
+	elif command -v 'grub2-install' &> /dev/null; then
 		command_grubinstall='grub2-install'
 	else
 		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
