@@ -763,7 +763,11 @@ copy_filesystem_files(){
 	while IFS="\0" read -r source_file; do
 		dest_file="$target_fs_mountpoint/${source_file}"
 
-		file_size=$(stat --format=%s "${source_file}")
+		file_size=$(\
+			stat\
+				--format=%s\
+				"${source_file}"\
+		)
 
 		if [ -d "${source_file}" ]; then
 			mkdir -p "${dest_file}"
@@ -771,7 +775,10 @@ copy_filesystem_files(){
 			if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
 			else
-				copy_file "${source_file}" "${dest_file}" "$current_size"
+				copy_file\
+					"${source_file}"\
+					"${dest_file}"\
+					"$current_size"
 			fi
 		else
 			echo "Error: Unknown type of '${source_file}'!" >&2
