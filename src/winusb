@@ -173,7 +173,7 @@ init(){
 }; declare -fr init
 
 install_bootloader_grub(){
-	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+	util_check_function_parameters_quantity 0 "${#}"
 
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${target_device}"
@@ -197,14 +197,14 @@ install_bootloader_grub(){
 }; declare -fr install_bootloader_grub
 
 workaround_support_windows_7_uefi_boot(){
-	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+	util_check_function_parameters_quantity 0 "${#}"
 
 	mkdir -p "${target_fs_mountpoint}/EFI/Boot"
 	7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 mount_source_and_target_filesystem(){
-	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+	util_check_function_parameters_quantity 0 "${#}"
 
 	echo_with_color blue "Mounting source and target filesystems..."
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
@@ -259,7 +259,7 @@ mount_source_and_target_filesystem(){
 }; declare -fr mount_source_and_target_filesystem
 
 setup_traps(){
-	util_check_function_parameters_quantity "${FUNCNAME[0]}" 0 "${#}"
+	util_check_function_parameters_quantity 0 "${#}"
 
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
