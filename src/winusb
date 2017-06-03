@@ -747,7 +747,7 @@ print_help(){
 
 process_commandline_parameters(){
 	util_check_function_parameters_quantity 3 "${#}"
-	local -n install_mode_ref="$1"; shift
+	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
 	local -n target_media_ref="${1}"
 
