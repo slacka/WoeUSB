@@ -74,10 +74,6 @@ declare\
 	command_mkdosfs\
 	command_grubinstall
 
-declare\
-	source_fs_mountpoint\
-	target_fs_mountpoint
-
 declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 # FIXME: No documentation for this non-trivial parameter
@@ -93,6 +89,12 @@ init(){
 	declare\
 		target_device\
 		target_partition
+
+	declare\
+		source_fs_mountpoint\
+		target_fs_mountpoint
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 	if ! process_commandline_parameters source_media target_media; then
 		print_help
@@ -116,29 +118,18 @@ init(){
 
 	pulse on
 
-	if [ "${install_mode}" = 'partition' ]; then
-		target_partition="${target_media}"
-		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
-		target_device="${target_media/%[0-9]/}"
-		if [ "${verbose}" = '1' ]; then
-			echo "Target device is '${target_device}'."
-		fi
+	determine_target_parameters\
+		target_device\
+		target_partition
 
-		# If target partition is mounted in the first place, bail out
-		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
-			echo_with_color red "Error: target partition is currently mounted, unmount the partition then try again"
-			exit 1
-		fi
+	check_source_and_target_not_busy\
+		"${install_mode}"\
+		"${source_media}"\
+		"${target_device}"\
+		"${target_partition}"
 
-	else # install_mode = device
-		target_device="${target_media}"
-		target_partition="${target_device}1"
-		# If target media busy, bail out
-		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
-			echo_with_color red "Error: target device is currently busy, unmount all mounted partitions in target device then try again"
-			exit 1
-		fi
-		destroy_and_rebuild_entire_disk
+	if [ "${install_mode}" = 'device' ]; then
+		destroy_and_rebuild_entire_disk "${target_device}"
 	fi
 
 	mount_source_and_target_filesystem
@@ -172,6 +163,53 @@ init(){
 	exit 0
 }; declare -fr init
 
+check_source_and_target_not_busy(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="$1"; shift
+	local source_media="$1"; shift
+	local target_device="$1"; shift
+	local target_partition="$1"
+
+	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
+		exit 1
+	fi
+
+	if [ "${install_mode}" = "partition" ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
+			exit 1
+		fi
+	else # When install_mode = device, all target partitions needs to by unmounted
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
+			exit 1
+		fi
+	fi
+}; declare -fr check_source_and_target_not_busy
+
+determine_target_parameters(){
+	util_check_function_parameters_quantity 3 $#
+	local install_mode="${1}"; shift
+	local -n target_device_ref="${1}"; shift
+	local -n target_partition_ref="${1}"; shift
+
+	if [ "${install_mode}" = 'partition' ]; then
+		target_partition_ref="${target_media}"
+		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
+		target_device_ref="${target_media/%[0-9]/}"
+	else # install_mode = device
+		target_device_ref="${target_media}"
+		target_partition_ref="${target_device}1"
+	fi
+
+	if [ "${verbose}" = '1' ]; then
+		echo "${FUNCNAME[0]}: Info: Target device is '${target_device_ref}'."
+		echo "${FUNCNAME[0]}: Info: Target partition is '${target_partition_ref}'."
+	fi
+	return 0
+}; declare -fr determine_target_parameters
+
 install_bootloader_grub(){
 	util_check_function_parameters_quantity 0 "${#}"
 
@@ -204,11 +242,14 @@ workaround_support_windows_7_uefi_boot(){
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 mount_source_and_target_filesystem(){
-	util_check_function_parameters_quantity 0 "${#}"
+	util_check_function_parameters_quantity 4 "${#}"
+
+	local source_media="$1"; shift
+	local source_fs_mountpoint="$1"; shift
+	local target_partition="$1"; shift
+	local target_fs_mountpoint="$1"
 
 	echo_with_color blue "Mounting source and target filesystems..."
-	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
-	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
 	mkdir -p "${source_fs_mountpoint}"
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
