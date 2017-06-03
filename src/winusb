@@ -253,7 +253,12 @@ install_bootloader_grub(){
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}" --target=i386-pc --boot-directory="${target_fs_mountpoint}" --force "${target_device}"
 
-	uuid=$(blkid -o value -s UUID "${partition}")
+	uuid=$(\
+		lsblk\
+			--output UUID\
+			--noheadings\
+			/dev/sda1\
+	)
 
 	echo_with_color blue "Installing grub.cfg..."
 	grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
@@ -447,7 +452,6 @@ check_runtime_dependencies(){
 		rm\
 		readlink\
 		find\
-		blkid\
 		lsblk
 		do
 		if ! command -v "${required_command}" >/dev/null; then
