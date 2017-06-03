@@ -702,12 +702,12 @@ copy_file(){
 
 	# Copy file block by block
 	i=0
-	while [ "$i" -lt "$block_number" ]; do
+	while [ "${i}" -lt "${block_number}" ]; do
 		dd\
 			if="${source_file}"\
 			bs="${DD_BLOCK_SIZE}"\
-			skip="$i"\
-			seek="$i"\
+			skip="${i}"\
+			seek="${i}"\
 			of="${dest_file}"\
 			count=1\
 			2> /dev/null
