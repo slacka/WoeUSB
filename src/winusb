@@ -593,12 +593,12 @@ print_help(){
 	echo -e "=========================="
 	echo -e "Convert a bootable Windows media to a bootable USB storage device"
 	echo -e
-	echo -e "Copy Windows files to an existing FAT partition of a USB storage and make it bootable"
+	echo -e "Copy Windows files to an existing FAT partition of an USB storage and make it bootable"
 	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1"
 	echo -e
-	echo -e "Completely DESTROY all previous data on a USB storage, copy Windows files and make it bootable"
+	echo -e "Completely DESTROY all previous data on an USB storage, copy Windows files and make it bootable"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --format <iso path> <device>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdd"
 	echo -e
