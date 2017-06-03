@@ -32,6 +32,13 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
+for critical_command in realpath basename dirname; do
+	if ! command -v "${critical_command}" &> /dev/null; then
+		echo "Fatal: This program requires GNU Coreutils in executable search path"
+		exit 1
+	fi
+done
+
 ## Non-overridable Primitive Variables
 ## BASHDOC: Shell Variables » Bash Variables
 ## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
