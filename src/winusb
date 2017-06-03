@@ -367,18 +367,20 @@ util_check_function_parameters_quantity(){
 }; declare -fr util_check_function_parameters_quantity
 
 destroy_and_rebuild_entire_disk(){
-	local storage_device="${target_media}"
+	util_check_function_parameters_quantity 2 $#
+	local -r target_device="${1}"; shift
+	local -r target_partition="${1}"
 
 	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
 	parted --script\
-		"${storage_device}"\
+		"${target_device}"\
 		mklabel\
 		msdos
 
 	# Create partition
 	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
 	parted --script\
-		"${storage_device}"\
+		"${target_device}"\
 		mkpart\
 		primary\
 		fat32\
@@ -389,16 +391,12 @@ destroy_and_rebuild_entire_disk(){
 	# FIXME: Is `blockdev` and `partprobe` both required?
 	blockdev\
 		--rereadpt\
-		"${storage_device}"\
+		"${target_device}"\
 		|| true
 	partprobe\
-		"${storage_device}"
+		"${target_device}"
 	echo "Wait 3 seconds for block device nodes to populate..."
 	sleep 3
-
-	# get first partition
-	local partition
-	partition="${storage_device}1"
 
 	# Create filesystem on partition
 	"$command_mkdosfs"\
