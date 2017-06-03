@@ -96,15 +96,15 @@ init(){
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
+	if ! check_runtime_dependencies; then
+		exit 1
+	fi
+
 	if ! process_commandline_parameters\
 			install_mode\
 			source_media\
 			target_media; then
 		print_help
-		exit 1
-	fi
-
-	if ! check_runtime_dependencies; then
 		exit 1
 	fi
 
