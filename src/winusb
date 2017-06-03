@@ -332,6 +332,7 @@ destroy_and_rebuild_entire_disk(){
 }; declare -fr destroy_and_rebuild_entire_disk
 
 check_runtime_dependencies(){
+	util_check_function_parameters_quantity 0 $#
 	local result="success"
 
 	if which 'mkdosfs' > /dev/null; then
@@ -364,6 +365,7 @@ check_runtime_dependencies(){
 }; declare -fr check_runtime_dependencies
 
 check_runtime_parameters(){
+	util_check_function_parameters_quantity 0 $#
 	local -i result="0" # success
 
 	if [ -z "${install_mode}" ]; then
@@ -388,6 +390,7 @@ check_runtime_parameters(){
 }; declare -fr check_runtime_parameters
 
 pulse(){
+	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
 		if [ ! "$pulseCurrentPid" -eq 0 ]; then
 			kill "$pulseCurrentPid"
@@ -410,6 +413,7 @@ pulse(){
 #     <color>: color of the next message
 #     none: reset color to default
 switch_terminal_text_color(){
+	util_check_function_parameters_quantity 1 $#
 	case "$1" in
 		none)
 			tput sgr0
