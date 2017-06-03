@@ -54,7 +54,7 @@ declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
 declare APPLICATION_NAME="WinUSB"
 
-declare install_method
+declare install_mode
 
 # source_media may be a optical disk drive or a disk image
 # target_media may be an entire usb storage device or just a partition
@@ -109,7 +109,7 @@ init(){
 
 	pulse on
 
-	if [ "${install_method}" = 'partition' ]; then
+	if [ "${install_mode}" = 'partition' ]; then
 		target_partition="${target_media}"
 		target_device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
 		if [ "${verbose}" = '1' ]; then
@@ -122,7 +122,7 @@ init(){
 			exit 1
 		fi
 
-	else # install_method = device
+	else # install_mode = device
 		target_device="${target_media}"
 		target_partition="${target_device}1"
 		# If target media busy, bail out
@@ -340,7 +340,7 @@ check_runtime_dependencies(){
 check_runtime_parameters(){
 	local -i result="0" # success
 
-	if [ -z "${install_method}" ]; then
+	if [ -z "${install_mode}" ]; then
 		echo "Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
@@ -631,14 +631,14 @@ process_commandline_parameters(){
 				enable_debug="Y"
 				;;
 			'--install')
-				install_method='partition'
+				install_mode='partition'
 				shift_array parameters
 				source_media="${parameters[0]}"
 				shift_array parameters
 				target_media="${parameters[0]}"
 				;;
 			'--format')
-				install_method='device'
+				install_mode='device'
 				shift_array parameters
 				source_media="${parameters[0]}"
 				shift_array parameters
