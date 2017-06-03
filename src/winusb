@@ -342,28 +342,6 @@ check_runtime_dependencies(){
 	util_check_function_parameters_quantity 0 $#
 	local result="unknown"
 
-	if command -v 'mkdosfs' &> /dev/null; then
-		command_mkdosfs='mkdosfs'
-	elif command -v 'make.msdos' &> /dev/null; then
-		command_mkdosfs='mkfs.msdos'
-	else
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
-		result="failed"
-	fi
-
-	if command -v 'grub-install' &> /dev/null; then
-		command_grubinstall='grub-install'
-	elif command -v 'grub2-install' &> /dev/null; then
-		command_grubinstall='grub2-install'
-	else
-		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result="failed"
-	fi
-
 	for required_command in\
 		mount\
 		grep\
@@ -386,6 +364,28 @@ check_runtime_dependencies(){
 			result=failed
 		fi
 	done
+
+	if command -v 'mkdosfs' &> /dev/null; then
+		command_mkdosfs='mkdosfs'
+	elif command -v 'make.msdos' &> /dev/null; then
+		command_mkdosfs='mkfs.msdos'
+	else
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
+		result="failed"
+	fi
+
+	if command -v 'grub-install' &> /dev/null; then
+		command_grubinstall='grub-install'
+	elif command -v 'grub2-install' &> /dev/null; then
+		command_grubinstall='grub2-install'
+	else
+		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+		result="failed"
+	fi
 
 	if [ "${result}" == "failed" ]; then
 		return 1
