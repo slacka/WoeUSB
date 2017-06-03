@@ -708,7 +708,7 @@ copy_file(){
 		((copied_size_total = copied_size + whole_current_size)) || true
 		#echo "$copied_size_total"
 
-		((percent = (copied_size_total * 100) / totalSize)) || true
+		((percent = (copied_size_total * 100) / total_size)) || true
 		echo -en "${percent}%\r"
 	done
 
@@ -725,19 +725,19 @@ copy_filesystem_files(){
 	pulse off
 
 	echo_with_color blue "Copying files from Windows installation media..."
-	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
-	currentSize=0
+	total_size=$(du -s "$1" --bytes | awk '{print $1}')
+	current_size=0
 
-	targetDir="$2"
-	mkdir -p "$targetDir"
-	targetDir=$(readlink -f "$targetDir")
+	target_dir="$2"
+	mkdir -p "$target_dir"
+	target_dir=$(readlink -f "$target_dir")
 
 	cd "$1"
 	file_list=$(find .)
 
 	while read -r source_file; do
 		if [ "${source_file}" != '.' ]; then
-			dest_file="$targetDir/${source_file}"
+			dest_file="$target_dir/${source_file}"
 
 			file_size=$(stat --format=%s "${source_file}")
 
@@ -747,7 +747,7 @@ copy_filesystem_files(){
 				if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 					cp "${source_file}" "${dest_file}"
 				else
-					copy_file "${source_file}" "${dest_file}" "$currentSize"
+					copy_file "${source_file}" "${dest_file}" "$current_size"
 				fi
 			else
 				echo "Error: Unknown type of '${source_file}'!" >&2
@@ -755,8 +755,8 @@ copy_filesystem_files(){
 			fi
 
 			# Progress
-			((currentSize = currentSize + file_size)) || true
-			((percent = (currentSize * 100) / totalSize)) || true
+			((current_size = current_size + file_size)) || true
+			((percent = (current_size * 100) / total_size)) || true
 			echo -en "${percent}%\r"
 		fi
 	done < <(echo "$file_list")
