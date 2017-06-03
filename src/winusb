@@ -215,7 +215,7 @@ mount_source_and_target_filesystem(){
 	free_space=$(df --block-size 1 "${target_fs_mountpoint}" | grep "${target_partition}" | awk '{print $4}')
 	needed_space=$(du -s "${source_fs_mountpoint}" --bytes | awk '{print $1}')
 
-	additional_space_required_for_grub_installation=((1000 * 1000 * 10)) # 10MiB
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
 	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
 	if [ "${needed_space}" -gt "${free_space}" ]; then
