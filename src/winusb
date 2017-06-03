@@ -803,8 +803,8 @@ copy_filesystem_files(){
 		fi
 
 		# Report progress
-		((current_size = current_size + file_size)) || true
-		((percentage = (current_size * 100) / total_size)) || true
+		((current_size = current_size + file_size))
+		((percentage = (current_size * 100) / total_size))
 		echo -en "${percent}%\r"
 	done < <(echo "${file_list}"); unset source_file
 
