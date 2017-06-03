@@ -143,6 +143,9 @@ init(){
 		|| echo_with_color red "Error: Failed to mount filesystems"
 		&& exit 1
 
+	check_target_filesystem_free_space\
+		|| exit 1
+
 	setup_traps
 
 	copy_filesystem_files\
@@ -173,6 +176,49 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+check_target_filesystem_free_space(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_fs_mountpoint="${1}"; shift
+	local -r target_partition="${1}"
+
+	free_space=$(\
+		df\
+			--block-size 1\
+			"${target_fs_mountpoint}"\
+		| grep "${target_partition}"\
+		| awk '{print $4}'\
+	)
+	free_space_human_readable=$(\
+		df\
+			--human-readable\
+			"${target_fs_mountpoint}"\
+		| grep "${target_partition}"\
+		| awk '{print $4}'\
+	)
+	needed_space=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	needed_space_human_readable=$(\
+		du\
+			--summarize\
+			--human-readable\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
+	((needed_space = needed_space + additional_space_required_for_grub_installation))
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on '${target_partition}'!" >&2
+		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
+		return 1
+	fi
+}; declare -fr check_target_filesystem_free_space
 
 check_target_filesystem(){
 	util_check_function_parameters_quantity 1 $#
@@ -328,42 +374,6 @@ mount_source_and_target_filesystem(){
 		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
 		&& return 1
 
-	free_space=$(\
-		df\
-			--block-size 1\
-			"${target_fs_mountpoint}"\
-		| grep "${target_partition}"\
-		| awk '{print $4}'\
-	)
-	free_space_human_readable=$(\
-		df\
-			--human-readable\
-			"${target_fs_mountpoint}"\
-		| grep "${target_partition}"\
-		| awk '{print $4}'\
-	)
-	needed_space=$(\
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	needed_space_human_readable=$(\
-		du\
-			--summarize\
-			--human-readable\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
-	((needed_space = needed_space + additional_space_required_for_grub_installation))
-
-	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on '${target_partition}'!" >&2
-		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
-		exit 1
-	fi
 }; declare -fr mount_source_and_target_filesystem
 
 setup_traps(){
