@@ -132,7 +132,11 @@ init(){
 		destroy_and_rebuild_entire_disk "${target_device}"
 	fi
 
-	mount_source_and_target_filesystem
+	mount_source_and_target_filesystem\
+		"${source_media}"\
+		"${source_fs_mountpoint}"\
+		"${target_partition}"\
+		"${target_fs_mountpoint}"
 
 	setup_traps
 
