@@ -474,7 +474,7 @@ check_runtime_parameters(){
 
 	if [ ! -f "${source_media}" ] \
 		&& [ ! -b "${source_media}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media}\" not found or not a regular file or a block device!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media}\" not found or not a regular file or a block device file!" >&2
 		result="failed"
 	fi
 
