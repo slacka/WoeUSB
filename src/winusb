@@ -74,7 +74,7 @@ declare\
 	command_grubinstall
 
 declare\
-	source_fs_mountpoint
+	source_fs_mountpoint\
 	target_fs_mountpoint
 
 declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
