@@ -594,6 +594,7 @@ print_help(){
 	echo -e "Convert a bootable Windows media to a bootable USB storage device"
 	echo -e
 	echo -e "Copy Windows files to an existing FAT partition of a USB storage and make it bootable"
+	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1"
 	echo -e
