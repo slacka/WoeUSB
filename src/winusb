@@ -63,12 +63,6 @@ declare APPLICATION_NAME="WinUSB"
 
 declare install_mode
 
-# source_media may be a optical disk drive or a disk image
-# target_media may be an entire usb storage device or just a partition
-declare\
-	source_media\
-	target_media
-
 declare -i\
 	verbose='0'\
 	only_for_gui='0'\
@@ -90,7 +84,13 @@ declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 declare -i pulseCurrentPid=0
 
 init(){
-	if ! process_commandline_parameters; then
+	# source_media may be a optical disk drive or a disk image
+	# target_media may be an entire usb storage device or just a partition
+	local\
+		source_media\
+		target_media
+
+	if ! process_commandline_parameters source_media target_media; then
 		print_help
 		exit 1
 	fi
@@ -676,7 +676,9 @@ print_help(){
 }; declare -fr print_help
 
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 0 "${#}"
+	util_check_function_parameters_quantity 2 "${#}"
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		print_help
@@ -700,16 +702,16 @@ process_commandline_parameters(){
 			'--install')
 				install_mode='partition'
 				shift_array parameters
-				source_media="${parameters[0]}"
+				source_media_ref="${parameters[0]}"
 				shift_array parameters
-				target_media="${parameters[0]}"
+				target_media_ref="${parameters[0]}"
 				;;
 			'--format')
 				install_mode='device'
 				shift_array parameters
-				source_media="${parameters[0]}"
+				source_media_ref="${parameters[0]}"
 				shift_array parameters
-				target_media="${parameters[0]}"
+				target_media_ref="${parameters[0]}"
 				;;
 			'--verbose'|'-v')
 				verbose='1'
