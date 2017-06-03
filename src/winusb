@@ -463,7 +463,7 @@ check_runtime_dependencies(){
 
 check_runtime_parameters(){
 	util_check_function_parameters_quantity 0 $#
-	local -i result="unknown"
+	local result="unknown"
 
 	if [ -z "${install_mode}" ]; then
 		echo "Error: No install method specified!" >&2
