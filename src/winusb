@@ -479,7 +479,7 @@ check_runtime_parameters(){
 	fi
 
 	if ! [ -b "${target_media}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media}\" is not block device file!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media}\" is not a block device file!" >&2
 		result="failed"
 	fi
 
