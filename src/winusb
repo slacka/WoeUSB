@@ -222,8 +222,8 @@ mount_source_and_target_filesystem(){
 	needed_space=$(\
 		du\
 			-s\
-			"${source_fs_mountpoint}"\
 			--bytes\
+			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
 	)
 
