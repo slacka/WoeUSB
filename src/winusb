@@ -751,7 +751,7 @@ copy_filesystem_files(){
 	)
 	local -i current_size=0
 
-	cd "$1"
+	cd "${source_fs_mountpoint}"
 	file_list=$(find .)
 
 	while read -r source_file; do
