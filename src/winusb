@@ -752,33 +752,36 @@ copy_filesystem_files(){
 	local -i current_size=0
 
 	pushd "${source_fs_mountpoint}"
-	file_list=$(find .)
+	file_list=$(\
+		find\
+			.\
+			-not -path "."\
+			-print\
+	)
 	popd
 
 	while read -r source_file; do
-		if [ "${source_file}" != '.' ]; then
-			dest_file="$target_fs_mountpoint/${source_file}"
+		dest_file="$target_fs_mountpoint/${source_file}"
 
-			file_size=$(stat --format=%s "${source_file}")
+		file_size=$(stat --format=%s "${source_file}")
 
-			if [ -d "${source_file}" ]; then
-				mkdir -p "${dest_file}"
-			elif [ -f "${source_file}" ]; then
-				if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
-					cp "${source_file}" "${dest_file}"
-				else
-					copy_file "${source_file}" "${dest_file}" "$current_size"
-				fi
+		if [ -d "${source_file}" ]; then
+			mkdir -p "${dest_file}"
+		elif [ -f "${source_file}" ]; then
+			if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
+				cp "${source_file}" "${dest_file}"
 			else
-				echo "Error: Unknown type of '${source_file}'!" >&2
-				exit 1
+				copy_file "${source_file}" "${dest_file}" "$current_size"
 			fi
-
-			# Report progress
-			((current_size = current_size + file_size)) || true
-			((percent = (current_size * 100) / total_size)) || true
-			echo -en "${percent}%\r"
+		else
+			echo "Error: Unknown type of '${source_file}'!" >&2
+			exit 1
 		fi
+
+		# Report progress
+		((current_size = current_size + file_size)) || true
+		((percent = (current_size * 100) / total_size)) || true
+		echo -en "${percent}%\r"
 	done < <(echo "$file_list")
 
 	pulse on
