@@ -53,21 +53,32 @@ fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
 declare install_method
+
+# source_media may be a optical disk drive or a disk image
+# target_media may be an entire usb storage device or just a partition
 declare\
 	source_media\
 	target_media
+
 declare -i\
 	verbose='0'\
 	only_for_gui='0'\
 	no_color='0'
+
+# Commands that needs to be determined in runtime
+# due to different names in distributions
 declare\
 	command_mkdosfs\
 	command_grubinstall
+
 declare\
 	source_fs_mountpoint
 	target_fs_mountpoint
-declare -i BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
-declare -i pulseCurrentPid=0 # FIXME: No documentation for this non-trivial parameter
+
+declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
+
+# FIXME: No documentation for this non-trivial parameter
+declare -i pulseCurrentPid=0
 
 init(){
 	if ! process_commandline_parameters; then
@@ -497,7 +508,7 @@ copy_file(){
 
 	# Calculate block count of the source file
 	size=$(stat --format=%s "${source_file}")
-	((stepNb = size / BLOCK_SIZE + 1))
+	((stepNb = size / DD_BLOCK_SIZE + 1))
 
 	if [ -f "${dest_file}" ]; then
 		rm "${dest_file}"
@@ -506,7 +517,7 @@ copy_file(){
 	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
-		dd if="${source_file}" bs="${BLOCK_SIZE}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
+		dd if="${source_file}" bs="${DD_BLOCK_SIZE}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
 		((i = i + 1))
 
 		# Send current copied size
@@ -551,7 +562,7 @@ copy_filesystem_files(){
 			if [ -d "${source_file}" ]; then
 				mkdir -p "${dest_file}"
 			elif [ -f "${source_file}" ]; then
-				if [ "${file_size}" -lt "${BLOCK_SIZE}" ]; then
+				if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 					cp "${source_file}" "${dest_file}"
 				else
 					copy_file "${source_file}" "${dest_file}" "$currentSize"
