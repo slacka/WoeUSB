@@ -834,4 +834,23 @@ trap_return(){
 	printf "DEBUG: %s: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
 }; declare -fr trap_return
 
+util_is_parameter_set_and_not_empty(){
+	util_check_function_parameters_quantity 1 $#
+
+	local parameter_name="${1}"
+
+	if [ ! -v "${parameter_name}" ]; then
+		return 1
+	else
+		declare -n parameter_ref
+		parameter_ref="${parameter_name}"
+
+		if [ -z "${parameter_ref}" ]; then
+			return 1
+		else
+			return 0
+		fi
+	fi
+}; declare -fr util_is_parameter_set_and_not_empty
+
 init "${@}"
