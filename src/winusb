@@ -251,14 +251,18 @@ mount_source_and_target_filesystem(){
 
 	echo_with_color blue "Mounting source and target filesystems..."
 
-	mkdir -p "${source_fs_mountpoint}"
+	mkdir\
+		--parents\
+		"${source_fs_mountpoint}"
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
 		mount -o loop,ro -t udf,iso9660 "${source_media}" "${source_fs_mountpoint}"
 	else # ${source_media} is a real optical disk drive (block device)
 		mount -o ro "${source_media}" "${source_fs_mountpoint}"
 	fi
 
-	mkdir -p "${target_fs_mountpoint}"
+	mkdir\
+		--parents\
+		"${target_fs_mountpoint}"
 	mount "${target_partition}" "${target_fs_mountpoint}"
 
 	free_space=$(\
