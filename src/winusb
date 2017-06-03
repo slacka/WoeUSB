@@ -108,12 +108,7 @@ init(){
 		exit 1
 	fi
 
-	if [ ! "$(id --user)" = 0 ]; then
-		printf --\
-			"%s\n%s\n"\
-			"Warning: You are not running WinUSB as root!"\
-			"Warning: This might be the reason of the following failure." >&2
-	fi
+	check_permission
 
 	if ! check_runtime_parameters; then
 		exit 1
@@ -169,6 +164,16 @@ init(){
 
 	exit 0
 }; declare -fr init
+
+check_permission(){
+	if [ ! "$(id --user)" = 0 ]; then
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
+	fi
+	return 0
+}; declare -fr check_permission
 
 check_source_and_target_not_busy(){
 	util_check_function_parameters_quantity 4 $#
