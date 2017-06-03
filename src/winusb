@@ -462,32 +462,36 @@ check_runtime_dependencies(){
 }; declare -fr check_runtime_dependencies
 
 check_runtime_parameters(){
-	util_check_function_parameters_quantity 0 $#
-	local result="unknown"
+	util_check_function_parameters_quantity 3 $#
+	local install_mode_name="${1}"; shift
+	local source_media_name="${1}"; shift
+	local target_media_name="${1}"
 
-	if [ -z "${install_mode}" ]; then
+	if ! util_is_parameter_set_and_not_empty install_mode_name\
+		|| ! util_is_parameter_set_and_not_empty source_media_name\
+		|| ! util_is_parameter_set_and_not_empty target_media_name; then
 		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
-		result="failed"
+		exit 1
 	fi
 
-	if [ ! -f "${source_media}" ] \
-		&& [ ! -b "${source_media}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media}\" not found or not a regular file or a block device file!" >&2
-		result="failed"
+	local -n\
+		source_media_ref="${source_media_name}"\
+		target_media_ref="${target_media_name}"
+
+	if [ ! -f "${source_media_ref}" ] \
+		&& [ ! -b "${source_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
+		exit 1
 	fi
 
-	if ! [ -b "${target_media}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media}\" is not a block device file!" >&2
-		result="failed"
+	if ! [ -b "${target_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
+		exit 1
 	fi
 
-	if [ "${result}" = "failed" ]; then
-		return 1
-	else
-		return 0
-	fi
+	return 0
 }; declare -fr check_runtime_parameters
 
 pulse(){
