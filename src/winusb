@@ -679,7 +679,8 @@ process_commandline_parameters(){
 	util_check_function_parameters_quantity 0 "${#}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
-		return 0
+		print_help
+		exit 0
 	fi
 
 	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
