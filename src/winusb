@@ -769,6 +769,12 @@ process_commandline_parameters(){
 			'--install')
 				install_mode_ref='partition'
 				shift_array parameters
+				if [ "${#parameters[@]}" -lt 2 ]; then
+					echo_with_color\
+						"red"\
+						"${FUNCNAME[0]}: Error: --install option requires 2 arguments!"
+					return 1
+				fi
 				source_media_ref="${parameters[0]}"
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
@@ -776,6 +782,12 @@ process_commandline_parameters(){
 			'--format')
 				install_mode_ref='device'
 				shift_array parameters
+				if [ "${#parameters[@]}" -lt 2 ]; then
+					echo_with_color\
+						"red"\
+						"${FUNCNAME[0]}: Error: --format option requires 2 arguments!"
+					return 1
+				fi
 				source_media_ref="${parameters[0]}"
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
