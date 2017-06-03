@@ -694,7 +694,7 @@ copy_file(){
 		--format=%s\
 		"${source_file}"\
 	)
-	((stepNb = size / DD_BLOCK_SIZE + 1))
+	((block_number = size / DD_BLOCK_SIZE + 1))
 
 	if [ -f "${dest_file}" ]; then
 		rm "${dest_file}"
@@ -702,7 +702,7 @@ copy_file(){
 
 	# Copy file block by block
 	i=0
-	while [ "$i" -lt "$stepNb" ]; do
+	while [ "$i" -lt "$block_number" ]; do
 		dd\
 			if="${source_file}"\
 			bs="${DD_BLOCK_SIZE}"\
