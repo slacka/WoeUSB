@@ -728,14 +728,12 @@ copy_filesystem_files(){
 	total_size=$(du -s "$1" --bytes | awk '{print $1}')
 	current_size=0
 
-	target_dir="$2"
-
 	cd "$1"
 	file_list=$(find .)
 
 	while read -r source_file; do
 		if [ "${source_file}" != '.' ]; then
-			dest_file="$target_dir/${source_file}"
+			dest_file="$target_fs_mountpoint/${source_file}"
 
 			file_size=$(stat --format=%s "${source_file}")
 
