@@ -59,7 +59,7 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-declare APPLICATION_NAME="WinUSB"
+declare -r APPLICATION_NAME="WinUSB"
 
 declare -i\
 	verbose='0'\
@@ -72,7 +72,7 @@ declare\
 	command_mkdosfs\
 	command_grubinstall
 
-declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
+declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 # FIXME: No documentation for this non-trivial parameter
 declare -i pulse_current_pid=0
