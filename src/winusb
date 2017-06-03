@@ -734,7 +734,7 @@ copy_filesystem_files(){
 			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
 	)
-	current_size=0
+	local -i current_size=0
 
 	cd "$1"
 	file_list=$(find .)
