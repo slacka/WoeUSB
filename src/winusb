@@ -725,7 +725,15 @@ copy_filesystem_files(){
 	pulse off
 
 	echo_with_color blue "Copying files from Windows installation media..."
-	total_size=$(du -s "$1" --bytes | awk '{print $1}')
+
+	local -i total_size
+	total_size=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
 	current_size=0
 
 	cd "$1"
