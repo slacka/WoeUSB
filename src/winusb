@@ -75,7 +75,7 @@ declare\
 declare -i DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 # FIXME: No documentation for this non-trivial parameter
-declare -i pulseCurrentPid=0
+declare -i pulse_current_pid=0
 
 init(){
 	local install_mode
@@ -493,15 +493,15 @@ check_runtime_parameters(){
 pulse(){
 	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
-		if [ ! "$pulseCurrentPid" -eq 0 ]; then
-			kill "$pulseCurrentPid"
-			#wait "$pulseCurrentPid"
-			pulseCurrentPid=0
+		if [ ! "$pulse_current_pid" -eq 0 ]; then
+			kill "$pulse_current_pid"
+			#wait "$pulse_current_pid"
+			pulse_current_pid=0
 		fi
 
 		if [ "$1" = 'on' ]; then
 			cd /; while true; do sleep 0.05; echo 'pulse'; done &
-			pulseCurrentPid="$!"
+			pulse_current_pid="$!"
 		elif [ "$1" != 'off' ]; then
 			echo "Pulse: bad argument" >&2
 			exit 1
