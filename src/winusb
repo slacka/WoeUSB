@@ -729,8 +729,6 @@ copy_filesystem_files(){
 	current_size=0
 
 	target_dir="$2"
-	mkdir -p "$target_dir"
-	target_dir=$(readlink -f "$target_dir")
 
 	cd "$1"
 	file_list=$(find .)
