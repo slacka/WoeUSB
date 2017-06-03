@@ -758,7 +758,7 @@ copy_filesystem_files(){
 				exit 1
 			fi
 
-			# Progress
+			# Report progress
 			((current_size = current_size + file_size)) || true
 			((percent = (current_size * 100) / total_size)) || true
 			echo -en "${percent}%\r"
