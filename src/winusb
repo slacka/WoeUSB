@@ -152,19 +152,7 @@ init(){
 		"${source_fs_mountpoint}"\
 		"${target_fs_mountpoint}"
 
-	# As Windows 7's installation media doesn't place the required EFI
-	# bootloaders in the right location, we extract them from the
-	# system image manually
-	# TODO: Functionize Windows 7 checking
-	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
-		echo_with_color yellow "Source media is Windows 7-based, applying workaround to make it support UEFI booting"
-
-		if command -v "7z" >/dev/null 2>&1; then
-			workaround_support_windows_7_uefi_boot
-		else
-			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
-		fi
-	fi
+	workaround_support_windows_7_uefi_boot
 
 	install_bootloader_grub
 
@@ -324,11 +312,24 @@ install_bootloader_grub(){
 	} > "${grub_cfg}"
 }; declare -fr install_bootloader_grub
 
+# As Windows 7's installation media doesn't place the required EFI
+# bootloaders in the right location, we extract them from the
+# system image manually
+# TODO: Functionize Windows 7 checking
 workaround_support_windows_7_uefi_boot(){
-	util_check_function_parameters_quantity 0 "${#}"
+	util_check_function_parameters_quantity 2 "${#}"
+	local source_fs_mountpoint="${1}"; shift
+	local target_fs_mountpoint="${1}"
 
-	mkdir --parents "${target_fs_mountpoint}/EFI/Boot"
-	7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+	if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "${source_fs_mountpoint}/sources/cversion.ini") && [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
+		echo_with_color yellow "Source media is Windows 7-based, applying workaround to make it support UEFI booting"
+		if command -v "7z" >/dev/null 2>&1; then
+			mkdir --parents "${target_fs_mountpoint}/EFI/Boot"
+			7z e -so "${source_fs_mountpoint}/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+		else
+			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
+		fi
+	fi
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 mount_source_and_target_filesystem(){
