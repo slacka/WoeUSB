@@ -111,7 +111,8 @@ init(){
 
 	if [ "${install_mode}" = 'partition' ]; then
 		target_partition="${target_media}"
-		target_device="$(echo "${target_media}" | sed "s/[0-9]*$//")"
+		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
+		target_device="${target_media/%[0-9]/}"
 		if [ "${verbose}" = '1' ]; then
 			echo "Target device is '${target_device}'."
 		fi
