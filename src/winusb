@@ -684,9 +684,9 @@ hideNoErr(){
 # Copy source_file to dest_file, overwrite file if dest_file exists
 copy_file(){
 	util_check_function_parameters_quantity 3 "${#}"
-	source_file="$1"
-	dest_file="$2"
-	whole_current_size="$3"
+	source_file="${1}"; shift
+	dest_file="${1}"; shift
+	whole_current_size="${1}"
 
 	# Calculate block count of the source file
 	size=$(stat --format=%s "${source_file}")
