@@ -340,7 +340,7 @@ destroy_and_rebuild_entire_disk(){
 
 check_runtime_dependencies(){
 	util_check_function_parameters_quantity 0 $#
-	local result="success"
+	local result="unknown"
 
 	if which 'mkdosfs' > /dev/null; then
 		command_mkdosfs='mkdosfs'
@@ -392,27 +392,31 @@ check_runtime_dependencies(){
 
 check_runtime_parameters(){
 	util_check_function_parameters_quantity 0 $#
-	local -i result="0" # success
+	local -i result="unknown"
 
 	if [ -z "${install_mode}" ]; then
 		echo "Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
-		result="1"
+		result="failed"
 	fi
 
 	if [ ! -f "${source_media}" ] \
 		&& [ ! -b "${source_media}" ]; then
 		echo "Error: source media '${source_media}' not found or not a regular file or a block device!" >&2
-		result="1"
+		result="failed"
 	fi
 
 	if ! [ -b "${target_media}" ]; then
 		echo "Error: the device \"${target_media}\" is not special block!" >&2
-		result="1"
+		result="failed"
 	fi
 
-	return "${result}"
+	if [ "${result}" = "failed" ]; then
+		return 1
+	else
+		return 0
+	fi
 }; declare -fr check_runtime_parameters
 
 pulse(){
