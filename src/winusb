@@ -739,8 +739,8 @@ copy_file(){
 		((copied_size_total = copied_size + whole_current_size)) || true
 		#echo "$copied_size_total"
 
-		((percent = (copied_size_total * 100) / total_size)) || true
-		echo -en "${percent}%\r"
+		((percentage = (copied_size_total * 100) / total_size)) || true
+		echo -en "${percentage}%\r"
 	done
 
 	return 0
@@ -761,6 +761,7 @@ copy_filesystem_files(){
 		| awk '{print $1}'\
 	)
 	local -i current_size=0
+	local -i percentage
 
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
@@ -803,7 +804,7 @@ copy_filesystem_files(){
 
 		# Report progress
 		((current_size = current_size + file_size)) || true
-		((percent = (current_size * 100) / total_size)) || true
+		((percentage = (current_size * 100) / total_size)) || true
 		echo -en "${percent}%\r"
 	done < <(echo "${file_list}"); unset source_file
 
