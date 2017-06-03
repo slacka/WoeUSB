@@ -589,12 +589,15 @@ copy_filesystem_files(){
 print_help(){
 	util_check_function_parameters_quantity 0 "${#}"
 
-	echo -e "${APPLICATION_NAME} usage"
-	echo -e "Install a Windows ISO on an FAT partition and edit MBR of the device"
+	echo -e "${APPLICATION_NAME}'s Help"
+	echo -e "=========================="
+	echo -e "Convert a bootable Windows media to a bootable USB storage device"
+	echo -e
+	echo -e "Copy Windows files to an existing FAT partition of a USB storage and make it bootable"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <iso path> <partition>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdd1"
 	echo -e
-	echo -e "Completely format a drive and install the ISO on it"
+	echo -e "Completely DESTROY all previous data on a USB storage, copy Windows files and make it bootable"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --format <iso path> <device>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdd"
 	echo -e
