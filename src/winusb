@@ -466,22 +466,18 @@ check_runtime_dependencies(){
 
 check_runtime_parameters(){
 	util_check_function_parameters_quantity 3 $#
-	local install_mode_name="${1}"; shift
-	local source_media_name="${1}"; shift
-	local target_media_name="${1}"
+	local -n install_mode_ref="${1}"; shift
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
 
-	if ! util_is_parameter_set_and_not_empty install_mode_name\
-		|| ! util_is_parameter_set_and_not_empty source_media_name\
-		|| ! util_is_parameter_set_and_not_empty target_media_name; then
+	if ! util_is_parameter_set_and_not_empty install_mode_ref\
+		|| ! util_is_parameter_set_and_not_empty source_media_ref\
+		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
 		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
 		exit 1
 	fi
-
-	local -n\
-		source_media_ref="${source_media_name}"\
-		target_media_ref="${target_media_name}"
 
 	if [ ! -f "${source_media_ref}" ] \
 		&& [ ! -b "${source_media_ref}" ]; then
