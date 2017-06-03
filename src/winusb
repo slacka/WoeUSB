@@ -689,7 +689,11 @@ copy_file(){
 	whole_current_size="${1}"
 
 	# Calculate block count of the source file
-	size=$(stat --format=%s "${source_file}")
+	size=$(\
+		stat\
+		--format=%s\
+		"${source_file}"\
+	)
 	((stepNb = size / DD_BLOCK_SIZE + 1))
 
 	if [ -f "${dest_file}" ]; then
@@ -699,12 +703,23 @@ copy_file(){
 	# Copy file block by block
 	i=0
 	while [ "$i" -lt "$stepNb" ]; do
-		dd if="${source_file}" bs="${DD_BLOCK_SIZE}" skip="$i" seek="$i" of="${dest_file}" count=1 2> /dev/null
+		dd\
+			if="${source_file}"\
+			bs="${DD_BLOCK_SIZE}"\
+			skip="$i"\
+			seek="$i"\
+			of="${dest_file}"\
+			count=1\
+			2> /dev/null
 		((i = i + 1))
 
 		# Send current copied size
 		local copied_size
-		copied_size=$(stat --format=%s "${dest_file}")
+		copied_size=$(\
+			stat\
+			--format=%s\
+			"${dest_file}"\
+		)
 		((copied_size_total = copied_size + whole_current_size)) || true
 		#echo "$copied_size_total"
 
