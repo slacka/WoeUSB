@@ -805,7 +805,7 @@ copy_filesystem_files(){
 		((current_size = current_size + file_size)) || true
 		((percent = (current_size * 100) / total_size)) || true
 		echo -en "${percent}%\r"
-	done < <(echo "${file_list}")
+	done < <(echo "${file_list}"); unset source_file
 
 	pulse on
 
