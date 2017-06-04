@@ -706,7 +706,8 @@ copy_file(){
 	local -ir caller_copied_size="${1}"
 
 	# Calculate block count of the source file
-	size=$(\
+	local -i source_file_size
+	source_file_size=$(\
 		stat\
 		--format=%s\
 		"${source_file}"\
