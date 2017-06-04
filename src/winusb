@@ -698,7 +698,7 @@ hideNoErr(){
 }
 
 # Copy source_file to dest_file, overwrite file if dest_file exists
-# Also report progress statistics
+# Also report copy_filesystem_files progress during operation
 copy_file(){
 	util_check_function_parameters_quantity 3 "${#}"
 	local -r source_file="${1}"; shift
