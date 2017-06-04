@@ -761,7 +761,7 @@ copy_filesystem_files(){
 			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
 	)
-	local -i current_size=0
+	local -i copied_size=0
 	local -i percentage
 
 	# FIXME: Why do we `pulse off` and on here?
@@ -796,7 +796,7 @@ copy_filesystem_files(){
 				copy_file\
 					"${source_file}"\
 					"${dest_file}"\
-					"${current_size}"
+					"${copied_size}"
 			fi
 		else
 			echo_with_color red "${FUNCNAME[0]}: Error: Unknown type of '${source_file}'!" >&2
@@ -804,8 +804,8 @@ copy_filesystem_files(){
 		fi
 
 		# Report progress
-		((current_size = current_size + file_size))
-		((percentage = (current_size * 100) / total_size))
+		((copied_size = copied_size + file_size))
+		((percentage = (copied_size * 100) / total_size))
 		echo -en "${percent}%\r"
 	done < <(echo "${file_list}"); unset source_file
 
