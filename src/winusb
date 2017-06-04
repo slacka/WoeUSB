@@ -701,9 +701,9 @@ hideNoErr(){
 # Also report progress statistics
 copy_file(){
 	util_check_function_parameters_quantity 3 "${#}"
-	source_file="${1}"; shift
-	dest_file="${1}"; shift
-	whole_current_size="${1}"
+	local -r source_file="${1}"; shift
+	local -r dest_file="${1}"; shift
+	local -ir whole_current_size="${1}"
 
 	# Calculate block count of the source file
 	size=$(\
