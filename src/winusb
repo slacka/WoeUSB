@@ -705,14 +705,16 @@ copy_file(){
 	local -r dest_file="${1}"; shift
 	local -ir caller_copied_size="${1}"
 
-	# Calculate block count of the source file
 	local -i source_file_size
 	source_file_size=$(\
 		stat\
 		--format=%s\
 		"${source_file}"\
 	)
-	((block_number = size / DD_BLOCK_SIZE + 1))
+
+	# block count of the source file
+	local -i block_number
+	((block_number = source_file_size / DD_BLOCK_SIZE + 1))
 
 	if [ -f "${dest_file}" ]; then
 		rm "${dest_file}"
