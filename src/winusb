@@ -719,7 +719,7 @@ copy_file(){
 	fi
 
 	# Copy file block by block
-	declare -i i=0; while [ "${i}" -lt "${block_number}" ]; do
+	local -i i=0; while [ "${i}" -lt "${block_number}" ]; do
 		dd\
 			if="${source_file}"\
 			bs="${DD_BLOCK_SIZE}"\
