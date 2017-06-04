@@ -742,7 +742,7 @@ copy_file(){
 
 		((percentage = (copied_size_total * 100) / total_size))
 		echo -en "${percentage}%\r"
-	done
+	done; unset i
 
 	return 0
 }; declare -fr copy_file
