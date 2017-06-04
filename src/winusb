@@ -798,7 +798,7 @@ copy_filesystem_files(){
 					"${current_size}"
 			fi
 		else
-			echo "Error: Unknown type of '${source_file}'!" >&2
+			echo_with_color red "${FUNCNAME[0]}: Error: Unknown type of '${source_file}'!" >&2
 			exit 1
 		fi
 
