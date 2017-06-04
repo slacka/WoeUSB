@@ -736,10 +736,10 @@ copy_file(){
 			--format=%s\
 			"${dest_file}"\
 		)
-		((copied_size_total = copied_size + whole_current_size)) || true
+		((copied_size_total = copied_size + whole_current_size))
 		#echo "$copied_size_total"
 
-		((percentage = (copied_size_total * 100) / total_size)) || true
+		((percentage = (copied_size_total * 100) / total_size))
 		echo -en "${percentage}%\r"
 	done
 
