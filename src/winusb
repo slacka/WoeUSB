@@ -816,7 +816,7 @@ copy_filesystem_files(){
 		# Report progress
 		((copied_size = copied_size + source_file_size))
 		((percentage = (copied_size * 100) / total_size))
-		echo -en "${percent}%\r"
+		echo -en "${percentage}%\r"
 	done < <(echo "${file_list}"); unset source_file dest_file source_file_size copied_size percentage percentage
 
 	pulse on
