@@ -969,7 +969,7 @@ trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
 	local returning_function="${1}"
 
-	printf "DEBUG: %s: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
+	printf "%s: DEBUG: returning from %s\n" "${FUNCNAME[0]}" "${returning_function}" 1>&2
 }; declare -fr trap_return
 
 util_is_parameter_set_and_not_empty(){
