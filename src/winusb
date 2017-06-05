@@ -293,7 +293,7 @@ install_bootloader_grub(){
 		lsblk\
 			--output UUID\
 			--noheadings\
-			/dev/sda1\
+			"${target_device}"\
 	)
 
 	echo_with_color blue "Installing grub.cfg..."
