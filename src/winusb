@@ -889,6 +889,9 @@ process_commandline_parameters(){
 				target_media_ref="${parameters[0]}"
 				;;
 			'--format')
+				# Limitation of ShellCheck to detect usage of indirection variables
+				# https://github.com/koalaman/shellcheck/wiki/SC2034
+				# shellcheck disable=SC2034
 				install_mode_ref='device'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
