@@ -793,7 +793,7 @@ copy_filesystem_files(){
 
 	echo_with_color blue "Copying files from source media..."
 
-	pushd "${source_fs_mountpoint}"
+	pushd "${source_fs_mountpoint}" >/dev/null
 
 	local file_list
 	file_list=$(\
@@ -836,7 +836,7 @@ copy_filesystem_files(){
 		echo -en "${percentage}%\r"
 	done <<< "${file_list}"; unset source_file dest_file source_file_size copied_size percentage percentage
 
-	popd
+	popd >/dev/null
 
 	pulse on
 
