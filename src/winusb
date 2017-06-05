@@ -294,7 +294,7 @@ install_bootloader_grub(){
 		--boot-directory="${target_fs_mountpoint}"\
 		--force "${target_device}"
 
-	local -r uuid=$(\
+	local -r target_fs_uuid=$(\
 		lsblk\
 			--output UUID\
 			--noheadings\
@@ -310,7 +310,7 @@ install_bootloader_grub(){
 			echo '|      Windows USB - Loading...    |'
 			echo '------------------------------------'
 			insmod fat
-			search --no-floppy --fs-uuid ${uuid} --set root
+			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
 			ntldr /bootmgr
 			boot
 		END_OF_FILE
