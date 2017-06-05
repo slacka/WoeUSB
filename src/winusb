@@ -152,9 +152,13 @@ init(){
 		"${source_fs_mountpoint}"\
 		"${target_fs_mountpoint}"
 
-	workaround_support_windows_7_uefi_boot
+	workaround_support_windows_7_uefi_boot\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"
 
-	install_bootloader_grub
+	install_bootloader_grub\
+		"${target_fs_mountpoint}"\
+		"${target_device}"
 
 	cleanup_mountpoints\
 		"${source_fs_mountpoint}"\
