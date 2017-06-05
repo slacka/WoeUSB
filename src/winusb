@@ -482,7 +482,7 @@ destroy_and_rebuild_entire_disk(){
 	"$command_mkdosfs"\
 		-F 32\
 		-n 'Windows USB' \
-		"${partition}"
+		"${target_partition}"
 }; declare -fr destroy_and_rebuild_entire_disk
 
 check_runtime_dependencies(){
