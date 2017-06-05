@@ -937,8 +937,12 @@ process_commandline_parameters(){
 		shift_array parameters
 	done
 
-	if [ "${enable_debug}" = "Y" ]; then
+	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
+		trap 'trap_debug "${BASH_COMMAND}"' DEBUG
+	fi
+
+	if [ "${enable_debug}" = "Y" ]; then
 		set -o xtrace
 	fi
 	return 0
