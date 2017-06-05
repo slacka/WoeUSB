@@ -792,7 +792,8 @@ copy_filesystem_files(){
 				copy_file\
 					"${source_file}"\
 					"${dest_file}"\
-					"${copied_size}"
+					"${copied_size}"\
+					"${total_size}"
 			fi
 		else
 			echo_with_color red "${FUNCNAME[0]}: Error: Unknown type of '${source_file}'!" >&2
