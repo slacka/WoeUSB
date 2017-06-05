@@ -834,7 +834,7 @@ copy_filesystem_files(){
 			.\
 			-not -path "."\
 			-print0\
-	); unset source_file dest_file source_file_size copied_size percentage percentage
+	); unset source_file dest_file source_file_size copied_size percentage
 
 	popd >/dev/null
 
