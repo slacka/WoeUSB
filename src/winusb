@@ -228,7 +228,7 @@ check_target_filesystem(){
 			"${target_partition}"\
 	)"
 
-	if [ "${target_partition}" != "vfat" ]; then
+	if [ "${target_filesystem}" != "vfat" ]; then
 		echo_with_color "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
 		return 1
 	fi
