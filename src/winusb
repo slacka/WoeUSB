@@ -722,7 +722,7 @@ copy_file(){
 	fi
 
 	# Copy file block by block
-	local -i i=0 copied_size_total=0; while [ "${i}" -lt "${block_number}" ]; do
+	local -i i=0 copied_size_total=0 percentage; while [ "${i}" -lt "${block_number}" ]; do
 		dd\
 			if="${source_file}"\
 			bs="${DD_BLOCK_SIZE}"\
@@ -737,7 +737,7 @@ copy_file(){
 
 		((percentage = (copied_size_total * 100) / caller_total_size))
 		echo -en "${percentage}%\r"
-	done; unset i copied_size_total
+	done; unset i copied_size_total percentage
 
 	return 0
 }; declare -fr copy_file
