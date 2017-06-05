@@ -455,6 +455,7 @@ destroy_and_rebuild_entire_disk(){
 	local -r target_device="${1}"; shift
 	local -r target_partition="${1}"
 
+	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
 	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
 	parted --script\
 		"${target_device}"\
