@@ -221,7 +221,8 @@ check_target_filesystem(){
 	util_check_function_parameters_quantity 1 $#
 	local target_partition="${1}"
 
-	local target_filesystem="$(\
+	local target_filesystem
+	target_filesystem="$(\
 		lsblk\
 			--output FSTYPE\
 			--noheadings\
