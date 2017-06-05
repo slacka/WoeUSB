@@ -700,10 +700,11 @@ hideNoErr(){
 # Copy source_file to dest_file, overwrite file if dest_file exists
 # Also report copy_filesystem_files progress during operation
 copy_file(){
-	util_check_function_parameters_quantity 3 "${#}"
+	util_check_function_parameters_quantity 4 "${#}"
 	local -r source_file="${1}"; shift
 	local -r dest_file="${1}"; shift
-	local -ir caller_copied_size="${1}"
+	local -ir caller_copied_size="${1}"; shift
+	local -ir caller_total_size="${1}"
 
 	local -i source_file_size
 	source_file_size=$(\
@@ -742,7 +743,7 @@ copy_file(){
 		((copied_size_total = copied_size + caller_copied_size))
 		#echo "$copied_size_total"
 
-		((percentage = (copied_size_total * 100) / total_size))
+		((percentage = (copied_size_total * 100) / caller_total_size))
 		echo -en "${percentage}%\r"
 	done; unset i
 
