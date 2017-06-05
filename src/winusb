@@ -939,7 +939,9 @@ process_commandline_parameters(){
 
 	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
-		trap 'trap_debug "${BASH_COMMAND}"' DEBUG
+
+		# Disabled due to FIXME
+		# trap 'trap_debug "${BASH_COMMAND}"' DEBUG
 	fi
 
 	if [ "${enable_debug}" = "Y" ]; then
@@ -986,6 +988,8 @@ trap_return(){
 	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
 }; declare -fr trap_return
 
+# FIXME: Debug trap never work as expected, it always
+# prints two identical lines somehow.
 trap_debug(){
 	util_check_function_parameters_quantity 1 $#
 	local -r command_to_be_executed="${1}"
