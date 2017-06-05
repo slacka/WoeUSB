@@ -757,8 +757,6 @@ copy_filesystem_files(){
 			"${source_fs_mountpoint}"\
 		| awk '{print $1}'\
 	)
-	local -i copied_size=0
-	local -i percentage
 
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
@@ -774,7 +772,7 @@ copy_filesystem_files(){
 	)
 	popd
 
-	while IFS="\0" read -r source_file; do
+	local -i copied_size=0 percentage; while IFS="\0" read -r source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
 		file_size=$(\
