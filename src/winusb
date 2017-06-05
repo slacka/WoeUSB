@@ -733,15 +733,7 @@ copy_file(){
 			2> /dev/null
 		((i = i + 1))
 
-		# Send current copied size
-		local copied_size
-		copied_size=$(\
-			stat\
-			--format=%s\
-			"${dest_file}"\
-		)
-		((copied_size_total = copied_size + caller_copied_size))
-		#echo "$copied_size_total"
+		((copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i ))
 
 		((percentage = (copied_size_total * 100) / caller_total_size))
 		echo -en "${percentage}%\r"
