@@ -716,6 +716,7 @@ copy_file(){
 	# block count of the source file
 	local -i block_number
 	((block_number = source_file_size / DD_BLOCK_SIZE + 1))
+	unset source_file_size
 
 	if [ -f "${dest_file}" ]; then
 		rm "${dest_file}"
