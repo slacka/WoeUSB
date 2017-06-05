@@ -696,7 +696,7 @@ cleanup_mountpoints(){
 	# shellcheck disable=2015
 	umount "$2" && rm -rf "$2" || true
 
-	if [ "$3" = 'normalCleanup' ]; then
+	if [ "$3" = 'normal_cleanup' ]; then
 		exit 0
 	else
 		exit 2
