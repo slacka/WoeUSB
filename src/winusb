@@ -803,7 +803,6 @@ copy_filesystem_files(){
 			-print0\
 	)
 
-	# BASHDOC: Basic Shell Features » Redirections » Here Strings
 	local -i copied_size=0 percentage; while IFS='' read -r -d '' source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
@@ -834,7 +833,7 @@ copy_filesystem_files(){
 		((copied_size = copied_size + source_file_size))
 		((percentage = (copied_size * 100) / total_size))
 		echo -en "${percentage}%\r"
-	done <<< "${file_list}"; unset source_file dest_file source_file_size copied_size percentage percentage
+	done < <(echo "${file_list}"); unset source_file dest_file source_file_size copied_size percentage percentage
 
 	popd >/dev/null
 
