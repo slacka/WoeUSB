@@ -118,6 +118,7 @@ init(){
 	pulse on
 
 	determine_target_parameters\
+		"${install_mode}"\
 		target_device\
 		target_partition
 
