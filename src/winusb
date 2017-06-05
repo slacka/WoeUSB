@@ -764,9 +764,11 @@ copy_file(){
 			2> /dev/null
 		((i = i + 1))
 
-		((copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i ))
-
-		((percentage = (copied_size_total * 100) / caller_total_size))
+		# Calculate and report progress
+		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Bash Features » Shell Arithmetic
+		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
+		let "percentage = (copied_size_total * 100) / caller_total_size" || true
 		echo -en "${percentage}%\r"
 	done; unset i copied_size_total percentage
 
@@ -829,9 +831,11 @@ copy_filesystem_files(){
 			exit 1
 		fi
 
-		# Report progress
-		((copied_size = copied_size + source_file_size))
-		((percentage = (copied_size * 100) / total_size))
+		# Calculate and report progress
+		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Bash Features » Shell Arithmetic
+		let "copied_size = copied_size + source_file_size" || true
+		let "percentage = (copied_size * 100) / total_size" || true
 		echo -en "${percentage}%\r"
 	done < <(echo "${file_list}"); unset source_file dest_file source_file_size copied_size percentage percentage
 
