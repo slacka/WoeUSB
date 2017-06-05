@@ -775,7 +775,7 @@ copy_filesystem_files(){
 	local -i copied_size=0 percentage; while IFS="\0" read -r source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
-		file_size=$(\
+		source_file_size=$(\
 			stat\
 				--format=%s\
 				"${source_file}"\
@@ -784,7 +784,7 @@ copy_filesystem_files(){
 		if [ -d "${source_file}" ]; then
 			mkdir --parents "${dest_file}"
 		elif [ -f "${source_file}" ]; then
-			if [ "${file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
+			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
 			else
 				copy_file\
@@ -799,10 +799,10 @@ copy_filesystem_files(){
 		fi
 
 		# Report progress
-		((copied_size = copied_size + file_size))
+		((copied_size = copied_size + source_file_size))
 		((percentage = (copied_size * 100) / total_size))
 		echo -en "${percent}%\r"
-	done < <(echo "${file_list}"); unset source_file dest_file file_size copied_size percentage percentage
+	done < <(echo "${file_list}"); unset source_file dest_file source_file_size copied_size percentage percentage
 
 	pulse on
 
