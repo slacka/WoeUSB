@@ -809,6 +809,9 @@ copy_filesystem_files(){
 		if [ -d "${source_file}" ]; then
 			mkdir --parents "${dest_file}"
 		elif [ -f "${source_file}" ]; then
+			if [ "${verbose}" = 1 ]; then
+				echo -e "\nINFO: Copying "${source_file}"..."
+			fi
 			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
 			else
