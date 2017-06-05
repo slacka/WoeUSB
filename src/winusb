@@ -181,7 +181,7 @@ check_target_filesystem_free_space(){
 
 	free_space=$(\
 		df\
-			--block-size 1\
+			--block-size=1\
 			"${target_fs_mountpoint}"\
 		| grep "${target_fs_mountpoint}"\
 		| awk '{print $4}'\
