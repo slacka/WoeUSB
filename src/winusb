@@ -147,7 +147,7 @@ init(){
 
 	check_target_filesystem_free_space\
 		"${target_fs_mountpoint}"\
-		"${source_fs_mountpoint}"
+		"${source_fs_mountpoint}"\
 		|| exit 1
 
 	copy_filesystem_files\
