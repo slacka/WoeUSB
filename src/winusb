@@ -375,7 +375,7 @@ mount_source_and_target_filesystem(){
 	mkdir\
 		--parents\
 		"${source_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${source_fs_mountpoint}" mountpoint directory"\
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${source_fs_mountpoint}\" mountpoint directory"\
 		&& return 1
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
 		mount\
@@ -397,7 +397,7 @@ mount_source_and_target_filesystem(){
 	mkdir\
 		--parents\
 		"${target_fs_mountpoint}"\
-		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create "${target_fs_mountpoint}" mountpoint directory"\
+		|| echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${target_fs_mountpoint}\" mountpoint directory"\
 		&& return 1
 	mount\
 		"${target_partition}"\
