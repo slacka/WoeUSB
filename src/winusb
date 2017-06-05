@@ -119,6 +119,7 @@ init(){
 
 	determine_target_parameters\
 		"${install_mode}"\
+		"${target_media}"\
 		target_device\
 		target_partition
 
@@ -277,8 +278,9 @@ check_source_and_target_not_busy(){
 }; declare -fr check_source_and_target_not_busy
 
 determine_target_parameters(){
-	util_check_function_parameters_quantity 3 $#
+	util_check_function_parameters_quantity 4 $#
 	local install_mode="${1}"; shift
+	local target_media="${1}"; shift
 	local -n target_device_ref="${1}"; shift
 	local -n target_partition_ref="${1}"; shift
 
