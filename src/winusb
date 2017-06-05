@@ -722,7 +722,7 @@ copy_file(){
 	fi
 
 	# Copy file block by block
-	local -i i=0 copied_size_total=0 percentage; while [ "${i}" -lt "${block_number}" ]; do
+	local -i i=0 copied_size_total percentage; while [ "${i}" -lt "${block_number}" ]; do
 		dd\
 			if="${source_file}"\
 			bs="${DD_BLOCK_SIZE}"\
