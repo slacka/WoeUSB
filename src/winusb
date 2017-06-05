@@ -982,6 +982,33 @@ trap_return(){
 	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
 }; declare -fr trap_return
 
+trap_debug(){
+	util_check_function_parameters_quantity 1 $#
+	local -r command_to_be_executed="${1}"
+
+	local -r command_base="${command_to_be_executed%% *}"
+
+	for ignored_command in util_check_function_parameters_quantity util_is_parameter_set_and_not_empty echo_with_color switch_terminal_text_color tput; do
+		if [ "${command_base}" = "${ignored_command}" ]; then
+			return 0
+		fi
+	done
+
+	case "$(type -t "${command_base}")" in
+		"file")
+			echo_with_color green "${FUNCNAME[0]}: INFO: Executing ${command_to_be_executed}"
+			;;
+		"function")
+			echo_with_color green "${FUNCNAME[0]}: INFO: Calling ${command_base}"
+			;;
+		*)
+			:
+			;;
+	esac
+
+	return 0
+}; declare -fr trap_debug
+
 util_is_parameter_set_and_not_empty(){
 	util_check_function_parameters_quantity 1 $#
 
