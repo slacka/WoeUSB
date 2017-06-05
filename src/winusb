@@ -802,7 +802,7 @@ copy_filesystem_files(){
 			-print0\
 	)
 
-	local -i copied_size=0 percentage; while IFS="\0" read -r source_file; do
+	local -i copied_size=0 percentage; while IFS='' read -r -d '' source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
 		source_file_size=$(\
