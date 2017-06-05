@@ -969,6 +969,16 @@ trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
 	local returning_function="${1}"
 
+	for ignored_function in\
+		util_check_function_parameters_quantity\
+		util_is_parameter_set_and_not_empty\
+		switch_terminal_text_color\
+		echo_with_color; do
+		if [ "${returning_function}" == "${ignored_function}" ]; then
+			return 0
+		fi
+	done
+
 	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
 }; declare -fr trap_return
 
