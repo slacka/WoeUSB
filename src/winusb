@@ -173,22 +173,22 @@ init(){
 }; declare -fr init
 
 check_target_filesystem_free_space(){
-	util_check_function_parameters_quantity 2 $#
+	util_check_function_parameters_quantity 3 $#
 	local -r target_fs_mountpoint="${1}"; shift
-	local -r target_partition="${1}"
+	local -r source_fs_mountpoint="${1}"
 
 	free_space=$(\
 		df\
 			--block-size 1\
 			"${target_fs_mountpoint}"\
-		| grep "${target_partition}"\
+		| grep "${target_fs_mountpoint}"\
 		| awk '{print $4}'\
 	)
 	free_space_human_readable=$(\
 		df\
 			--human-readable\
 			"${target_fs_mountpoint}"\
-		| grep "${target_partition}"\
+		| grep "${target_fs_mountpoint}"\
 		| awk '{print $4}'\
 	)
 	needed_space=$(\
@@ -209,7 +209,7 @@ check_target_filesystem_free_space(){
 	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
 	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on '${target_partition}'!" >&2
+		echo "Error: Not enough free space on target partition!" >&2
 		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
 		return 1
 	fi
