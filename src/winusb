@@ -129,7 +129,9 @@ init(){
 		"${target_partition}"
 
 	if [ "${install_mode}" = 'device' ]; then
-		destroy_and_rebuild_entire_disk "${target_device}"
+		destroy_and_rebuild_entire_disk\
+			"${target_device}"\
+			"${target_partition}"
 	fi
 
 	if [ "${install_mode}" = 'partition' ]; then
