@@ -309,7 +309,6 @@ install_bootloader_grub(){
 		--boot-directory="${target_fs_mountpoint}"\
 		--force "${target_device}"
 
-
 	echo_with_color blue "Installing grub.cfg..."
 	local -r grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
 	local -r target_fs_uuid=$(\
