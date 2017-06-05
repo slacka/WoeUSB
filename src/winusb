@@ -794,6 +794,7 @@ copy_filesystem_files(){
 	echo_with_color blue "Copying files from source media..."
 
 	pushd "${source_fs_mountpoint}"
+
 	file_list=$(\
 		find\
 			.\
