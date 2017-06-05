@@ -156,7 +156,10 @@ init(){
 
 	install_bootloader_grub
 
-	cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" 'normal_cleanup'
+	cleanup_mountpoints\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"\
+		'normal_cleanup'
 
 	echo_with_color green "Done :-)  You may detach the usb storage now."
 
