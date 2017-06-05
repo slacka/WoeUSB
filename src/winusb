@@ -235,7 +235,7 @@ check_target_filesystem(){
 	)"
 
 	if [ "${target_filesystem}" != "vfat" ]; then
-		echo_with_color "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
 		return 1
 	fi
 	return 0
