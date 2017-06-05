@@ -797,14 +797,6 @@ copy_filesystem_files(){
 
 	pushd "${source_fs_mountpoint}" >/dev/null
 
-	local file_list
-	file_list=$(\
-		find\
-			.\
-			-not -path "."\
-			-print0\
-	)
-
 	local -i copied_size=0 percentage; while IFS='' read -r -d '' source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
@@ -837,7 +829,12 @@ copy_filesystem_files(){
 		let "copied_size = copied_size + source_file_size" || true
 		let "percentage = (copied_size * 100) / total_size" || true
 		echo -en "${percentage}%\r"
-	done < <(echo "${file_list}"); unset source_file dest_file source_file_size copied_size percentage percentage
+	done < <(\
+		find\
+			.\
+			-not -path "."\
+			-print0\
+	); unset source_file dest_file source_file_size copied_size percentage percentage
 
 	popd >/dev/null
 
