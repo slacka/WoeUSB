@@ -795,7 +795,8 @@ copy_filesystem_files(){
 
 	pushd "${source_fs_mountpoint}"
 
-	file_list=$(\
+	local -r file_list
+	file_list$(\
 		find\
 			.\
 			-not -path "."\
