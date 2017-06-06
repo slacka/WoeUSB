@@ -360,9 +360,7 @@ workaround_support_windows_7_uefi_boot(){
 				--parents\
 				"${target_fs_mountpoint}/EFI/Boot"
 			7z\
-				# extract \
 				e\
-				# Write data to StdOut \
 				-so\
 				"${source_fs_mountpoint}/sources/install.wim"\
 				"1/Windows/Boot/EFI/bootmgfw.efi"\
