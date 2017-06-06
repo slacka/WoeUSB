@@ -872,7 +872,7 @@ print_help(){
 
 	echo -e "${APPLICATION_NAME}'s Help"
 	echo -e "=========================="
-	echo -e "Convert a bootable Windows media to a bootable USB storage device"
+	echo -e "Create a bootable Windows USB device from a bootable Windows optical disk or an disk image"
 	echo -e
 	echo -e "Copy Windows files to an existing FAT partition of an USB storage and make it bootable"
 	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
