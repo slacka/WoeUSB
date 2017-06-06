@@ -151,7 +151,7 @@ init(){
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
 		|| (
-			echo_with_color red "Error: Failed to mount filesystems"\
+			echo_with_color red "Error: Failed to mount filesystems"
 			exit 1
 		)
 
