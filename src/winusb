@@ -1,43 +1,635 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2026
+# SC2026 disabled because of false positives(ShellCheck issue #923)
 
-# Config
-	# Quit the script if a command fails
+# A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
+# Copyright © 2013 Colin GILLE / congelli501
+# Copyright © 2017 slacka et. al.
+
+# This file is part of WinUSB.
+#
+# WinUSB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# WinUSB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with WinUSB  If not, see <http://www.gnu.org/licenses/>.
+
+# Notes:
+#
+# * Use --strip instead of --no-symlinks for compatibility of Ubuntu 14.04(EoL: April 2019)
+
+## Makes debuggers' life easier - Unofficial Bash Strict Mode
+## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
 set -o errexit
-
-	# Quit the script if a non-declared variable is referenced
+set -o errtrace
 set -o nounset
+set -o pipefail
 
-# Script path
-set +o nounset
-if [ "$scriptPath" = "" ]; then
-	scriptName=$(basename $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
-	scriptPath=$(dirname $(readlink -f $0)) # readlink -f $0 ne marche pas en cas de "source"
+for critical_command in realpath basename dirname; do
+	if ! command -v "${critical_command}" &> /dev/null; then
+		echo "Fatal: This program requires GNU Coreutils in the executable search path"
+		exit 1
+	fi
+done
+
+## Non-overridable Primitive Variables
+## BASHDOC: Shell Variables » Bash Variables
+## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
+if [ -v "BASH_SOURCE[0]" ]; then
+	RUNTIME_EXECUTABLE_PATH="$(realpath --strip "${BASH_SOURCE[0]}")"
+	RUNTIME_EXECUTABLE_FILENAME="$(basename "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_EXECUTABLE_NAME="${RUNTIME_EXECUTABLE_FILENAME%.*}"
+	RUNTIME_EXECUTABLE_DIRECTORY="$(dirname "${RUNTIME_EXECUTABLE_PATH}")"
+	RUNTIME_COMMANDLINE_BASECOMMAND="${0}"
+	# Keep these partially unused variables declared
+	# shellcheck disable=SC2034
+	declare -r\
+		RUNTIME_EXECUTABLE_PATH\
+		RUNTIME_EXECUTABLE_FILENAME\
+		RUNTIME_EXECUTABLE_NAME\
+		RUNTIME_EXECUTABLE_DIRECTORY\
+		RUNTIME_COMMANDLINE_BASECOMMAND
 fi
-set -o nounset
+declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-pulseCurrentPid=0
-function pulse()
-{
-	if [ "$forGui" -eq 1 ]; then
-		if [ ! "$pulseCurrentPid" -eq 0 ]; then
-			kill "$pulseCurrentPid"
-			#wait "$pulseCurrentPid"
-			pulseCurrentPid=0
+declare -r APPLICATION_NAME="WinUSB"
+
+declare -i\
+	verbose='0'\
+	only_for_gui='0'\
+	no_color='0'
+
+# Commands that needs to be determined in runtime
+# due to different names in distributions
+declare\
+	command_mkdosfs\
+	command_grubinstall
+
+declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
+
+# FIXME: No documentation for this non-trivial parameter
+declare -i pulse_current_pid=0
+
+init(){
+	local install_mode
+
+	# source_media may be a optical disk drive or a disk image
+	# target_media may be an entire usb storage device or just a partition
+	local\
+		source_media\
+		target_media
+
+	local\
+		target_device\
+		target_partition
+
+	local\
+		source_fs_mountpoint\
+		target_fs_mountpoint
+	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
+	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
+
+	if ! check_runtime_dependencies; then
+		exit 1
+	fi
+
+	if ! process_commandline_parameters\
+			install_mode\
+			source_media\
+			target_media; then
+		print_help
+		exit 1
+	fi
+
+	check_permission
+
+	if ! check_runtime_parameters\
+		install_mode\
+		source_media\
+		target_media; then
+		print_help
+		exit 1
+	fi
+
+	# FIXME: Why `pulse on` here?
+	pulse on
+
+	determine_target_parameters\
+		"${install_mode}"\
+		"${target_media}"\
+		target_device\
+		target_partition
+
+	check_source_and_target_not_busy\
+		"${install_mode}"\
+		"${source_media}"\
+		"${target_device}"\
+		"${target_partition}"
+
+	if [ "${install_mode}" = 'device' ]; then
+		destroy_and_rebuild_entire_disk\
+			"${target_device}"\
+			"${target_partition}"
+	fi
+
+	if [ "${install_mode}" = 'partition' ]; then
+		check_target_filesystem "${target_partition}"
+	fi
+
+	setup_traps
+
+	mount_source_and_target_filesystem\
+		"${source_media}"\
+		"${source_fs_mountpoint}"\
+		"${target_partition}"\
+		"${target_fs_mountpoint}"\
+		|| (
+			echo_with_color red "Error: Failed to mount filesystems"
+			exit 1
+		)
+
+	check_target_filesystem_free_space\
+		"${target_fs_mountpoint}"\
+		"${source_fs_mountpoint}"\
+		|| exit 1
+
+	copy_filesystem_files\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"
+
+	workaround_support_windows_7_uefi_boot\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"
+
+	install_bootloader_grub\
+		"${target_fs_mountpoint}"\
+		"${target_device}"
+
+	cleanup_mountpoints\
+		"${source_fs_mountpoint}"\
+		"${target_fs_mountpoint}"\
+		'normal_cleanup'
+
+	echo_with_color green "Done :-)  You may detach the usb storage now."
+
+	pulse off
+
+	exit 0
+}; declare -fr init
+
+check_target_filesystem_free_space(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_fs_mountpoint="${1}"; shift
+	local -r source_fs_mountpoint="${1}"
+
+	free_space=$(\
+		df\
+			--block-size=1\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	free_space_human_readable=$(\
+		df\
+			--human-readable\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	needed_space=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	needed_space_human_readable=$(\
+		du\
+			--summarize\
+			--human-readable\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
+	((needed_space = needed_space + additional_space_required_for_grub_installation))
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on target partition!" >&2
+		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
+		return 1
+	fi
+}; declare -fr check_target_filesystem_free_space
+
+check_target_filesystem(){
+	util_check_function_parameters_quantity 1 $#
+	local target_partition="${1}"
+
+	local target_filesystem
+	target_filesystem="$(\
+		lsblk\
+			--output FSTYPE\
+			--noheadings\
+			"${target_partition}"\
+	)"
+
+	if [ "${target_filesystem}" != "vfat" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		return 1
+	fi
+	return 0
+}; declare -fr check_target_filesystem
+
+check_permission(){
+	if [ ! "$(id --user)" = 0 ]; then
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
+	fi
+	return 0
+}; declare -fr check_permission
+
+check_source_and_target_not_busy(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="$1"; shift
+	local source_media="$1"; shift
+	local target_device="$1"; shift
+	local target_partition="$1"
+
+	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
+		exit 1
+	fi
+
+	if [ "${install_mode}" = "partition" ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
+			exit 1
+		fi
+	else # When install_mode = device, all target partitions needs to by unmounted
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
+			exit 1
+		fi
+	fi
+}; declare -fr check_source_and_target_not_busy
+
+determine_target_parameters(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="${1}"; shift
+	local target_media="${1}"; shift
+	local -n target_device_ref="${1}"; shift
+	local -n target_partition_ref="${1}"; shift
+
+	if [ "${install_mode}" = 'partition' ]; then
+		target_partition_ref="${target_media}"
+		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
+		target_device_ref="${target_media/%[0-9]/}"
+	else # install_mode = device
+		target_device_ref="${target_media}"
+		target_partition_ref="${target_device}1"
+	fi
+
+	if [ "${verbose}" = '1' ]; then
+		echo "${FUNCNAME[0]}: Info: Target device is '${target_device_ref}'."
+		echo "${FUNCNAME[0]}: Info: Target partition is '${target_partition_ref}'."
+	fi
+	return 0
+}; declare -fr determine_target_parameters
+
+install_bootloader_grub(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local -r target_fs_mountpoint="${1}"; shift 1
+	local -r target_device="${1}"
+
+	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
+	"${command_grubinstall}"\
+		--target=i386-pc\
+		--boot-directory="${target_fs_mountpoint}"\
+		--force "${target_device}"
+
+	echo_with_color blue "Installing grub.cfg..."
+	local -r grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
+	local -r target_fs_uuid=$(\
+		lsblk\
+			--output UUID\
+			--noheadings\
+			"${target_device}"\
+	)
+
+	mkdir --parents "$(dirname "${grub_cfg}")"
+	{
+		cat <<- END_OF_FILE
+			echo '------------------------------------'
+			echo '|      Windows USB - Loading...    |'
+			echo '------------------------------------'
+			insmod fat
+			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
+			ntldr /bootmgr
+			boot
+		END_OF_FILE
+	} > "${grub_cfg}"
+}; declare -fr install_bootloader_grub
+
+# As Windows 7's installation media doesn't place the required EFI
+# bootloaders in the right location, we extract them from the
+# system image manually
+# TODO: Functionize Windows 7 checking
+workaround_support_windows_7_uefi_boot(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local source_fs_mountpoint="${1}"; shift
+	local target_fs_mountpoint="${1}"
+
+	if \
+		grep\
+			--extended-regexp\
+			--quiet\
+			"^MinServer=7[0-9]{3}\.[0-9]"\
+			"${source_fs_mountpoint}/sources/cversion.ini"\
+		&& [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
+		echo_with_color yellow "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting"
+		if command -v "7z" >/dev/null 2>&1; then
+			mkdir\
+				--parents\
+				"${target_fs_mountpoint}/EFI/Boot"
+			7z\
+				e\
+				-so\
+				"${source_fs_mountpoint}/sources/install.wim"\
+				"Windows/Boot/EFI/bootmgfw.efi"\
+				> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+		else
+			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
+		fi
+	fi
+}; declare -fr workaround_support_windows_7_uefi_boot
+
+mount_source_and_target_filesystem(){
+	util_check_function_parameters_quantity 4 "${#}"
+
+	local source_media="$1"; shift
+	local source_fs_mountpoint="$1"; shift
+	local target_partition="$1"; shift
+	local target_fs_mountpoint="$1"
+
+	echo_with_color blue "Mounting source and target filesystems..."
+
+	mkdir\
+		--parents\
+		"${source_fs_mountpoint}"\
+		|| (
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${source_fs_mountpoint}\" mountpoint directory"
+			return 1
+		)
+	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
+		mount\
+			--options loop,ro\
+			--types udf,iso9660\
+			"${source_media}"\
+			"${source_fs_mountpoint}"\
+		|| (
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
+			return 1
+		)
+	else # ${source_media} is a real optical disk drive (block device)
+		mount\
+			--options ro\
+			"${source_media}"\
+			"${source_fs_mountpoint}"\
+		|| (
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
+			return 1
+		)
+	fi
+
+	mkdir\
+		--parents\
+		"${target_fs_mountpoint}"\
+		|| (
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${target_fs_mountpoint}\" mountpoint directory"
+			return 1
+		)
+	mount\
+		"${target_partition}"\
+		"${target_fs_mountpoint}"\
+		|| (
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
+			return 1
+		)
+}; declare -fr mount_source_and_target_filesystem
+
+setup_traps(){
+	util_check_function_parameters_quantity 0 "${#}"
+
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
+}; declare -fr setup_traps
+
+# Utility function to check if function parameters quantity is legal
+# NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
+util_check_function_parameters_quantity(){
+	if [ "${#}" -ne 2 ]; then
+		printf --\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			"${FUNCNAME[0]}"\
+			2\
+			"${#}"
+		exit 1
+	fi
+
+	# The expected given quantity
+	local -i expected_parameter_quantity="${1}"; shift
+	# The actual given parameter quantity, simply pass "${#}" will do
+	local -i given_parameter_quantity="${1}"
+
+	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
+		printf --\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			"${FUNCNAME[1]}"\
+			"${expected_parameter_quantity}"\
+			"${given_parameter_quantity}"\
+			1>&2
+		exit 1
+	fi
+	return 0
+}; declare -fr util_check_function_parameters_quantity
+
+destroy_and_rebuild_entire_disk(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_device="${1}"; shift
+	local -r target_partition="${1}"
+
+	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
+	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+	parted --script\
+		"${target_device}"\
+		mklabel\
+		msdos
+
+	# Create partition
+	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+	parted --script\
+		"${target_device}"\
+		mkpart\
+		primary\
+		fat32\
+		4MiB\
+		-- -1s # last sector of the disk
+
+	# Reload the new partition table
+	# FIXME: Is `blockdev` and `partprobe` both required?
+	blockdev\
+		--rereadpt\
+		"${target_device}"\
+		|| true
+	partprobe\
+		"${target_device}"
+	echo "Wait 3 seconds for block device nodes to populate..."
+	sleep 3
+
+	# Create filesystem on partition
+	"$command_mkdosfs"\
+		-F 32\
+		-n 'Windows USB' \
+		"${target_partition}"
+}; declare -fr destroy_and_rebuild_entire_disk
+
+check_runtime_dependencies(){
+	util_check_function_parameters_quantity 0 $#
+	local result="unknown"
+
+	for required_command in\
+		mount\
+		grep\
+		dd\
+		id\
+		mkdir\
+		df\
+		du\
+		awk\
+		parted\
+		blockdev\
+		partprobe\
+		stat\
+		rm\
+		readlink\
+		find\
+		lsblk\
+		expr
+		do
+		if ! command -v "${required_command}" >/dev/null; then
+			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
+			result=failed
+		fi
+	done
+
+	if command -v 'mkdosfs' &> /dev/null; then
+		command_mkdosfs='mkdosfs'
+	elif command -v 'make.msdos' &> /dev/null; then
+		command_mkdosfs='mkfs.msdos'
+	else
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
+		result="failed"
+	fi
+
+	if command -v 'grub-install' &> /dev/null; then
+		command_grubinstall='grub-install'
+	elif command -v 'grub2-install' &> /dev/null; then
+		command_grubinstall='grub2-install'
+	else
+		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+		result="failed"
+	fi
+
+	if [ "${result}" == "failed" ]; then
+		return 1
+	else
+		return 0
+	fi
+}; declare -fr check_runtime_dependencies
+
+check_runtime_parameters(){
+	util_check_function_parameters_quantity 3 $#
+	local -n install_mode_ref="${1}"; shift
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
+
+	if ! util_is_parameter_set_and_not_empty install_mode_ref\
+		|| ! util_is_parameter_set_and_not_empty source_media_ref\
+		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
+		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
+		echo "" >&2
+		print_help
+		return 1
+	fi
+
+	if [ ! -f "${source_media_ref}" ] \
+		&& [ ! -b "${source_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
+		return 1
+	fi
+
+	if ! [ -b "${target_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = device ] \
+		&& expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = partition ] \
+		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
+		return 1
+	fi
+
+	return 0
+}; declare -fr check_runtime_parameters
+
+pulse(){
+	util_check_function_parameters_quantity 1 $#
+	if [ "$only_for_gui" -eq 1 ]; then
+		if [ ! "$pulse_current_pid" -eq 0 ]; then
+			kill "$pulse_current_pid"
+			#wait "$pulse_current_pid"
+			pulse_current_pid=0
 		fi
 
 		if [ "$1" = 'on' ]; then
 			cd /; while true; do sleep 0.05; echo 'pulse'; done &
-			pulseCurrentPid="$!"
+			pulse_current_pid="$!"
 		elif [ "$1" != 'off' ]; then
-			echo "Pulse: bad argument" >&2
+			echo "${FUNCNAME[0]}: Error: Illegal function parameter" >&2
 			exit 1
 		fi
 	fi
-}
+}; declare -fr pulse
 
-# Fns
-function color()
-{
+# Configure the terminal to print future messages with certain color
+# $1:
+#     <color>: color of the next message
+#     none: reset color to default
+switch_terminal_text_color(){
+	util_check_function_parameters_quantity 1 $#
 	case "$1" in
 		none)
 			tput sgr0
@@ -61,42 +653,53 @@ function color()
 			echo -en "\033[0;37m"
 			;;
 	esac
-}
+}; declare -fr switch_terminal_text_color
 
-function echoC()
-{
-	if [ "$noColor" -eq 1 ]; then
-		echo -e "$2"
+# Print message with color
+echo_with_color(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local -r message_color="${1}"; shift
+	local -r message_body="${1}"
+
+	if [ "${no_color}" -eq 1 ]; then
+		echo -e "${message_body}"
 	else
-		color "$1"
-		echo -e "$2"
-		color none
+		switch_terminal_text_color "${message_color}"
+		echo -e "${message_body}"
+		switch_terminal_text_color none
 	fi
 }
 
-function exitUmountIso()
-{
-	RETURN="$?"
+# Unmount mounted filesystems and clean-up mountpoints before exiting program
+# $1: Windows ISO mountpoint
+# $2: Target mountpoint
+# $3: Exit reason
+cleanup_mountpoints(){
+	util_check_function_parameters_quantity 3 "${#}"
 
 	set +o errexit # We need to clean up everything we can
 
-	trap - HUP QUIT KILL SEGV PIPE INT TERM EXIT
+	trap - HUP QUIT PIPE INT TERM EXIT
 
 	pulse off
+
+	printf "\n" # Proactively separate from previous command output
 	if [ "$3" == 'kill' ]; then
-		echoC red "\nKilled!"  >&2
-	elif [ "$RETURN" -ne 0 ]; then
-		echoC red "Error occured!"  >&2
+		echo_with_color yellow "Terminated by external signal!"  >&2
+	elif [ "$3" == 'error' ]; then
+		echo_with_color red "Internal error occurred!"  >&2
+	elif [ "$3" == 'interrupt' ]; then
+		echo_with_color yellow "Interrupted by user"
 	else
-		echoC green "Exiting..."
+		echo_with_color green "Exiting..."
 	fi
 
-	echo "Syncing..."
+	echo "Synchronizing cached writes to persistent storage..."
 
 	pulse on
 	sync
 	pulse off
-	
+
 	echo "Cleaning..."
 
 	cd /
@@ -104,328 +707,358 @@ function exitUmountIso()
 	wait 2> /dev/null
 	sleep 1
 
-	echoC green "Unmounting and removing '$1'..."
+	echo_with_color green "Unmounting and removing '$1'..."
+	# shellcheck disable=2015
 	umount "$1" && rm -rf "$1" || true
 
-	echoC green "Unmounting and removing '$2'..."
+	echo_with_color green "Unmounting and removing '$2'..."
+	# shellcheck disable=2015
 	umount "$2" && rm -rf "$2" || true
 
-	if [ "$3" = 'normalCleanup' ]; then
-		exit 0
+	if [ "$3" = 'normal_cleanup' ]; then
+		return 0
 	else
 		exit 2
 	fi
 }
 
-function hideNoErr()
-{
+hideNoErr(){
 	set +o errexit
 	TEXT="$( "$@" 2>&1 )"
 	RETURN="$?"
 	set -o errexit
 
 	if [ "$RETURN" -ne 0 ]; then
-		echoC red "Error while running command '$*' (exit code : $RETURN)!" >&2
-		echoC red "Read command output (Y/n)?" >&2
+		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echo_with_color red "Read command output (Y/n)?" >&2
 
 		rep='y'
-		read rep || true # If we can't read, don't quit
+		read -r rep || true # If we can't read, don't quit
 
-		if [ "$rep" != "n" ] && [ "$rep" != "N" ]; then
+		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
 			echo "$TEXT"
 		fi
 
-		echoC red "Press any key to exit (tmpDir will be removed)" >&2
-		read var
+		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
+		read -r
 	fi
 
 	return "$RETURN"
 }
 
-function printHelp()
-{
-	echo "$scriptName usage" >&2
-	echo "Install a Windows ISO on an FAT partition and edit MBR of the device" >&2
-	echo "  $scriptName --install <iso path> <partition>" >&2
-	echo "  Example: $scriptName --install win7_amd64.iso /dev/sdd1" >&2
-	echo "" >&2
-	echo "Completely format a drive and install the ISO on it" >&2
-	echo "  $scriptName --format <iso path> <device>" >&2
-	echo "  Example: $scriptName --format win7_amd64.iso /dev/sdd" >&2
-	echo "" >&2
-	echo "Options" >&2
-	echo " --verbose, -v        Verbose mode" >&2
-	echo " --help, -h           Show this help message and exit" >&2
-	echo " --noColor            Disable color" >&2
-}
+# Copy source_file to dest_file, overwrite file if dest_file exists
+# Also report copy_filesystem_files progress during operation
+copy_file(){
+	util_check_function_parameters_quantity 4 "${#}"
+	local -r source_file="${1}"; shift
+	local -r dest_file="${1}"; shift
+	local -ir caller_copied_size="${1}"; shift
+	local -ir caller_total_size="${1}"
 
+	local -i source_file_size
+	source_file_size=$(\
+		stat\
+		--format=%s\
+		"${source_file}"\
+	)
 
-((blockSize = 4 * 1024 * 1024)) # 4Mo
+	# block count of the source file
+	local -i block_number
+	((block_number = source_file_size / DD_BLOCK_SIZE + 1))
+	unset source_file_size
 
-function copyFile()
-{
-	inFile="$1"
-	outFile="$2"
-	wholeCurrentSize="$3"
-
-	# Size
-	size=$(stat --format=%s "$inFile")
-	((stepNb = size / blockSize + 1))
-
-	# Rm
-	if [ -f "$outFile" ]; then
-		rm "$outFile"
+	if [ -f "${dest_file}" ]; then
+		rm "${dest_file}"
 	fi
 
-	# Copy
-	i=0
-	while [ "$i" -lt "$stepNb" ]; do
-		dd if="$inFile" bs="$blockSize" skip="$i" seek="$i" of="$outFile" count=1 2> /dev/null 
+	# Copy file block by block
+	local -i i=0 copied_size_total percentage; while [ "${i}" -lt "${block_number}" ]; do
+		dd\
+			if="${source_file}"\
+			bs="${DD_BLOCK_SIZE}"\
+			skip="${i}"\
+			seek="${i}"\
+			of="${dest_file}"\
+			count=1\
+			2> /dev/null
 		((i = i + 1))
 
-		# Send current copied size
-		local copiedSize=$(stat --format=%s "$outFile")
-		((totalCopiedSize = copiedSize + wholeCurrentSize)) || true
-		#echo "$totalCopiedSize"
+		# Calculate and report progress
+		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Bash Features » Shell Arithmetic
+		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
+		let "percentage = (copied_size_total * 100) / caller_total_size" || true
+		echo -en "${percentage}%\r"
+	done; unset i copied_size_total percentage
 
-		((percent = (totalCopiedSize * 100) / totalSize)) || true
-		echo -en "$percent%\r"
-	done
+	return 0
+}; declare -fr copy_file
+
+# Copying all files from one filesystem to another, with progress reporting
+copy_filesystem_files(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local source_fs_mountpoint="${1}"; shift
+	local target_fs_mountpoint="${1}"
+
+	local -i total_size
+	total_size=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+
+	# FIXME: Why do we `pulse off` and on here?
+	pulse off
+
+	echo_with_color blue "Copying files from source media..."
+
+	pushd "${source_fs_mountpoint}" >/dev/null
+
+	local -i copied_size=0 percentage; while IFS='' read -r -d '' source_file; do
+		dest_file="${target_fs_mountpoint}/${source_file}"
+
+		source_file_size=$(\
+			stat\
+				--format=%s\
+				"${source_file}"\
+		)
+
+		if [ -d "${source_file}" ]; then
+			mkdir --parents "${dest_file}"
+		elif [ -f "${source_file}" ]; then
+			if [ "${verbose}" = 1 ]; then
+				echo -e "\nINFO: Copying "${source_file}"..."
+			fi
+			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
+				cp "${source_file}" "${dest_file}"
+			else
+				copy_file\
+					"${source_file}"\
+					"${dest_file}"\
+					"${copied_size}"\
+					"${total_size}"
+			fi
+		else
+			echo_with_color red "${FUNCNAME[0]}: Error: Unknown type of '${source_file}'!" >&2
+			exit 1
+		fi
+
+		# Calculate and report progress
+		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Bash Features » Shell Arithmetic
+		let "copied_size = copied_size + source_file_size" || true
+		let "percentage = (copied_size * 100) / total_size" || true
+		echo -en "${percentage}%\r"
+	done < <(\
+		find\
+			.\
+			-not -path "."\
+			-print0\
+	); unset source_file dest_file source_file_size copied_size percentage
+
+	popd >/dev/null
+
+	pulse on
 
 	return 0
 }
 
-function progressCp()
-{
-	totalSize=$(du -s "$1" --bytes | awk '{print $1}')
-	currentSize=0
+print_help(){
+	util_check_function_parameters_quantity 0 "${#}"
 
-	targetDir="$2"
-	mkdir -p "$targetDir"
-	targetDir=$(readlink -f "$targetDir")
+	echo -e "${APPLICATION_NAME}'s Help"
+	echo -e "=========================="
+	echo -e "Create a bootable Windows USB device from a bootable Windows optical disk or an disk image"
+	echo -e
+	echo -e "Copy Windows files to an existing FAT partition of an USB storage and make it bootable"
+	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
+	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <source media path> <partition>"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdX1"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install /dev/sr0 /dev/sdX1"
+	echo -e
+	echo -e "Completely DESTROY all previous data on an USB storage, copy Windows files and make it bootable"
+	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --format <source media path> <device>"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdX"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format /dev/sr0 /dev/sdX"
+	echo -e
+	echo -e "Options"
+	echo -e "\t--verbose, -v        ""Verbose mode"
+	echo -e "\t--help, -h           ""Show this help message and exit"
+	echo -e "\t--no-color           ""Disable color"
+	echo -e "\t--debug, -d          ""Enable script debugging"
+}; declare -fr print_help
 
-	cd "$1"
-	fileList=$(find .)
+process_commandline_parameters(){
+	util_check_function_parameters_quantity 3 "${#}"
+	local -n install_mode_ref="${1}"; shift
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
 
-	while read inFile; do
-		if [ "$inFile" != '.' ]; then
-			outFile="$targetDir/$inFile"
+	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
+		print_help
+		exit 0
+	fi
 
-			fileSize=$(stat --format=%s "$inFile")
+	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
+	local enable_debug=N
 
-			if [ -d "$inFile" ]; then
-				mkdir -p "$outFile"
-			elif [ -f "$inFile" ]; then
-				if [ "$fileSize" -lt "$blockSize" ]; then
-					cp "$inFile" "$outFile"
-				else
-					copyFile "$inFile" "$outFile" "$currentSize"
+	while [ "${#parameters[@]}" -ne 0 ]; do
+		case "${parameters[0]}" in
+			"--help"\
+			|"-h")
+				print_help;
+				exit 0
+				;;
+			"--debug"\
+			|"-d")
+				enable_debug="Y"
+				;;
+			'--install')
+				install_mode_ref='partition'
+				shift_array parameters
+				if [ "${#parameters[@]}" -lt 2 ]; then
+					echo_with_color\
+						"red"\
+						"${FUNCNAME[0]}: Error: --install option requires 2 arguments!"
+					return 1
 				fi
-			else
-				echo "Error: Unknown type of '$inFile'!" >&2
-				exit 1
-			fi
+				source_media_ref="${parameters[0]}"
+				shift_array parameters
+				target_media_ref="${parameters[0]}"
+				;;
+			'--format')
+				# Limitation of ShellCheck to detect usage of indirection variables
+				# https://github.com/koalaman/shellcheck/wiki/SC2034
+				# shellcheck disable=SC2034
+				install_mode_ref='device'
+				shift_array parameters
+				if [ "${#parameters[@]}" -lt 2 ]; then
+					echo_with_color\
+						"red"\
+						"${FUNCNAME[0]}: Error: --format option requires 2 arguments!"
+					return 1
+				fi
+				source_media_ref="${parameters[0]}"
+				shift_array parameters
+				target_media_ref="${parameters[0]}"
+				;;
+			'--verbose'|'-v')
+				verbose='1'
+				;;
+			'--for-gui')
+				no_color='1'
+				only_for_gui='1'
+				;;
+			'--no-color')
+				no_color='1'
+				;;
+			*)
+				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
+				return 1
+				;;
+		esac
+		shift_array parameters
+	done
 
-			# Mode
-			#chmod "$(stat --format=%a "$inFile")" "$outFile"
+	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
+		trap 'trap_return "${FUNCNAME[0]}"' RETURN
 
-			# Progress
-			((currentSize = currentSize + fileSize)) || true
-			((percent = (currentSize * 100) / totalSize)) || true
-			echo -en "$percent%\r"
+		# Disabled due to FIXME
+		# trap 'trap_debug "${BASH_COMMAND}"' DEBUG
+	fi
+
+	if [ "${enable_debug}" = "Y" ]; then
+		set -o xtrace
+	fi
+	return 0
+}; declare -fr process_commandline_parameters;
+
+shift_array(){
+	util_check_function_parameters_quantity 1 "${#}"
+
+	local -n array_ref="${1}"
+
+	if [ "${#array_ref[@]}" -eq 0 ]; then
+		printf "ERROR: array is empty!\n" 1>&2
+		return 1
+	fi
+
+	# Unset the 1st element
+	unset "array_ref[0]"
+
+	# Repack array if element still available in array
+	if [ "${#array_ref[@]}" -ne 0 ]; then
+		array_ref=("${array_ref[@]}")
+	fi
+
+	return 0
+}; declare -fr shift_array
+
+trap_return(){
+	util_check_function_parameters_quantity 1 "${#}"
+	local returning_function="${1}"
+
+	for ignored_function in\
+		util_check_function_parameters_quantity\
+		util_is_parameter_set_and_not_empty\
+		switch_terminal_text_color\
+		echo_with_color; do
+		if [ "${returning_function}" == "${ignored_function}" ]; then
+			return 0
 		fi
-	done < <(echo "$fileList")
-}
+	done
 
-# Args
-installMethod=''
-isoPath=''
-targetMedia=''
-verbose='0'
-forGui='0'
-noColor='0'
+	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
+}; declare -fr trap_return
 
+# FIXME: Debug trap never work as expected, it always
+# prints two identical lines somehow.
+trap_debug(){
+	util_check_function_parameters_quantity 1 $#
+	local -r command_to_be_executed="${1}"
 
-while [ ! "$#" -eq 0 ]; do
-	case "$1" in
-		'--help'|'-h')
-			printHelp
-			exit 0;;
-		'--install')
-			installMethod='edit'
-			shift
-			isoPath=$(readlink -f "$1")
-			shift
-			targetMedia=$(readlink -f "$1");;
-		'--format')
-			installMethod='format'
-			shift
-			isoPath=$(readlink -f "$1")
-			shift
-			targetMedia=$(readlink -f "$1");;
-		'--verbose'|'-v')
-			verbose='1';;
-		'--forGui')
-			noColor='1'
-			forGui='1';;
-		'--noColor')
-			noColor='1';;
-		* )
-			echo "Error: Unknown argument \"$1\"!" >&2
-			exit 1;;
+	local -r command_base="${command_to_be_executed%% *}"
+
+	for ignored_command in util_check_function_parameters_quantity util_is_parameter_set_and_not_empty echo_with_color switch_terminal_text_color tput; do
+		if [ "${command_base}" = "${ignored_command}" ]; then
+			return 0
+		fi
+	done
+
+	case "$(type -t "${command_base}")" in
+		"file")
+			echo_with_color green "${FUNCNAME[0]}: INFO: Executing ${command_to_be_executed}"
+			;;
+		"function")
+			echo_with_color green "${FUNCNAME[0]}: INFO: Calling ${command_base}"
+			;;
+		*)
+			:
+			;;
 	esac
 
-	shift
-done
+	return 0
+}; declare -fr trap_debug
 
-# Test
-if [ ! $(id -u) = 0 ]; then
-   echo "Warning: you should run this script as root!" >&2
-fi
+util_is_parameter_set_and_not_empty(){
+	util_check_function_parameters_quantity 1 $#
 
-mkdosfsProg=''
-if which 'mkdosfs' > /dev/null; then
-	mkdosfsProg='mkdosfs'
-elif which 'make.msdos' > /dev/null; then
-	mkdosfsProg='mkfs.msdos'
-else
-	echo 'Error: mkdosfs or mkfs.msdos program not found!' >&2
-	exit 1
-fi
+	local parameter_name="${1}"
 
-if [ -z "$installMethod" ]; then
-	echo "Error: No install method specified!" >&2
-	echo "" >&2
-	printHelp
-	exit 1
-fi
-
-if [ ! -f "$isoPath" ] && [ ! -b "$isoPath" ]; then
-	echo "Error: iso '$isoPath' not found or not a regular file or a block file!" >&2
-	exit 1
-fi
-
-if ! [ -b "$targetMedia" ]; then
-	echo "Error: the device "$targetMedia" is not special block!" >&2
-	exit 1
-fi
-
-trap "pulse off" HUP QUIT KILL SEGV PIPE INT TERM EXIT
-pulse on
-
-# Prepare install
-if [ "$installMethod" = 'edit' ]; then
-	device="$(echo "$targetMedia" | sed "s/[0-9]*$//")"
-	partition="$targetMedia"
-
-	if [ "$verbose" = '1' ]; then
-		echo "Target device is '$device'."
-	fi
-else
-	echo "Formatting device..."
-	device="$targetMedia"
-
-	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
-	parted -s "$device" mklabel msdos
-
-	# Create partiton
-	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	parted -s "$device" mkpart primary fat32 4MiB -- -1s
-	
-	blockdev --rereadpt "$device" || true # Reload partition table
-	partprobe "$device" # Reload partition table
-	echo "Wait 3 seconds for block device nodes to populate..."
-	sleep 3
-
-	# get first partition
-	partition=`ls --color=no -1 "$device"* | grep -ve "$device"'$'`
-
-	# Create the FAT partition
-	"$mkdosfsProg" -F 32 -n 'Windows USB' "$partition"
-fi
-
-isoMountPath="/media/winusb_iso_$(date +%s)_$$"
-partitionMountPath="/media/winusb_target_$(date +%s)_$$"
-
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'kill'" INT TERM
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'exit'" EXIT
-trap "exitUmountIso '$isoMountPath' '$partitionMountPath' 'other signal'" HUP QUIT KILL SEGV PIPE
-
-# Mounting
-echo "Mounting..."
-mkdir -p "$isoMountPath"
-if [ -f "$isoPath" ]; then # ISO
-	mount -o loop,ro -t udf,iso9660 "$isoPath" "$isoMountPath"
-else # Real DVD drive (block)
-	mount -o ro "$isoPath" "$isoMountPath"
-fi
-
-	# Umount partition
-if [ "$(mount | grep -c "$partition")" != 0 ]; then
-	umount "$partition"
-fi
-
-mkdir -p "$partitionMountPath"
-mount "$partition" "$partitionMountPath"
-
-freeSpace=$(df --block-size 1 "$partitionMountPath" | grep "$partition" | awk '{print $4}')
-neededSpace=$(du -s "$isoMountPath" --bytes | awk '{print $1}')
-
-((neededSpace = neededSpace + 1000 * 1000 * 10)) # 10MB more for grub installation
-
-if [ "$neededSpace" -gt "$freeSpace" ]; then
-	echo "Error: Not enough free space on '$partition'!" >&2
-	exit 1
-fi
-
-# Copy
-pulse off
-
-echo "Copying..."
-progressCp "$isoMountPath" "$partitionMountPath"
-
-pulse on
-
-# Copy the EFI file for Windows 7
-if ( grep -Eq "^MinServer=7[0-9]{3}\.[0-9]" "$isoMountPath/sources/cversion.ini") && [ -f "$isoMountPath/bootmgr.efi" ]; then
-	# It's Windows 7 with EFI support (and thus 64-Bit)
-	if command -v "7z" >/dev/null 2>&1; then
-		mkdir -p "$partitionMountPath/EFI/Boot"
-		7z e -so "$isoMountPath/sources/install.wim" "1/Windows/Boot/EFI/bootmgfw.efi" > "$partitionMountPath/EFI/Boot/bootx64.efi"
+	if [ ! -v "${parameter_name}" ]; then
+		return 1
 	else
-		echo "Warning: '7z' utility missing, EFI booting might not work!" >&2
+		declare -n parameter_ref
+		parameter_ref="${parameter_name}"
+
+		if [ -z "${parameter_ref}" ]; then
+			return 1
+		else
+			return 0
+		fi
 	fi
-fi
+}; declare -fr util_is_parameter_set_and_not_empty
 
-# Grub
-echo "Installing grub..."
-if which 'grub-install' &> /dev/null; then
-	grubInsProg='grub-install'
-elif which 'grub2-install' &> /dev/null; then
-	grubInsProg='grub2-install'
-else
-	echo 'Error: grub-install or grub2-install program not found!' >&2
-	exit 1
-fi
-"$grubInsProg" --target=i386-pc --boot-directory="$partitionMountPath" --force "$device" 
-
-uuid=$(blkid -o value -s UUID "$partition") 
-
-# grub.cfg 
-echo "Installing grub.cfg..."
-cfgFilename="$partitionMountPath/grub/grub.cfg" 
-mkdir -p "$(dirname "$cfgFilename")"
-echo -n "" > "$cfgFilename"
-
-echo "echo '------------------------------------'" >> "$cfgFilename" 
-echo "echo '|      Windows USB - Loading...    |'" >> "$cfgFilename" 
-echo "echo '------------------------------------'" >> "$cfgFilename" 
-echo "insmod fat" >> "$cfgFilename"
-echo "search --no-floppy --fs-uuid $uuid --set root" >> "$cfgFilename" 
-echo "ntldr /bootmgr" >> "$cfgFilename"
-echo "boot" >> "$cfgFilename" 
-
-# End
-exitUmountIso "$isoMountPath" "$partitionMountPath" 'normalCleanup'
-pulse off
-exit 0
+init "${@}"
