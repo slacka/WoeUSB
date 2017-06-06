@@ -118,6 +118,7 @@ init(){
 		exit 1
 	fi
 
+	# FIXME: Why `pulse on` here?
 	pulse on
 
 	determine_target_parameters\
