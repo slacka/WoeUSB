@@ -957,7 +957,7 @@ process_commandline_parameters(){
 				no_color='1'
 				;;
 			*)
-				printf "ERROR: Unknown command-line argument \"%s\"\n" "${parameters[0]}" >&2
+				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
 				return 1
 				;;
 		esac
