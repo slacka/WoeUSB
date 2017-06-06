@@ -110,10 +110,13 @@ init(){
 
 	check_permission
 
-	check_runtime_parameters\
+	if ! check_runtime_parameters\
 		install_mode\
 		source_media\
-		target_media
+		target_media; then
+		print_help
+		exit 1
+	fi
 
 	pulse on
 
