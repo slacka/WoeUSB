@@ -363,7 +363,7 @@ workaround_support_windows_7_uefi_boot(){
 				e\
 				-so\
 				"${source_fs_mountpoint}/sources/install.wim"\
-				"1/Windows/Boot/EFI/bootmgfw.efi"\
+				"Windows/Boot/EFI/bootmgfw.efi"\
 				> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
 		else
 			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
