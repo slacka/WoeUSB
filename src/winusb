@@ -576,32 +576,32 @@ check_runtime_parameters(){
 		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
 		echo "" >&2
 		print_help
-		exit 1
+		return 1
 	fi
 
 	if [ ! -f "${source_media_ref}" ] \
 		&& [ ! -b "${source_media_ref}" ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
-		exit 1
+		return 1
 	fi
 
 	if ! [ -b "${target_media_ref}" ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
-		exit 1
+		return 1
 	fi
 
 	if [ "${install_mode_ref}" = device ] \
 		&& expr match "${target_media}" '.*[0-9]' >/dev/null
 		then
 		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
-		exit 1
+		return 1
 	fi
 
 	if [ "${install_mode_ref}" = partition ] \
 		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
 		then
 		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
-		exit 1
+		return 1
 	fi
 
 	return 0
