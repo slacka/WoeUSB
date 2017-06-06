@@ -947,7 +947,7 @@ process_commandline_parameters(){
 			'--verbose'|'-v')
 				verbose='1'
 				;;
-			'--forGui')
+			'--for-gui')
 				no_color='1'
 				only_for_gui='1'
 				;;
