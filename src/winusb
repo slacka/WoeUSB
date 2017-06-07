@@ -885,6 +885,8 @@ pulse(){
 	fi
 }; declare -fr pulse
 
+## Traps: Functions that are triggered when certain condition occurred
+## Shell Builtin Commands » Bourne Shell Builtins » trap
 setup_traps(){
 	util_check_function_parameters_quantity 0 "${#}"
 
