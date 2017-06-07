@@ -83,7 +83,8 @@ declare -i pulse_current_pid=0
 alias\
 	echo_with_color=util_echo_with_color\
 	switch_terminal_text_color=util_switch_terminal_text_color\
-	shift_array=util_shift_array
+	shift_array=util_shift_array\
+	is_target_busy=check_is_target_device_busy
 
 ## Entry point of the main code
 init(){
@@ -446,6 +447,17 @@ determine_target_parameters(){
 	return 0
 }; declare -fr determine_target_parameters
 
+check_is_target_device_busy(){
+	util_check_function_parameters_quantity 1 $#
+	local -r "${target_device}"
+
+	if [ "$(mount | grep -c "${target_device}")" -ne 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}; declare -fr check_is_target_device_busy
+
 check_source_and_target_not_busy(){
 	util_check_function_parameters_quantity 4 $#
 	local install_mode="$1"; shift
@@ -464,7 +476,7 @@ check_source_and_target_not_busy(){
 			exit 1
 		fi
 	else # When install_mode = device, all target partitions needs to by unmounted
-		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+		if is_target_busy "${target_device}"; then
 			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
 			exit 1
 		fi
