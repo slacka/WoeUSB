@@ -75,9 +75,10 @@ declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 declare -i pulse_current_pid=0
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
-alias echo_with_color=util_echo_with_color
-alias switch_terminal_text_color=util_switch_terminal_text_color
-alias shift_array=util_shift_array
+alias\
+	echo_with_color=util_echo_with_color\
+	switch_terminal_text_color=util_switch_terminal_text_color\
+	shift_array=util_shift_array
 
 ## Entry point of the main code
 init(){
