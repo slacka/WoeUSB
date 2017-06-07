@@ -944,13 +944,15 @@ trap_debug(){
 ## An utility function for inhibiting command call output and
 ## only show them to user when error occurred
 util_call_external_command(){
+	local -r command="${@}"
+
 	set +o errexit
-	TEXT="$( "$@" 2>&1 )"
+	TEXT="$( "${command}" 2>&1 )"
 	RETURN="$?"
 	set -o errexit
 
 	if [ "$RETURN" -ne 0 ]; then
-		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echo_with_color red "Error while running command '${command}' (exit code : $RETURN)!" >&2
 		echo_with_color red "Read command output (Y/n)?" >&2
 
 		rep='y'
