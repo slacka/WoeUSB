@@ -912,7 +912,7 @@ trap_return(){
 		fi
 	done
 
-	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
+	echo_with_color green "${FUNCNAME[0]}: INFO: returning from ${returning_function}" 1>&2
 }; declare -fr trap_return
 
 ## FIXME: Debug trap never work as expected, it always
