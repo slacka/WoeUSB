@@ -625,7 +625,7 @@ check_target_filesystem_free_space(){
 	fi
 }; declare -fr check_target_filesystem_free_space
 
-# Copying all files from one filesystem to another, with progress reporting
+## Copying all files from one filesystem to another, with progress reporting
 copy_filesystem_files(){
 	util_check_function_parameters_quantity 2 "${#}"
 	local source_fs_mountpoint="${1}"; shift
@@ -696,8 +696,8 @@ copy_filesystem_files(){
 	return 0
 }; declare -fr copy_filesystem_files
 
-# Copy source_file to dest_file, overwrite file if dest_file exists
-# Also report copy_filesystem_files progress during operation
+## Copy source_file to dest_file, overwrite file if dest_file exists
+## Also report copy_filesystem_files progress during operation
 copy_file(){
 	util_check_function_parameters_quantity 4 "${#}"
 	local -r source_file="${1}"; shift
@@ -744,10 +744,10 @@ copy_file(){
 	return 0
 }; declare -fr copy_file
 
-# As Windows 7's installation media doesn't place the required EFI
-# bootloaders in the right location, we extract them from the
-# system image manually
-# TODO: Functionize Windows 7 checking
+## As Windows 7's installation media doesn't place the required EFI
+## bootloaders in the right location, we extract them from the
+## system image manually
+## TODO: Functionize Windows 7 checking
 workaround_support_windows_7_uefi_boot(){
 	util_check_function_parameters_quantity 2 "${#}"
 	local source_fs_mountpoint="${1}"; shift
@@ -812,10 +812,10 @@ install_bootloader_grub(){
 	} > "${grub_cfg}"
 }; declare -fr install_bootloader_grub
 
-# Unmount mounted filesystems and clean-up mountpoints before exiting program
-# $1: Windows ISO mountpoint
-# $2: Target mountpoint
-# $3: Exit reason
+## Unmount mounted filesystems and clean-up mountpoints before exiting program
+## $1: Windows ISO mountpoint
+## $2: Target mountpoint
+## $3: Exit reason
 cleanup_mountpoints(){
 	util_check_function_parameters_quantity 3 "${#}"
 
@@ -864,7 +864,7 @@ cleanup_mountpoints(){
 	fi
 }; declare -fr cleanup_mountpoints
 
-# FIXME: What is this function's purpose
+## FIXME: What is this function's purpose
 pulse(){
 	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
@@ -935,8 +935,8 @@ trap_return(){
 	echo_with_color green ""${FUNCNAME[0]}": INFO: returning from ${returning_function}\n" 1>&2
 }; declare -fr trap_return
 
-# FIXME: Debug trap never work as expected, it always
-# prints two identical lines somehow.
+## FIXME: Debug trap never work as expected, it always
+## prints two identical lines somehow.
 trap_debug(){
 	util_check_function_parameters_quantity 1 $#
 	local -r command_to_be_executed="${1}"
@@ -964,10 +964,10 @@ trap_debug(){
 	return 0
 }; declare -fr trap_debug
 
-# Configure the terminal to print future messages with certain color
-# $1:
-#     <color>: color of the next message
-#     none: reset color to default
+## Configure the terminal to print future messages with certain color
+## $1:
+##     <color>: color of the next message
+##     none: reset color to default
 util_switch_terminal_text_color(){
 	util_check_function_parameters_quantity 1 $#
 	case "$1" in
@@ -995,7 +995,7 @@ util_switch_terminal_text_color(){
 	esac
 }; declare -fr util_switch_terminal_text_color
 
-# Print message with color
+## Print message with color
 util_echo_with_color(){
 	util_check_function_parameters_quantity 2 "${#}"
 	local -r message_color="${1}"; shift
@@ -1050,8 +1050,8 @@ util_is_parameter_set_and_not_empty(){
 	fi
 }; declare -fr util_is_parameter_set_and_not_empty
 
-# Utility function to check if function parameters quantity is legal
-# NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
+## Utility function to check if function parameters quantity is legal
+## NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
 util_check_function_parameters_quantity(){
 	if [ "${#}" -ne 2 ]; then
 		printf --\
