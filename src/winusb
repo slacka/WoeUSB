@@ -504,6 +504,7 @@ destroy_and_rebuild_entire_disk(){
 		"${target_partition}"
 }; declare -fr destroy_and_rebuild_entire_disk
 
+# FIXME: What is this function's purpose
 pulse(){
 	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
