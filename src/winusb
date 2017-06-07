@@ -504,7 +504,7 @@ destroy_and_rebuild_entire_disk(){
 	sleep 3
 
 	# Create filesystem on partition
-	"$command_mkdosfs"\
+	"${command_mkdosfs}"\
 		-F 32\
 		-n 'Windows USB' \
 		"${target_partition}"
