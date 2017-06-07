@@ -77,6 +77,7 @@ declare -i pulse_current_pid=0
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias echo_with_color=util_echo_with_color
 alias switch_terminal_text_color=util_switch_terminal_text_color
+alias shift_array=util_shift_array
 
 ## Entry point of the main code
 init(){
@@ -916,7 +917,7 @@ copy_filesystem_files(){
 	return 0
 }; declare -fr copy_filesystem_files
 
-shift_array(){
+util_shift_array(){
 	util_check_function_parameters_quantity 1 "${#}"
 
 	local -n array_ref="${1}"
@@ -935,7 +936,7 @@ shift_array(){
 	fi
 
 	return 0
-}; declare -fr shift_array
+}; declare -fr util_shift_array
 
 trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
