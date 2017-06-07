@@ -665,7 +665,7 @@ copy_filesystem_files(){
 			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
 			else
-				copy_file\
+				copy_file_with_progress_report\
 					"${source_file}"\
 					"${dest_file}"\
 					"${copied_size}"\
@@ -699,7 +699,7 @@ copy_filesystem_files(){
 ## Companion function of copy_filesystem_files for copying large files
 ## Copy source_file to dest_file, overwrite file if dest_file exists
 ## Also report copy_filesystem_files progress during operation
-copy_file(){
+copy_file_with_progress_report(){
 	util_check_function_parameters_quantity 4 "${#}"
 	local -r source_file="${1}"; shift
 	local -r dest_file="${1}"; shift
@@ -743,7 +743,7 @@ copy_file(){
 	done; unset i copied_size_total percentage
 
 	return 0
-}; declare -fr copy_file
+}; declare -fr copy_file_with_progress_report
 
 ## As Windows 7's installation media doesn't place the required EFI
 ## bootloaders in the right location, we extract them from the
