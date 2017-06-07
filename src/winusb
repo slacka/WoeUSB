@@ -1051,8 +1051,8 @@ util_shift_array(){
 	local -n array_ref="${1}"
 
 	if [ "${#array_ref[@]}" -eq 0 ]; then
-		printf "ERROR: array is empty!\n" 1>&2
-		return 1
+		printf "%s: FATAL: array is empty!\n" "${FUNCNAME[0]}" 1>&2
+		exit 1
 	fi
 
 	# Unset the 1st element
