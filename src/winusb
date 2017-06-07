@@ -71,12 +71,12 @@ declare -i\
 
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
-# NOTE: Need to pass to clean_mountpoints trap, so need to be global
+## NOTE: Need to pass to traps, so need to be global
 declare\
 	source_fs_mountpoint\
 	target_fs_mountpoint
 
-# FIXME: No documentation for this non-trivial parameter
+## FIXME: No documentation for this non-trivial parameter
 declare -i pulse_current_pid=0
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
