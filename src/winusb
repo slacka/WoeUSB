@@ -448,35 +448,6 @@ setup_traps(){
 	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
 }; declare -fr setup_traps
 
-# Utility function to check if function parameters quantity is legal
-# NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
-util_check_function_parameters_quantity(){
-	if [ "${#}" -ne 2 ]; then
-		printf --\
-			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
-			"${FUNCNAME[0]}"\
-			2\
-			"${#}"
-		exit 1
-	fi
-
-	# The expected given quantity
-	local -i expected_parameter_quantity="${1}"; shift
-	# The actual given parameter quantity, simply pass "${#}" will do
-	local -i given_parameter_quantity="${1}"
-
-	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
-		printf --\
-			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
-			"${FUNCNAME[1]}"\
-			"${expected_parameter_quantity}"\
-			"${given_parameter_quantity}"\
-			1>&2
-		exit 1
-	fi
-	return 0
-}; declare -fr util_check_function_parameters_quantity
-
 destroy_and_rebuild_entire_disk(){
 	util_check_function_parameters_quantity 3 $#
 	local -r target_device="${1}"; shift
@@ -638,52 +609,6 @@ pulse(){
 		fi
 	fi
 }; declare -fr pulse
-
-# Configure the terminal to print future messages with certain color
-# $1:
-#     <color>: color of the next message
-#     none: reset color to default
-util_switch_terminal_text_color(){
-	util_check_function_parameters_quantity 1 $#
-	case "$1" in
-		none)
-			tput sgr0
-			;;
-		black)
-			echo -en "\033[0;30m"
-			;;
-		red)
-			echo -en "\033[0;31m"
-			;;
-		green)
-			echo -en "\033[0;32m"
-			;;
-		yellow)
-			echo -en "\033[0;33m"
-			;;
-		blue)
-			echo -en "\033[0;34m"
-			;;
-		white)
-			echo -en "\033[0;37m"
-			;;
-	esac
-}; declare -fr util_switch_terminal_text_color
-
-# Print message with color
-util_echo_with_color(){
-	util_check_function_parameters_quantity 2 "${#}"
-	local -r message_color="${1}"; shift
-	local -r message_body="${1}"
-
-	if [ "${no_color}" -eq 1 ]; then
-		echo -e "${message_body}"
-	else
-		switch_terminal_text_color "${message_color}"
-		echo -e "${message_body}"
-		switch_terminal_text_color none
-	fi
-}; declare -fr util_echo_with_color
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # $1: Windows ISO mountpoint
@@ -1058,6 +983,52 @@ trap_debug(){
 	return 0
 }; declare -fr trap_debug
 
+# Configure the terminal to print future messages with certain color
+# $1:
+#     <color>: color of the next message
+#     none: reset color to default
+util_switch_terminal_text_color(){
+	util_check_function_parameters_quantity 1 $#
+	case "$1" in
+		none)
+			tput sgr0
+			;;
+		black)
+			echo -en "\033[0;30m"
+			;;
+		red)
+			echo -en "\033[0;31m"
+			;;
+		green)
+			echo -en "\033[0;32m"
+			;;
+		yellow)
+			echo -en "\033[0;33m"
+			;;
+		blue)
+			echo -en "\033[0;34m"
+			;;
+		white)
+			echo -en "\033[0;37m"
+			;;
+	esac
+}; declare -fr util_switch_terminal_text_color
+
+# Print message with color
+util_echo_with_color(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local -r message_color="${1}"; shift
+	local -r message_body="${1}"
+
+	if [ "${no_color}" -eq 1 ]; then
+		echo -e "${message_body}"
+	else
+		switch_terminal_text_color "${message_color}"
+		echo -e "${message_body}"
+		switch_terminal_text_color none
+	fi
+}; declare -fr util_echo_with_color
+
 util_is_parameter_set_and_not_empty(){
 	util_check_function_parameters_quantity 1 $#
 
@@ -1076,5 +1047,34 @@ util_is_parameter_set_and_not_empty(){
 		fi
 	fi
 }; declare -fr util_is_parameter_set_and_not_empty
+
+# Utility function to check if function parameters quantity is legal
+# NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
+util_check_function_parameters_quantity(){
+	if [ "${#}" -ne 2 ]; then
+		printf --\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			"${FUNCNAME[0]}"\
+			2\
+			"${#}"
+		exit 1
+	fi
+
+	# The expected given quantity
+	local -i expected_parameter_quantity="${1}"; shift
+	# The actual given parameter quantity, simply pass "${#}" will do
+	local -i given_parameter_quantity="${1}"
+
+	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
+		printf --\
+			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			"${FUNCNAME[1]}"\
+			"${expected_parameter_quantity}"\
+			"${given_parameter_quantity}"\
+			1>&2
+		exit 1
+	fi
+	return 0
+}; declare -fr util_check_function_parameters_quantity
 
 init "${@}"
