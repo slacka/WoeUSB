@@ -504,205 +504,6 @@ destroy_and_rebuild_entire_disk(){
 		"${target_partition}"
 }; declare -fr destroy_and_rebuild_entire_disk
 
-check_target_filesystem_free_space(){
-	util_check_function_parameters_quantity 2 $#
-	local -r target_fs_mountpoint="${1}"; shift
-	local -r source_fs_mountpoint="${1}"
-
-	free_space=$(\
-		df\
-			--block-size=1\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
-	)
-	free_space_human_readable=$(\
-		df\
-			--human-readable\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
-	)
-	needed_space=$(\
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	needed_space_human_readable=$(\
-		du\
-			--summarize\
-			--human-readable\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
-	((needed_space = needed_space + additional_space_required_for_grub_installation))
-
-	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on target partition!" >&2
-		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
-		return 1
-	fi
-}; declare -fr check_target_filesystem_free_space
-
-check_target_filesystem(){
-	util_check_function_parameters_quantity 1 $#
-	local target_partition="${1}"
-
-	local target_filesystem
-	target_filesystem="$(\
-		lsblk\
-			--output FSTYPE\
-			--noheadings\
-			"${target_partition}"\
-	)"
-
-	if [ "${target_filesystem}" != "vfat" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
-		return 1
-	fi
-	return 0
-}; declare -fr check_target_filesystem
-
-check_permission(){
-	if [ ! "$(id --user)" = 0 ]; then
-		printf --\
-			"%s\n%s\n"\
-			"Warning: You are not running WinUSB as root!"\
-			"Warning: This might be the reason of the following failure." >&2
-	fi
-	return 0
-}; declare -fr check_permission
-
-check_source_and_target_not_busy(){
-	util_check_function_parameters_quantity 4 $#
-	local install_mode="$1"; shift
-	local source_media="$1"; shift
-	local target_device="$1"; shift
-	local target_partition="$1"
-
-	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
-		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
-		exit 1
-	fi
-
-	if [ "${install_mode}" = "partition" ]; then
-		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
-			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
-			exit 1
-		fi
-	else # When install_mode = device, all target partitions needs to by unmounted
-		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
-			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
-			exit 1
-		fi
-	fi
-}; declare -fr check_source_and_target_not_busy
-
-check_runtime_dependencies(){
-	util_check_function_parameters_quantity 2 $#
-	local -n command_mkdosfs_ref="$1"; shift
-	local -n command_grubinstall_ref="$1"
-
-	local result="unknown"
-
-	for required_command in\
-		mount\
-		grep\
-		dd\
-		id\
-		mkdir\
-		df\
-		du\
-		awk\
-		parted\
-		blockdev\
-		partprobe\
-		stat\
-		rm\
-		readlink\
-		find\
-		lsblk\
-		expr
-		do
-		if ! command -v "${required_command}" >/dev/null; then
-			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
-			result=failed
-		fi
-	done
-
-	if command -v 'mkdosfs' &> /dev/null; then
-		command_mkdosfs_ref='mkdosfs'
-	elif command -v 'make.msdos' &> /dev/null; then
-		command_mkdosfs_ref='mkfs.msdos'
-	else
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
-		result="failed"
-	fi
-
-	if command -v 'grub-install' &> /dev/null; then
-		command_grubinstall_ref='grub-install'
-	elif command -v 'grub2-install' &> /dev/null; then
-		command_grubinstall_ref='grub2-install'
-	else
-		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result="failed"
-	fi
-
-	if [ "${result}" == "failed" ]; then
-		return 1
-	else
-		return 0
-	fi
-}; declare -fr check_runtime_dependencies
-
-check_runtime_parameters(){
-	util_check_function_parameters_quantity 3 $#
-	local -n install_mode_ref="${1}"; shift
-	local -n source_media_ref="${1}"; shift
-	local -n target_media_ref="${1}"
-
-	if ! util_is_parameter_set_and_not_empty install_mode_ref\
-		|| ! util_is_parameter_set_and_not_empty source_media_ref\
-		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
-		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
-		return 1
-	fi
-
-	if [ ! -f "${source_media_ref}" ] \
-		&& [ ! -b "${source_media_ref}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
-		return 1
-	fi
-
-	if ! [ -b "${target_media_ref}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
-		return 1
-	fi
-
-	if [ "${install_mode_ref}" = device ] \
-		&& expr match "${target_media}" '.*[0-9]' >/dev/null
-		then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
-		return 1
-	fi
-
-	if [ "${install_mode_ref}" = partition ] \
-		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
-		then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
-		return 1
-	fi
-
-	return 0
-}; declare -fr check_runtime_parameters
-
 pulse(){
 	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
@@ -916,6 +717,205 @@ copy_filesystem_files(){
 
 	return 0
 }; declare -fr copy_filesystem_files
+
+check_target_filesystem_free_space(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_fs_mountpoint="${1}"; shift
+	local -r source_fs_mountpoint="${1}"
+
+	free_space=$(\
+		df\
+			--block-size=1\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	free_space_human_readable=$(\
+		df\
+			--human-readable\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	needed_space=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	needed_space_human_readable=$(\
+		du\
+			--summarize\
+			--human-readable\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
+	((needed_space = needed_space + additional_space_required_for_grub_installation))
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on target partition!" >&2
+		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
+		return 1
+	fi
+}; declare -fr check_target_filesystem_free_space
+
+check_target_filesystem(){
+	util_check_function_parameters_quantity 1 $#
+	local target_partition="${1}"
+
+	local target_filesystem
+	target_filesystem="$(\
+		lsblk\
+			--output FSTYPE\
+			--noheadings\
+			"${target_partition}"\
+	)"
+
+	if [ "${target_filesystem}" != "vfat" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		return 1
+	fi
+	return 0
+}; declare -fr check_target_filesystem
+
+check_permission(){
+	if [ ! "$(id --user)" = 0 ]; then
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
+	fi
+	return 0
+}; declare -fr check_permission
+
+check_source_and_target_not_busy(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="$1"; shift
+	local source_media="$1"; shift
+	local target_device="$1"; shift
+	local target_partition="$1"
+
+	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
+		exit 1
+	fi
+
+	if [ "${install_mode}" = "partition" ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
+			exit 1
+		fi
+	else # When install_mode = device, all target partitions needs to by unmounted
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
+			exit 1
+		fi
+	fi
+}; declare -fr check_source_and_target_not_busy
+
+check_runtime_dependencies(){
+	util_check_function_parameters_quantity 2 $#
+	local -n command_mkdosfs_ref="$1"; shift
+	local -n command_grubinstall_ref="$1"
+
+	local result="unknown"
+
+	for required_command in\
+		mount\
+		grep\
+		dd\
+		id\
+		mkdir\
+		df\
+		du\
+		awk\
+		parted\
+		blockdev\
+		partprobe\
+		stat\
+		rm\
+		readlink\
+		find\
+		lsblk\
+		expr
+		do
+		if ! command -v "${required_command}" >/dev/null; then
+			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
+			result=failed
+		fi
+	done
+
+	if command -v 'mkdosfs' &> /dev/null; then
+		command_mkdosfs_ref='mkdosfs'
+	elif command -v 'make.msdos' &> /dev/null; then
+		command_mkdosfs_ref='mkfs.msdos'
+	else
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
+		result="failed"
+	fi
+
+	if command -v 'grub-install' &> /dev/null; then
+		command_grubinstall_ref='grub-install'
+	elif command -v 'grub2-install' &> /dev/null; then
+		command_grubinstall_ref='grub2-install'
+	else
+		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+		result="failed"
+	fi
+
+	if [ "${result}" == "failed" ]; then
+		return 1
+	else
+		return 0
+	fi
+}; declare -fr check_runtime_dependencies
+
+check_runtime_parameters(){
+	util_check_function_parameters_quantity 3 $#
+	local -n install_mode_ref="${1}"; shift
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
+
+	if ! util_is_parameter_set_and_not_empty install_mode_ref\
+		|| ! util_is_parameter_set_and_not_empty source_media_ref\
+		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
+		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
+		return 1
+	fi
+
+	if [ ! -f "${source_media_ref}" ] \
+		&& [ ! -b "${source_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
+		return 1
+	fi
+
+	if ! [ -b "${target_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = device ] \
+		&& expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = partition ] \
+		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
+		return 1
+	fi
+
+	return 0
+}; declare -fr check_runtime_parameters
 
 trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
