@@ -917,27 +917,6 @@ copy_filesystem_files(){
 	return 0
 }; declare -fr copy_filesystem_files
 
-util_shift_array(){
-	util_check_function_parameters_quantity 1 "${#}"
-
-	local -n array_ref="${1}"
-
-	if [ "${#array_ref[@]}" -eq 0 ]; then
-		printf "ERROR: array is empty!\n" 1>&2
-		return 1
-	fi
-
-	# Unset the 1st element
-	unset "array_ref[0]"
-
-	# Repack array if element still available in array
-	if [ "${#array_ref[@]}" -ne 0 ]; then
-		array_ref=("${array_ref[@]}")
-	fi
-
-	return 0
-}; declare -fr util_shift_array
-
 trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
 	local returning_function="${1}"
@@ -1029,6 +1008,27 @@ util_echo_with_color(){
 		switch_terminal_text_color none
 	fi
 }; declare -fr util_echo_with_color
+
+util_shift_array(){
+	util_check_function_parameters_quantity 1 "${#}"
+
+	local -n array_ref="${1}"
+
+	if [ "${#array_ref[@]}" -eq 0 ]; then
+		printf "ERROR: array is empty!\n" 1>&2
+		return 1
+	fi
+
+	# Unset the 1st element
+	unset "array_ref[0]"
+
+	# Repack array if element still available in array
+	if [ "${#array_ref[@]}" -ne 0 ]; then
+		array_ref=("${array_ref[@]}")
+	fi
+
+	return 0
+}; declare -fr util_shift_array
 
 util_is_parameter_set_and_not_empty(){
 	util_check_function_parameters_quantity 1 $#
