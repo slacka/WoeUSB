@@ -78,6 +78,7 @@ declare -i pulse_current_pid=0
 alias echo_with_color=util_echo_with_color
 alias switch_terminal_text_color=util_switch_terminal_text_color
 
+## Entry point of the main code
 init(){
 	local install_mode
 
