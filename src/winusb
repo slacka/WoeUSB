@@ -696,6 +696,7 @@ copy_filesystem_files(){
 	return 0
 }; declare -fr copy_filesystem_files
 
+## Companion function of copy_filesystem_files for copying large files
 ## Copy source_file to dest_file, overwrite file if dest_file exists
 ## Also report copy_filesystem_files progress during operation
 copy_file(){
