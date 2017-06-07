@@ -32,6 +32,9 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
+## Enable aliases for easy access to functions
+shopt -s expand_aliases
+
 for critical_command in realpath basename dirname; do
 	if ! command -v "${critical_command}" &> /dev/null; then
 		echo "Fatal: This program requires GNU Coreutils in the executable search path"
@@ -70,6 +73,10 @@ declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 # FIXME: No documentation for this non-trivial parameter
 declare -i pulse_current_pid=0
+
+## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
+alias echo_with_color=util_echo_with_color
+alias switch_terminal_text_color=util_switch_terminal_text_color
 
 init(){
 	local install_mode
@@ -635,7 +642,7 @@ pulse(){
 # $1:
 #     <color>: color of the next message
 #     none: reset color to default
-switch_terminal_text_color(){
+util_switch_terminal_text_color(){
 	util_check_function_parameters_quantity 1 $#
 	case "$1" in
 		none)
@@ -660,10 +667,10 @@ switch_terminal_text_color(){
 			echo -en "\033[0;37m"
 			;;
 	esac
-}; declare -fr switch_terminal_text_color
+}; declare -fr util_switch_terminal_text_color
 
 # Print message with color
-echo_with_color(){
+util_echo_with_color(){
 	util_check_function_parameters_quantity 2 "${#}"
 	local -r message_color="${1}"; shift
 	local -r message_body="${1}"
@@ -675,7 +682,7 @@ echo_with_color(){
 		echo -e "${message_body}"
 		switch_terminal_text_color none
 	fi
-}; declare -fr echo_with_color
+}; declare -fr util_echo_with_color
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # $1: Windows ISO mountpoint
