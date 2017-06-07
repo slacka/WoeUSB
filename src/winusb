@@ -307,103 +307,6 @@ process_commandline_parameters(){
 	return 0
 }; declare -fr process_commandline_parameters;
 
-check_target_filesystem_free_space(){
-	util_check_function_parameters_quantity 2 $#
-	local -r target_fs_mountpoint="${1}"; shift
-	local -r source_fs_mountpoint="${1}"
-
-	free_space=$(\
-		df\
-			--block-size=1\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
-	)
-	free_space_human_readable=$(\
-		df\
-			--human-readable\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
-	)
-	needed_space=$(\
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	needed_space_human_readable=$(\
-		du\
-			--summarize\
-			--human-readable\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
-	((needed_space = needed_space + additional_space_required_for_grub_installation))
-
-	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on target partition!" >&2
-		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
-		return 1
-	fi
-}; declare -fr check_target_filesystem_free_space
-
-check_target_filesystem(){
-	util_check_function_parameters_quantity 1 $#
-	local target_partition="${1}"
-
-	local target_filesystem
-	target_filesystem="$(\
-		lsblk\
-			--output FSTYPE\
-			--noheadings\
-			"${target_partition}"\
-	)"
-
-	if [ "${target_filesystem}" != "vfat" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
-		return 1
-	fi
-	return 0
-}; declare -fr check_target_filesystem
-
-check_permission(){
-	if [ ! "$(id --user)" = 0 ]; then
-		printf --\
-			"%s\n%s\n"\
-			"Warning: You are not running WinUSB as root!"\
-			"Warning: This might be the reason of the following failure." >&2
-	fi
-	return 0
-}; declare -fr check_permission
-
-check_source_and_target_not_busy(){
-	util_check_function_parameters_quantity 4 $#
-	local install_mode="$1"; shift
-	local source_media="$1"; shift
-	local target_device="$1"; shift
-	local target_partition="$1"
-
-	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
-		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
-		exit 1
-	fi
-
-	if [ "${install_mode}" = "partition" ]; then
-		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
-			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
-			exit 1
-		fi
-	else # When install_mode = device, all target partitions needs to by unmounted
-		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
-			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
-			exit 1
-		fi
-	fi
-}; declare -fr check_source_and_target_not_busy
-
 determine_target_parameters(){
 	util_check_function_parameters_quantity 4 $#
 	local install_mode="${1}"; shift
@@ -599,6 +502,103 @@ destroy_and_rebuild_entire_disk(){
 		-n 'Windows USB' \
 		"${target_partition}"
 }; declare -fr destroy_and_rebuild_entire_disk
+
+check_target_filesystem_free_space(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_fs_mountpoint="${1}"; shift
+	local -r source_fs_mountpoint="${1}"
+
+	free_space=$(\
+		df\
+			--block-size=1\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	free_space_human_readable=$(\
+		df\
+			--human-readable\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	needed_space=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	needed_space_human_readable=$(\
+		du\
+			--summarize\
+			--human-readable\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
+	((needed_space = needed_space + additional_space_required_for_grub_installation))
+
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on target partition!" >&2
+		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
+		return 1
+	fi
+}; declare -fr check_target_filesystem_free_space
+
+check_target_filesystem(){
+	util_check_function_parameters_quantity 1 $#
+	local target_partition="${1}"
+
+	local target_filesystem
+	target_filesystem="$(\
+		lsblk\
+			--output FSTYPE\
+			--noheadings\
+			"${target_partition}"\
+	)"
+
+	if [ "${target_filesystem}" != "vfat" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		return 1
+	fi
+	return 0
+}; declare -fr check_target_filesystem
+
+check_permission(){
+	if [ ! "$(id --user)" = 0 ]; then
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
+	fi
+	return 0
+}; declare -fr check_permission
+
+check_source_and_target_not_busy(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="$1"; shift
+	local source_media="$1"; shift
+	local target_device="$1"; shift
+	local target_partition="$1"
+
+	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
+		exit 1
+	fi
+
+	if [ "${install_mode}" = "partition" ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
+			exit 1
+		fi
+	else # When install_mode = device, all target partitions needs to by unmounted
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
+			exit 1
+		fi
+	fi
+}; declare -fr check_source_and_target_not_busy
 
 check_runtime_dependencies(){
 	util_check_function_parameters_quantity 2 $#
