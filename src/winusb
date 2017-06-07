@@ -944,29 +944,42 @@ trap_debug(){
 ## An utility function for inhibiting command call output and
 ## only show them to user when error occurred
 util_call_external_command(){
-	local -r command="${@}"
+	local -ar command=("${@}")
 
-	set +o errexit
-	TEXT="$( "${command}" 2>&1 )"
-	RETURN="$?"
-	set -o errexit
-
-	if [ "$RETURN" -ne 0 ]; then
-		echo_with_color red "Error while running command '${command}' (exit code : $RETURN)!" >&2
-		echo_with_color red "Read command output (Y/n)?" >&2
-
-		rep='y'
-		read -r rep || true # If we can't read, don't quit
-
-		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
-			echo "$TEXT"
-		fi
-
-		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
-		read -r
+	local command_output
+	local -i command_exit_status
+	if command_output="$( "${command[@]}" 2>&1 )"; then
+		command_exit_status="0"
+	else
+		command_exit_status="$?"
 	fi
 
-	return "$RETURN"
+	if [ "${command_exit_status}" -ne 0 ]; then
+		echo_with_color red "Error occurred while running command \"${command[@]}\" (exit status: ${command_exit_status})!" >&2
+
+		local -r read_prompt="Read command output (Y/n)?"
+		printf "${read_prompt}"
+
+		local answer='y'
+
+		while true; do
+			read -r answer
+
+			if [ "${answer}" == "y" ] || [ "${answer}" == "Y" ]; then
+				echo "${command_output}"
+				break
+			elif [ "${answer}" == "n" ] || [ "${answer}" == "N" ]; then
+				break
+			else
+				printf "${read_prompt}"
+			fi
+		done
+
+		echo_with_color red "Press ENTER to continue" >&2
+		read -r keyholder; unset keyholder
+	fi
+
+	return "${command_exit_status}"
 }; declare -fr util_call_external_command
 
 ## Configure the terminal to print future messages with certain color
