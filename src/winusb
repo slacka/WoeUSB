@@ -955,10 +955,10 @@ util_call_external_command(){
 	fi
 
 	if [ "${command_exit_status}" -ne 0 ]; then
-		echo_with_color red "Error occurred while running command \"${command[@]}\" (exit status: ${command_exit_status})!" >&2
+		echo_with_color red "Error occurred while running command \"${command[*]}\" (exit status: ${command_exit_status})!" >&2
 
 		local -r read_prompt="Read command output (Y/n)?"
-		printf "${read_prompt}"
+		printf "%s" "${read_prompt}"
 
 		local answer='y'
 
@@ -971,12 +971,12 @@ util_call_external_command(){
 			elif [ "${answer}" == "n" ] || [ "${answer}" == "N" ]; then
 				break
 			else
-				printf "${read_prompt}"
+				printf "%s" "${read_prompt}"
 			fi
 		done
 
 		echo_with_color red "Press ENTER to continue" >&2
-		read -r keyholder; unset keyholder
+		read -r # catch enter key
 	fi
 
 	return "${command_exit_status}"
