@@ -71,6 +71,11 @@ declare -i\
 
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
+# NOTE: Need to pass to clean_mountpoints trap, so need to be global
+declare\
+	source_fs_mountpoint\
+	target_fs_mountpoint
+
 # FIXME: No documentation for this non-trivial parameter
 declare -i pulse_current_pid=0
 
@@ -94,9 +99,6 @@ init(){
 		target_device\
 		target_partition
 
-	local\
-		source_fs_mountpoint\
-		target_fs_mountpoint
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
