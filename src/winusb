@@ -66,12 +66,6 @@ declare -i\
 	only_for_gui='0'\
 	no_color='0'
 
-# Commands that needs to be determined in runtime
-# due to different names in distributions
-declare\
-	command_mkdosfs\
-	command_grubinstall
-
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 # FIXME: No documentation for this non-trivial parameter
@@ -96,7 +90,15 @@ init(){
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
 
-	if ! check_runtime_dependencies; then
+	# Commands that needs to be determined in runtime
+	# due to different names in distributions
+	declare\
+		command_mkdosfs\
+		command_grubinstall
+
+	if ! check_runtime_dependencies\
+		command_mkdosfs\
+		command_grubinstall; then
 		exit 1
 	fi
 
@@ -136,7 +138,8 @@ init(){
 	if [ "${install_mode}" = 'device' ]; then
 		destroy_and_rebuild_entire_disk\
 			"${target_device}"\
-			"${target_partition}"
+			"${target_partition}"\
+			"${command_mkdosfs}"
 	fi
 
 	if [ "${install_mode}" = 'partition' ]; then
@@ -170,7 +173,8 @@ init(){
 
 	install_bootloader_grub\
 		"${target_fs_mountpoint}"\
-		"${target_device}"
+		"${target_device}"\
+		"${command_grubinstall}"
 
 	cleanup_mountpoints\
 		"${source_fs_mountpoint}"\
@@ -305,9 +309,10 @@ determine_target_parameters(){
 }; declare -fr determine_target_parameters
 
 install_bootloader_grub(){
-	util_check_function_parameters_quantity 2 "${#}"
+	util_check_function_parameters_quantity 3 "${#}"
 	local -r target_fs_mountpoint="${1}"; shift 1
-	local -r target_device="${1}"
+	local -r target_device="${1}"; shift 1
+	local -r command_grubinstall="${1}"
 
 	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}"\
@@ -465,9 +470,10 @@ util_check_function_parameters_quantity(){
 }; declare -fr util_check_function_parameters_quantity
 
 destroy_and_rebuild_entire_disk(){
-	util_check_function_parameters_quantity 2 $#
+	util_check_function_parameters_quantity 3 $#
 	local -r target_device="${1}"; shift
-	local -r target_partition="${1}"
+	local -r target_partition="${1}"; shift
+	local -r command_msdosfs="${1}"
 
 	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
 	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
@@ -505,7 +511,10 @@ destroy_and_rebuild_entire_disk(){
 }; declare -fr destroy_and_rebuild_entire_disk
 
 check_runtime_dependencies(){
-	util_check_function_parameters_quantity 0 $#
+	util_check_function_parameters_quantity 2 $#
+	local -n command_mkdosfs_ref="$1"; shift
+	local -n command_grubinstall_ref="$1"
+
 	local result="unknown"
 
 	for required_command in\
@@ -534,9 +543,9 @@ check_runtime_dependencies(){
 	done
 
 	if command -v 'mkdosfs' &> /dev/null; then
-		command_mkdosfs='mkdosfs'
+		command_mkdosfs_ref='mkdosfs'
 	elif command -v 'make.msdos' &> /dev/null; then
-		command_mkdosfs='mkfs.msdos'
+		command_mkdosfs_ref='mkfs.msdos'
 	else
 		echo_with_color red\
 			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
@@ -546,9 +555,9 @@ check_runtime_dependencies(){
 	fi
 
 	if command -v 'grub-install' &> /dev/null; then
-		command_grubinstall='grub-install'
+		command_grubinstall_ref='grub-install'
 	elif command -v 'grub2-install' &> /dev/null; then
-		command_grubinstall='grub2-install'
+		command_grubinstall_ref='grub2-install'
 	else
 		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
 		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
