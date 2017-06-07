@@ -581,7 +581,6 @@ check_runtime_parameters(){
 		|| ! util_is_parameter_set_and_not_empty source_media_ref\
 		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
 		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
-		echo "" >&2
 		return 1
 	fi
 
