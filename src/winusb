@@ -326,7 +326,7 @@ install_bootloader_grub(){
 		lsblk\
 			--output UUID\
 			--noheadings\
-			"${target_device}"\
+			"${target_partition}"\
 	)
 
 	mkdir --parents "$(dirname "${grub_cfg}")"
