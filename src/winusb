@@ -885,30 +885,6 @@ pulse(){
 	fi
 }; declare -fr pulse
 
-hideNoErr(){
-	set +o errexit
-	TEXT="$( "$@" 2>&1 )"
-	RETURN="$?"
-	set -o errexit
-
-	if [ "$RETURN" -ne 0 ]; then
-		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
-		echo_with_color red "Read command output (Y/n)?" >&2
-
-		rep='y'
-		read -r rep || true # If we can't read, don't quit
-
-		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
-			echo "$TEXT"
-		fi
-
-		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
-		read -r
-	fi
-
-	return "$RETURN"
-}; declare -fr hideNoErr
-
 setup_traps(){
 	util_check_function_parameters_quantity 0 "${#}"
 
@@ -964,6 +940,32 @@ trap_debug(){
 
 	return 0
 }; declare -fr trap_debug
+
+## An utility function for inhibiting command call output and
+## only show them to user when error occurred
+util_call_command(){
+	set +o errexit
+	TEXT="$( "$@" 2>&1 )"
+	RETURN="$?"
+	set -o errexit
+
+	if [ "$RETURN" -ne 0 ]; then
+		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echo_with_color red "Read command output (Y/n)?" >&2
+
+		rep='y'
+		read -r rep || true # If we can't read, don't quit
+
+		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
+			echo "$TEXT"
+		fi
+
+		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
+		read -r
+	fi
+
+	return "$RETURN"
+}; declare -fr util_call_command
 
 ## Configure the terminal to print future messages with certain color
 ## $1:
