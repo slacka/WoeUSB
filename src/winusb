@@ -943,7 +943,7 @@ trap_debug(){
 
 ## An utility function for inhibiting command call output and
 ## only show them to user when error occurred
-util_call_command(){
+util_call_external_command(){
 	set +o errexit
 	TEXT="$( "$@" 2>&1 )"
 	RETURN="$?"
@@ -965,7 +965,7 @@ util_call_command(){
 	fi
 
 	return "$RETURN"
-}; declare -fr util_call_command
+}; declare -fr util_call_external_command
 
 ## Configure the terminal to print future messages with certain color
 ## $1:
