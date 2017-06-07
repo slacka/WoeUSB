@@ -308,6 +308,118 @@ process_commandline_parameters(){
 	return 0
 }; declare -fr process_commandline_parameters;
 
+check_runtime_dependencies(){
+	util_check_function_parameters_quantity 2 $#
+	local -n command_mkdosfs_ref="$1"; shift
+	local -n command_grubinstall_ref="$1"
+
+	local result="unknown"
+
+	for required_command in\
+		mount\
+		grep\
+		dd\
+		id\
+		mkdir\
+		df\
+		du\
+		awk\
+		parted\
+		blockdev\
+		partprobe\
+		stat\
+		rm\
+		readlink\
+		find\
+		lsblk\
+		expr
+		do
+		if ! command -v "${required_command}" >/dev/null; then
+			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
+			result=failed
+		fi
+	done
+
+	if command -v 'mkdosfs' &> /dev/null; then
+		command_mkdosfs_ref='mkdosfs'
+	elif command -v 'make.msdos' &> /dev/null; then
+		command_mkdosfs_ref='mkfs.msdos'
+	else
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+		echo_with_color red\
+			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
+		result="failed"
+	fi
+
+	if command -v 'grub-install' &> /dev/null; then
+		command_grubinstall_ref='grub-install'
+	elif command -v 'grub2-install' &> /dev/null; then
+		command_grubinstall_ref='grub2-install'
+	else
+		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+		result="failed"
+	fi
+
+	if [ "${result}" == "failed" ]; then
+		return 1
+	else
+		return 0
+	fi
+}; declare -fr check_runtime_dependencies
+
+check_permission(){
+	if [ ! "$(id --user)" = 0 ]; then
+		printf --\
+			"%s\n%s\n"\
+			"Warning: You are not running WinUSB as root!"\
+			"Warning: This might be the reason of the following failure." >&2
+	fi
+	return 0
+}; declare -fr check_permission
+
+check_runtime_parameters(){
+	util_check_function_parameters_quantity 3 $#
+	local -n install_mode_ref="${1}"; shift
+	local -n source_media_ref="${1}"; shift
+	local -n target_media_ref="${1}"
+
+	if ! util_is_parameter_set_and_not_empty install_mode_ref\
+		|| ! util_is_parameter_set_and_not_empty source_media_ref\
+		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
+		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
+		return 1
+	fi
+
+	if [ ! -f "${source_media_ref}" ] \
+		&& [ ! -b "${source_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
+		return 1
+	fi
+
+	if ! [ -b "${target_media_ref}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = device ] \
+		&& expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
+		return 1
+	fi
+
+	if [ "${install_mode_ref}" = partition ] \
+		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
+		then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
+		return 1
+	fi
+
+	return 0
+}; declare -fr check_runtime_parameters
+
 determine_target_parameters(){
 	util_check_function_parameters_quantity 4 $#
 	local install_mode="${1}"; shift
@@ -331,73 +443,90 @@ determine_target_parameters(){
 	return 0
 }; declare -fr determine_target_parameters
 
-install_bootloader_grub(){
-	util_check_function_parameters_quantity 3 "${#}"
-	local -r target_fs_mountpoint="${1}"; shift 1
-	local -r target_device="${1}"; shift 1
-	local -r command_grubinstall="${1}"
+check_source_and_target_not_busy(){
+	util_check_function_parameters_quantity 4 $#
+	local install_mode="$1"; shift
+	local source_media="$1"; shift
+	local target_device="$1"; shift
+	local target_partition="$1"
 
-	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
-	"${command_grubinstall}"\
-		--target=i386-pc\
-		--boot-directory="${target_fs_mountpoint}"\
-		--force "${target_device}"
+	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
+		exit 1
+	fi
 
-	echo_with_color blue "Installing grub.cfg..."
-	local -r grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
-	local -r target_fs_uuid=$(\
-		lsblk\
-			--output UUID\
-			--noheadings\
-			"${target_partition}"\
-	)
-
-	mkdir --parents "$(dirname "${grub_cfg}")"
-	{
-		cat <<- END_OF_FILE
-			echo '------------------------------------'
-			echo '|      Windows USB - Loading...    |'
-			echo '------------------------------------'
-			insmod fat
-			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
-			ntldr /bootmgr
-			boot
-		END_OF_FILE
-	} > "${grub_cfg}"
-}; declare -fr install_bootloader_grub
-
-# As Windows 7's installation media doesn't place the required EFI
-# bootloaders in the right location, we extract them from the
-# system image manually
-# TODO: Functionize Windows 7 checking
-workaround_support_windows_7_uefi_boot(){
-	util_check_function_parameters_quantity 2 "${#}"
-	local source_fs_mountpoint="${1}"; shift
-	local target_fs_mountpoint="${1}"
-
-	if \
-		grep\
-			--extended-regexp\
-			--quiet\
-			"^MinServer=7[0-9]{3}\.[0-9]"\
-			"${source_fs_mountpoint}/sources/cversion.ini"\
-		&& [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
-		echo_with_color yellow "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting"
-		if command -v "7z" >/dev/null 2>&1; then
-			mkdir\
-				--parents\
-				"${target_fs_mountpoint}/EFI/Boot"
-			7z\
-				e\
-				-so\
-				"${source_fs_mountpoint}/sources/install.wim"\
-				"Windows/Boot/EFI/bootmgfw.efi"\
-				> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
-		else
-			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
+	if [ "${install_mode}" = "partition" ]; then
+		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
+			exit 1
+		fi
+	else # When install_mode = device, all target partitions needs to by unmounted
+		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
+			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
+			exit 1
 		fi
 	fi
-}; declare -fr workaround_support_windows_7_uefi_boot
+}; declare -fr check_source_and_target_not_busy
+
+destroy_and_rebuild_entire_disk(){
+	util_check_function_parameters_quantity 3 $#
+	local -r target_device="${1}"; shift
+	local -r target_partition="${1}"; shift
+	local -r command_msdosfs="${1}"
+
+	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
+	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+	parted --script\
+		"${target_device}"\
+		mklabel\
+		msdos
+
+	# Create partition
+	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+	parted --script\
+		"${target_device}"\
+		mkpart\
+		primary\
+		fat32\
+		4MiB\
+		-- -1s # last sector of the disk
+
+	# Reload the new partition table
+	# FIXME: Is `blockdev` and `partprobe` both required?
+	blockdev\
+		--rereadpt\
+		"${target_device}"\
+		|| true
+	partprobe\
+		"${target_device}"
+	echo "Wait 3 seconds for block device nodes to populate..."
+	sleep 3
+
+	# Create filesystem on partition
+	"${command_mkdosfs}"\
+		-F 32\
+		-n 'Windows USB' \
+		"${target_partition}"
+}; declare -fr destroy_and_rebuild_entire_disk
+
+check_target_filesystem(){
+	util_check_function_parameters_quantity 1 $#
+	local target_partition="${1}"
+
+	local target_filesystem
+	target_filesystem="$(\
+		lsblk\
+			--output FSTYPE\
+			--noheadings\
+			"${target_partition}"\
+	)"
+
+	if [ "${target_filesystem}" != "vfat" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
+		return 1
+	fi
+	return 0
+}; declare -fr check_target_filesystem
 
 mount_source_and_target_filesystem(){
 	util_check_function_parameters_quantity 4 "${#}"
@@ -453,200 +582,48 @@ mount_source_and_target_filesystem(){
 		)
 }; declare -fr mount_source_and_target_filesystem
 
-setup_traps(){
-	util_check_function_parameters_quantity 0 "${#}"
+check_target_filesystem_free_space(){
+	util_check_function_parameters_quantity 2 $#
+	local -r target_fs_mountpoint="${1}"; shift
+	local -r source_fs_mountpoint="${1}"
 
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
-}; declare -fr setup_traps
-
-destroy_and_rebuild_entire_disk(){
-	util_check_function_parameters_quantity 3 $#
-	local -r target_device="${1}"; shift
-	local -r target_partition="${1}"; shift
-	local -r command_msdosfs="${1}"
-
-	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
-	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
-	parted --script\
-		"${target_device}"\
-		mklabel\
-		msdos
-
-	# Create partition
-	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	parted --script\
-		"${target_device}"\
-		mkpart\
-		primary\
-		fat32\
-		4MiB\
-		-- -1s # last sector of the disk
-
-	# Reload the new partition table
-	# FIXME: Is `blockdev` and `partprobe` both required?
-	blockdev\
-		--rereadpt\
-		"${target_device}"\
-		|| true
-	partprobe\
-		"${target_device}"
-	echo "Wait 3 seconds for block device nodes to populate..."
-	sleep 3
-
-	# Create filesystem on partition
-	"${command_mkdosfs}"\
-		-F 32\
-		-n 'Windows USB' \
-		"${target_partition}"
-}; declare -fr destroy_and_rebuild_entire_disk
-
-# FIXME: What is this function's purpose
-pulse(){
-	util_check_function_parameters_quantity 1 $#
-	if [ "$only_for_gui" -eq 1 ]; then
-		if [ ! "$pulse_current_pid" -eq 0 ]; then
-			kill "$pulse_current_pid"
-			#wait "$pulse_current_pid"
-			pulse_current_pid=0
-		fi
-
-		if [ "$1" = 'on' ]; then
-			cd /; while true; do sleep 0.05; echo 'pulse'; done &
-			pulse_current_pid="$!"
-		elif [ "$1" != 'off' ]; then
-			echo "${FUNCNAME[0]}: Error: Illegal function parameter" >&2
-			exit 1
-		fi
-	fi
-}; declare -fr pulse
-
-# Unmount mounted filesystems and clean-up mountpoints before exiting program
-# $1: Windows ISO mountpoint
-# $2: Target mountpoint
-# $3: Exit reason
-cleanup_mountpoints(){
-	util_check_function_parameters_quantity 3 "${#}"
-
-	set +o errexit # We need to clean up everything we can
-
-	trap - HUP QUIT PIPE INT TERM EXIT
-
-	pulse off
-
-	printf "\n" # Proactively separate from previous command output
-	if [ "$3" == 'kill' ]; then
-		echo_with_color yellow "Terminated by external signal!"  >&2
-	elif [ "$3" == 'error' ]; then
-		echo_with_color red "Internal error occurred!"  >&2
-	elif [ "$3" == 'interrupt' ]; then
-		echo_with_color yellow "Interrupted by user"
-	else
-		echo_with_color green "Exiting..."
-	fi
-
-	echo "Synchronizing cached writes to persistent storage..."
-
-	pulse on
-	sync
-	pulse off
-
-	echo "Cleaning..."
-
-	cd /
-	sync
-	wait 2> /dev/null
-	sleep 1
-
-	echo_with_color green "Unmounting and removing '$1'..."
-	# shellcheck disable=2015
-	umount "$1" && rm -rf "$1" || true
-
-	echo_with_color green "Unmounting and removing '$2'..."
-	# shellcheck disable=2015
-	umount "$2" && rm -rf "$2" || true
-
-	if [ "$3" = 'normal_cleanup' ]; then
-		return 0
-	else
-		exit 2
-	fi
-}; declare -fr cleanup_mountpoints
-
-hideNoErr(){
-	set +o errexit
-	TEXT="$( "$@" 2>&1 )"
-	RETURN="$?"
-	set -o errexit
-
-	if [ "$RETURN" -ne 0 ]; then
-		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
-		echo_with_color red "Read command output (Y/n)?" >&2
-
-		rep='y'
-		read -r rep || true # If we can't read, don't quit
-
-		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
-			echo "$TEXT"
-		fi
-
-		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
-		read -r
-	fi
-
-	return "$RETURN"
-}; declare -fr hideNoErr
-
-# Copy source_file to dest_file, overwrite file if dest_file exists
-# Also report copy_filesystem_files progress during operation
-copy_file(){
-	util_check_function_parameters_quantity 4 "${#}"
-	local -r source_file="${1}"; shift
-	local -r dest_file="${1}"; shift
-	local -ir caller_copied_size="${1}"; shift
-	local -ir caller_total_size="${1}"
-
-	local -i source_file_size
-	source_file_size=$(\
-		stat\
-		--format=%s\
-		"${source_file}"\
+	free_space=$(\
+		df\
+			--block-size=1\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
 	)
+	free_space_human_readable=$(\
+		df\
+			--human-readable\
+			"${target_fs_mountpoint}"\
+		| grep "${target_fs_mountpoint}"\
+		| awk '{print $4}'\
+	)
+	needed_space=$(\
+		du\
+			--summarize\
+			--bytes\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	needed_space_human_readable=$(\
+		du\
+			--summarize\
+			--human-readable\
+			"${source_fs_mountpoint}"\
+		| awk '{print $1}'\
+	)
+	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
+	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
-	# block count of the source file
-	local -i block_number
-	((block_number = source_file_size / DD_BLOCK_SIZE + 1))
-	unset source_file_size
-
-	if [ -f "${dest_file}" ]; then
-		rm "${dest_file}"
+	if [ "${needed_space}" -gt "${free_space}" ]; then
+		echo "Error: Not enough free space on target partition!" >&2
+		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
+		return 1
 	fi
-
-	# Copy file block by block
-	local -i i=0 copied_size_total percentage; while [ "${i}" -lt "${block_number}" ]; do
-		dd\
-			if="${source_file}"\
-			bs="${DD_BLOCK_SIZE}"\
-			skip="${i}"\
-			seek="${i}"\
-			of="${dest_file}"\
-			count=1\
-			2> /dev/null
-		((i = i + 1))
-
-		# Calculate and report progress
-		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
-		# BASHDOC: Bash Features » Shell Arithmetic
-		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
-		let "percentage = (copied_size_total * 100) / caller_total_size" || true
-		echo -en "${percentage}%\r"
-	done; unset i copied_size_total percentage
-
-	return 0
-}; declare -fr copy_file
+}; declare -fr check_target_filesystem_free_space
 
 # Copying all files from one filesystem to another, with progress reporting
 copy_filesystem_files(){
@@ -719,204 +696,227 @@ copy_filesystem_files(){
 	return 0
 }; declare -fr copy_filesystem_files
 
-check_target_filesystem_free_space(){
-	util_check_function_parameters_quantity 2 $#
-	local -r target_fs_mountpoint="${1}"; shift
-	local -r source_fs_mountpoint="${1}"
+# Copy source_file to dest_file, overwrite file if dest_file exists
+# Also report copy_filesystem_files progress during operation
+copy_file(){
+	util_check_function_parameters_quantity 4 "${#}"
+	local -r source_file="${1}"; shift
+	local -r dest_file="${1}"; shift
+	local -ir caller_copied_size="${1}"; shift
+	local -ir caller_total_size="${1}"
 
-	free_space=$(\
-		df\
-			--block-size=1\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
+	local -i source_file_size
+	source_file_size=$(\
+		stat\
+		--format=%s\
+		"${source_file}"\
 	)
-	free_space_human_readable=$(\
-		df\
-			--human-readable\
-			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
-	)
-	needed_space=$(\
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	needed_space_human_readable=$(\
-		du\
-			--summarize\
-			--human-readable\
-			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
-	)
-	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
-	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
-	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on target partition!" >&2
-		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
-		return 1
+	# block count of the source file
+	local -i block_number
+	((block_number = source_file_size / DD_BLOCK_SIZE + 1))
+	unset source_file_size
+
+	if [ -f "${dest_file}" ]; then
+		rm "${dest_file}"
 	fi
-}; declare -fr check_target_filesystem_free_space
 
-check_target_filesystem(){
-	util_check_function_parameters_quantity 1 $#
-	local target_partition="${1}"
+	# Copy file block by block
+	local -i i=0 copied_size_total percentage; while [ "${i}" -lt "${block_number}" ]; do
+		dd\
+			if="${source_file}"\
+			bs="${DD_BLOCK_SIZE}"\
+			skip="${i}"\
+			seek="${i}"\
+			of="${dest_file}"\
+			count=1\
+			2> /dev/null
+		((i = i + 1))
 
-	local target_filesystem
-	target_filesystem="$(\
+		# Calculate and report progress
+		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Bash Features » Shell Arithmetic
+		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
+		let "percentage = (copied_size_total * 100) / caller_total_size" || true
+		echo -en "${percentage}%\r"
+	done; unset i copied_size_total percentage
+
+	return 0
+}; declare -fr copy_file
+
+# As Windows 7's installation media doesn't place the required EFI
+# bootloaders in the right location, we extract them from the
+# system image manually
+# TODO: Functionize Windows 7 checking
+workaround_support_windows_7_uefi_boot(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local source_fs_mountpoint="${1}"; shift
+	local target_fs_mountpoint="${1}"
+
+	if \
+		grep\
+			--extended-regexp\
+			--quiet\
+			"^MinServer=7[0-9]{3}\.[0-9]"\
+			"${source_fs_mountpoint}/sources/cversion.ini"\
+		&& [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
+		echo_with_color yellow "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting"
+		if command -v "7z" >/dev/null 2>&1; then
+			mkdir\
+				--parents\
+				"${target_fs_mountpoint}/EFI/Boot"
+			7z\
+				e\
+				-so\
+				"${source_fs_mountpoint}/sources/install.wim"\
+				"Windows/Boot/EFI/bootmgfw.efi"\
+				> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+		else
+			echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
+		fi
+	fi
+}; declare -fr workaround_support_windows_7_uefi_boot
+
+install_bootloader_grub(){
+	util_check_function_parameters_quantity 3 "${#}"
+	local -r target_fs_mountpoint="${1}"; shift 1
+	local -r target_device="${1}"; shift 1
+	local -r command_grubinstall="${1}"
+
+	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
+	"${command_grubinstall}"\
+		--target=i386-pc\
+		--boot-directory="${target_fs_mountpoint}"\
+		--force "${target_device}"
+
+	echo_with_color blue "Installing grub.cfg..."
+	local -r grub_cfg="${target_fs_mountpoint}/grub/grub.cfg"
+	local -r target_fs_uuid=$(\
 		lsblk\
-			--output FSTYPE\
+			--output UUID\
 			--noheadings\
 			"${target_partition}"\
-	)"
+	)
 
-	if [ "${target_filesystem}" != "vfat" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
-		return 1
-	fi
-	return 0
-}; declare -fr check_target_filesystem
+	mkdir --parents "$(dirname "${grub_cfg}")"
+	{
+		cat <<- END_OF_FILE
+			echo '------------------------------------'
+			echo '|      Windows USB - Loading...    |'
+			echo '------------------------------------'
+			insmod fat
+			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
+			ntldr /bootmgr
+			boot
+		END_OF_FILE
+	} > "${grub_cfg}"
+}; declare -fr install_bootloader_grub
 
-check_permission(){
-	if [ ! "$(id --user)" = 0 ]; then
-		printf --\
-			"%s\n%s\n"\
-			"Warning: You are not running WinUSB as root!"\
-			"Warning: This might be the reason of the following failure." >&2
-	fi
-	return 0
-}; declare -fr check_permission
+# Unmount mounted filesystems and clean-up mountpoints before exiting program
+# $1: Windows ISO mountpoint
+# $2: Target mountpoint
+# $3: Exit reason
+cleanup_mountpoints(){
+	util_check_function_parameters_quantity 3 "${#}"
 
-check_source_and_target_not_busy(){
-	util_check_function_parameters_quantity 4 $#
-	local install_mode="$1"; shift
-	local source_media="$1"; shift
-	local target_device="$1"; shift
-	local target_partition="$1"
+	set +o errexit # We need to clean up everything we can
 
-	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
-		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
-		exit 1
-	fi
+	trap - HUP QUIT PIPE INT TERM EXIT
 
-	if [ "${install_mode}" = "partition" ]; then
-		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
-			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
-			exit 1
-		fi
-	else # When install_mode = device, all target partitions needs to by unmounted
-		if [ "$(mount | grep -c "${target_device}")" != 0 ]; then
-			echo_with_color red "Error: Target device is currently busy, unmount all mounted partitions in target device then try again"
-			exit 1
-		fi
-	fi
-}; declare -fr check_source_and_target_not_busy
+	pulse off
 
-check_runtime_dependencies(){
-	util_check_function_parameters_quantity 2 $#
-	local -n command_mkdosfs_ref="$1"; shift
-	local -n command_grubinstall_ref="$1"
-
-	local result="unknown"
-
-	for required_command in\
-		mount\
-		grep\
-		dd\
-		id\
-		mkdir\
-		df\
-		du\
-		awk\
-		parted\
-		blockdev\
-		partprobe\
-		stat\
-		rm\
-		readlink\
-		find\
-		lsblk\
-		expr
-		do
-		if ! command -v "${required_command}" >/dev/null; then
-			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
-			result=failed
-		fi
-	done
-
-	if command -v 'mkdosfs' &> /dev/null; then
-		command_mkdosfs_ref='mkdosfs'
-	elif command -v 'make.msdos' &> /dev/null; then
-		command_mkdosfs_ref='mkfs.msdos'
+	printf "\n" # Proactively separate from previous command output
+	if [ "$3" == 'kill' ]; then
+		echo_with_color yellow "Terminated by external signal!"  >&2
+	elif [ "$3" == 'error' ]; then
+		echo_with_color red "Internal error occurred!"  >&2
+	elif [ "$3" == 'interrupt' ]; then
+		echo_with_color yellow "Interrupted by user"
 	else
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
-		echo_with_color red\
-			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
-		result="failed"
+		echo_with_color green "Exiting..."
 	fi
 
-	if command -v 'grub-install' &> /dev/null; then
-		command_grubinstall_ref='grub-install'
-	elif command -v 'grub2-install' &> /dev/null; then
-		command_grubinstall_ref='grub2-install'
-	else
-		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result="failed"
-	fi
+	echo "Synchronizing cached writes to persistent storage..."
 
-	if [ "${result}" == "failed" ]; then
-		return 1
-	else
+	pulse on
+	sync
+	pulse off
+
+	echo "Cleaning..."
+
+	cd /
+	sync
+	wait 2> /dev/null
+	sleep 1
+
+	echo_with_color green "Unmounting and removing '$1'..."
+	# shellcheck disable=2015
+	umount "$1" && rm -rf "$1" || true
+
+	echo_with_color green "Unmounting and removing '$2'..."
+	# shellcheck disable=2015
+	umount "$2" && rm -rf "$2" || true
+
+	if [ "$3" = 'normal_cleanup' ]; then
 		return 0
+	else
+		exit 2
 	fi
-}; declare -fr check_runtime_dependencies
+}; declare -fr cleanup_mountpoints
 
-check_runtime_parameters(){
-	util_check_function_parameters_quantity 3 $#
-	local -n install_mode_ref="${1}"; shift
-	local -n source_media_ref="${1}"; shift
-	local -n target_media_ref="${1}"
+# FIXME: What is this function's purpose
+pulse(){
+	util_check_function_parameters_quantity 1 $#
+	if [ "$only_for_gui" -eq 1 ]; then
+		if [ ! "$pulse_current_pid" -eq 0 ]; then
+			kill "$pulse_current_pid"
+			#wait "$pulse_current_pid"
+			pulse_current_pid=0
+		fi
 
-	if ! util_is_parameter_set_and_not_empty install_mode_ref\
-		|| ! util_is_parameter_set_and_not_empty source_media_ref\
-		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
-		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
-		return 1
+		if [ "$1" = 'on' ]; then
+			cd /; while true; do sleep 0.05; echo 'pulse'; done &
+			pulse_current_pid="$!"
+		elif [ "$1" != 'off' ]; then
+			echo "${FUNCNAME[0]}: Error: Illegal function parameter" >&2
+			exit 1
+		fi
+	fi
+}; declare -fr pulse
+
+hideNoErr(){
+	set +o errexit
+	TEXT="$( "$@" 2>&1 )"
+	RETURN="$?"
+	set -o errexit
+
+	if [ "$RETURN" -ne 0 ]; then
+		echo_with_color red "Error while running command '$*' (exit code : $RETURN)!" >&2
+		echo_with_color red "Read command output (Y/n)?" >&2
+
+		rep='y'
+		read -r rep || true # If we can't read, don't quit
+
+		if [ "${rep}" != "n" ] && [ "${rep}" != "N" ]; then
+			echo "$TEXT"
+		fi
+
+		echo_with_color red "Press ENTER to exit (tmpDir will be removed)" >&2
+		read -r
 	fi
 
-	if [ ! -f "${source_media_ref}" ] \
-		&& [ ! -b "${source_media_ref}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: source media \"${source_media_ref}\" not found or not a regular file or a block device file!" >&2
-		return 1
-	fi
+	return "$RETURN"
+}; declare -fr hideNoErr
 
-	if ! [ -b "${target_media_ref}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not a block device file!" >&2
-		return 1
-	fi
+setup_traps(){
+	util_check_function_parameters_quantity 0 "${#}"
 
-	if [ "${install_mode_ref}" = device ] \
-		&& expr match "${target_media}" '.*[0-9]' >/dev/null
-		then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
-		return 1
-	fi
-
-	if [ "${install_mode_ref}" = partition ] \
-		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
-		then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
-		return 1
-	fi
-
-	return 0
-}; declare -fr check_runtime_parameters
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
+	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
+}; declare -fr setup_traps
 
 trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
