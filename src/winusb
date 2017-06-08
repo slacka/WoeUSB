@@ -74,10 +74,14 @@ declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 ## NOTE: Need to pass to traps, so need to be global
 declare\
 	source_fs_mountpoint\
-	target_fs_mountpoint
+	target_fs_mountpoint\
+	target_device
 
 ## FIXME: No documentation for this non-trivial parameter
 declare -i pulse_current_pid=0
+
+## Execution state for cleanup functions to determine if clean up is required
+declare current_state="pre-init"
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias\
@@ -88,6 +92,8 @@ alias\
 
 ## Entry point of the main code
 init(){
+	current_state="enter-init"
+
 	local install_mode
 
 	# source_media may be a optical disk drive or a disk image
@@ -96,9 +102,7 @@ init(){
 		source_media\
 		target_media
 
-	local\
-		target_device\
-		target_partition
+	local target_partition
 
 	source_fs_mountpoint="/media/winusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/winusb_target_$(date +%s)_$$"
@@ -159,7 +163,7 @@ init(){
 		check_target_filesystem "${target_partition}"
 	fi
 
-	setup_traps
+	current_state="start-mounting"
 
 	mount_source_and_target_filesystem\
 		"${source_media}"\
@@ -189,12 +193,7 @@ init(){
 		"${target_device}"\
 		"${command_grubinstall}"
 
-	cleanup_mountpoints\
-		"${source_fs_mountpoint}"\
-		"${target_fs_mountpoint}"\
-		'normal_cleanup'
-
-	echo_with_color green "Done :-)  You may detach the usb storage now."
+	current_state="finished"
 
 	pulse off
 
@@ -449,9 +448,9 @@ determine_target_parameters(){
 
 check_is_target_device_busy(){
 	util_check_function_parameters_quantity 1 $#
-	local -r target_device="${1}"
+	local device="${1}"
 
-	if [ "$(mount | grep -c "${target_device}")" -ne 0 ]; then
+	if [ "$(mount | grep -c "${device}")" -ne 0 ]; then
 		return 0
 	else
 		return 1
@@ -829,54 +828,55 @@ install_bootloader_grub(){
 }; declare -fr install_bootloader_grub
 
 ## Unmount mounted filesystems and clean-up mountpoints before exiting program
-## $1: Windows ISO mountpoint
-## $2: Target mountpoint
-## $3: Exit reason
+## exit status:
+##     unclean(2): Not fully clean, target device can be safely detach from host
+##     unsafe(3): Target device cannot be safely detach from host
 cleanup_mountpoints(){
-	util_check_function_parameters_quantity 3 "${#}"
+	util_check_function_parameters_quantity 2 "${#}"
+	local -r source_fs_mountpoint="${1}"; shift
+	local -r target_fs_mountpoint="${1}"
 
-	set +o errexit # We need to clean up everything we can
+	local clean_result="unknown"
 
-	trap - HUP QUIT PIPE INT TERM EXIT
-
+	# FIXME: Why `pulse off` here?
 	pulse off
 
-	printf "\n" # Proactively separate from previous command output
-	if [ "$3" == 'kill' ]; then
-		echo_with_color yellow "Terminated by external signal!"  >&2
-	elif [ "$3" == 'error' ]; then
-		echo_with_color red "Internal error occurred!"  >&2
-	elif [ "$3" == 'interrupt' ]; then
-		echo_with_color yellow "Interrupted by user"
-	else
-		echo_with_color green "Exiting..."
+	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
+	popd &>/dev/null\
+		|| true
+
+	if [ -e "${source_fs_mountpoint}" ]; then
+		echo_with_color green "Unmounting and removing '${source_fs_mountpoint}'..."
+		if umount "${source_fs_mountpoint}"; then
+			if ! rmdir "${source_fs_mountpoint}"; then
+				echo_with_color yellow "${FUNCNAME}: Warning: Unable to remove source mountpoint"
+				clean_result="unclean"
+			fi
+		else
+			echo_with_color yellow "${FUNCNAME}: Warning: Unable to unmount source filesystem."
+			clean_result="unclean"
+		fi
 	fi
 
-	echo "Synchronizing cached writes to persistent storage..."
+	if [ -e "${target_fs_mountpoint}" ]; then
+	echo_with_color green "Unmounting and removing '${target_fs_mountpoint}'..."
+		if umount "${target_fs_mountpoint}"; then
+			if ! rmdir "${target_fs_mountpoint}"; then
+				echo_with_color yellow "${FUNCNAME}: Warning: Unable to remove target mountpoint"
+				clean_result="unclean"
+			fi
+		else
+			echo_with_color yellow "${FUNCNAME}: Warning: Unable to unmount target filesystem."
+			clean_result="unsafe"
+		fi
+	fi
 
-	pulse on
-	sync
-	pulse off
-
-	echo "Cleaning..."
-
-	cd /
-	sync
-	wait 2> /dev/null
-	sleep 1
-
-	echo_with_color green "Unmounting and removing '$1'..."
-	# shellcheck disable=2015
-	umount "$1" && rm -rf "$1" || true
-
-	echo_with_color green "Unmounting and removing '$2'..."
-	# shellcheck disable=2015
-	umount "$2" && rm -rf "$2" || true
-
-	if [ "$3" = 'normal_cleanup' ]; then
-		return 0
+	if [ "${clean_result}" == "unclean" ]; then
+		return 2
+	elif [ "${clean_result}" == "unsafe" ]; then
+		return 3
 	else
-		exit 2
+		return 0
 	fi
 }; declare -fr cleanup_mountpoints
 
@@ -902,15 +902,59 @@ pulse(){
 
 ## Traps: Functions that are triggered when certain condition occurred
 ## Shell Builtin Commands » Bourne Shell Builtins » trap
-setup_traps(){
-	util_check_function_parameters_quantity 0 "${#}"
+trap_errexit(){
+	echo_with_color red "The command \"${BASH_COMMAND}\" failed with exit status \"${?}\", program is prematurely aborted" 1>&2
 
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "error"' ERR
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "interrupt"' INT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "kill"' TERM
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "exit"' EXIT
-	trap 'cleanup_mountpoints "${source_fs_mountpoint}" "${target_fs_mountpoint}" "other signal"' HUP QUIT PIPE
-}; declare -fr setup_traps
+	return 0
+}; declare -fr trap_errexit
+
+trap_exit(){
+	if \
+		util_is_parameter_set_and_not_empty\
+			source_fs_mountpoint\
+		&& util_is_parameter_set_and_not_empty\
+			target_fs_mountpoint; then
+		if cleanup_mountpoints\
+			"${source_fs_mountpoint}"\
+			"${target_fs_mountpoint}"; then
+			:
+		elif [ "${?}" == "2" ]; then
+			echo_with_color yellow "Some mountpoints are not unmount/cleaned successfully and must be done manually"
+		else # $? == 3, target filesystem not unmounted
+			echo_with_color yellow "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption"
+			echo_with_color yellow "Some mountpoints are not unmount/cleaned successfully and must be done manually"
+		fi
+	fi
+
+	if [ "${current_state}" != "pre-init" ] \
+		&& [ "${current_state}" != "enter-init" ]; then
+		echo_with_color green "Synchronizing cached writes to persistent storage..."
+		sync
+	fi
+
+	if \
+		util_is_parameter_set_and_not_empty\
+			target_device; then
+		if is_target_busy "${target_device}"; then
+			echo_with_color yellow "Target device is busy, please make sure you unmount all filesystems on target device before detaching it."
+		else
+			echo_with_color green "You may now safely detach the target device"
+		fi
+	fi
+
+	if [ "${current_state}" = "finished" ]; then
+		echo_with_color green "Done :)"
+		echo_with_color green "The target device should be bootable now"
+	fi
+
+	return 0
+}; declare -fr trap_exit
+
+trap_interrupt(){
+	printf "\n" # Separate message with previous output
+	echo_with_color yellow "Recieved SIGINT, program is interrupted." 1>&2
+	return 1
+}; declare -fr trap_interrupt
 
 trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
@@ -1113,5 +1157,9 @@ util_check_function_parameters_quantity(){
 	fi
 	return 0
 }; declare -fr util_check_function_parameters_quantity
+
+trap trap_exit EXIT
+trap trap_errexit ERR
+trap trap_interrupt INT
 
 init "${@}"
