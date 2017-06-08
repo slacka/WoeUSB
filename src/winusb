@@ -496,7 +496,7 @@ destroy_and_rebuild_entire_disk(){
 	local -r target_partition="${1}"; shift
 	local -r command_msdosfs="${1}"
 
-	echo_with_color blue "DESTROYING previous data on \"${target_device}\" and reintializing ..."
+	echo_with_color green "DESTROYING previous data on \"${target_device}\" and reintializing ..."
 	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
 	parted --script\
 		"${target_device}"\
@@ -558,7 +558,7 @@ mount_source_and_target_filesystem(){
 	local target_partition="$1"; shift
 	local target_fs_mountpoint="$1"
 
-	echo_with_color blue "Mounting source and target filesystems..."
+	echo_with_color green "Mounting source and target filesystems..."
 
 	mkdir\
 		--parents\
@@ -665,7 +665,7 @@ copy_filesystem_files(){
 	# FIXME: Why do we `pulse off` and on here?
 	pulse off
 
-	echo_with_color blue "Copying files from source media..."
+	echo_with_color green "Copying files from source media..."
 
 	pushd "${source_fs_mountpoint}" >/dev/null
 
@@ -807,13 +807,13 @@ install_bootloader_grub(){
 	local -r command_grubinstall="${1}"; shift 1
 	local -r name_grub_prefix="${1}"
 
-	echo_with_color blue "Installing GRUB bootloader for legacy boot support..."
+	echo_with_color green "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}"\
 		--target=i386-pc\
 		--boot-directory="${target_fs_mountpoint}"\
 		--force "${target_device}"
 
-	echo_with_color blue "Installing grub.cfg..."
+	echo_with_color green "Installing grub.cfg..."
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
 	local -r target_fs_uuid=$(\
 		lsblk\
