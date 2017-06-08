@@ -928,12 +928,6 @@ trap_exit(){
 		fi
 	fi
 
-	if [ "${current_state}" != "pre-init" ] \
-		&& [ "${current_state}" != "enter-init" ]; then
-		echo_with_color green "Synchronizing cached writes to persistent storage..."
-		sync
-	fi
-
 	if \
 		util_is_parameter_set_and_not_empty\
 			target_device; then
