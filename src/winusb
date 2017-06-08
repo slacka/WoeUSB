@@ -171,12 +171,19 @@ init(){
 
 	current_state="start-mounting"
 
-	mount_source_and_target_filesystem\
+	if ! mount_source_filesystem\
 		"${source_media}"\
-		"${source_fs_mountpoint}"\
+		"${source_fs_mountpoint}"; then
+		echo_with_color red "Error: Unable to mount source filesystem"
+		exit 1
+	fi
+
+	if ! mount_target_filesystem\
 		"${target_partition}"\
-		"${target_fs_mountpoint}"\
-		|| exit 1
+		"${target_fs_mountpoint}"; then
+		echo_with_color red "Error: Unable to mount target filesystem"
+		exit 1
+	fi
 
 	check_target_filesystem_free_space\
 		"${target_fs_mountpoint}"\
@@ -616,15 +623,12 @@ check_target_filesystem(){
 	return 0
 }; declare -fr check_target_filesystem
 
-mount_source_and_target_filesystem(){
-	util_check_function_parameters_quantity 4 "${#}"
-
+mount_source_filesystem(){
+	util_check_function_parameters_quantity 2 $#
 	local source_media="$1"; shift
-	local source_fs_mountpoint="$1"; shift
-	local target_partition="$1"; shift
-	local target_fs_mountpoint="$1"
+	local source_fs_mountpoint="$1"
 
-	echo_with_color green "Mounting source and target filesystems..."
+	echo_with_color green "Mounting source filesystem..."
 
 	mkdir\
 		--parents\
@@ -653,6 +657,12 @@ mount_source_and_target_filesystem(){
 			return 1
 		)
 	fi
+}; declare -fr mount_source_filesystem
+
+mount_target_filesystem(){
+	util_check_function_parameters_quantity 2 $#
+	local target_partition="$1"; shift
+	local target_fs_mountpoint="$1"
 
 	mkdir\
 		--parents\
@@ -668,7 +678,7 @@ mount_source_and_target_filesystem(){
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
 			return 1
 		)
-}; declare -fr mount_source_and_target_filesystem
+}; declare -fr mount_target_filesystem
 
 check_target_filesystem_free_space(){
 	util_check_function_parameters_quantity 2 $#
