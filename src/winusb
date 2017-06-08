@@ -1143,12 +1143,14 @@ util_check_function_parameters_quantity(){
 	local -i given_parameter_quantity="${1}"
 
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
+		switch_terminal_text_color red
 		printf --\
 			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
 			"${FUNCNAME[1]}"\
 			"${expected_parameter_quantity}"\
 			"${given_parameter_quantity}"\
 			1>&2
+		switch_terminal_text_color none
 		exit 1
 	fi
 	return 0
