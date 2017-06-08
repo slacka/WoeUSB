@@ -155,9 +155,13 @@ init(){
 		"${target_partition}"
 
 	if [ "${install_mode}" = 'device' ]; then
-		destroy_and_rebuild_entire_disk\
+		overwrite_target_partition_table\
 			"${target_device}"\
+			"legacy"
+		create_target_partition\
 			"${target_partition}"\
+			"FAT"\
+			"Windows USB"\
 			"${command_mkdosfs}"
 	fi
 
@@ -487,28 +491,45 @@ check_source_and_target_not_busy(){
 	fi
 }; declare -fr check_source_and_target_not_busy
 
-destroy_and_rebuild_entire_disk(){
-	util_check_function_parameters_quantity 3 $#
+overwrite_target_partition_table(){
+	util_check_function_parameters_quantity 2 $#
 	local -r target_device="${1}"; shift
-	local -r target_partition="${1}"; shift
-	local -r command_msdosfs="${1}"
+	local -r partition_table_type="${1}"
 
-	echo_with_color green "DESTROYING previous data on \"${target_device}\" and reintializing ..."
-	# Create new PC, a.k.a. MBR, a.k.a. msdos style partition table(and overwrite the old one, whatever it was)
+	echo_with_color green "Overwriting \"${target_device}\"'s partition table..."
+
+	local parted_partiton_table_argument
+
+	case "${partition_table_type}" in
+		legacy|msdos|mbr|pc)
+			parted_partiton_table_argument="msdos"
+			;;
+		gpt|guid)
+			parted_partiton_table_argument="gpt"
+			echo_with_color\
+				red\
+				"${FUNCNAME[0]}: Error: Currently GUID partition table is not supported."
+			return 2
+			;;
+		*)
+			echo_with_color\
+				red\
+				"${FUNCNAME[0]}: Error: Partition table not supported."
+			return 2
+			;;
+	esac
+
+	# Create partition table(and overwrite the old one, whatever it was)
 	parted --script\
 		"${target_device}"\
 		mklabel\
-		msdos
+		"${parted_partiton_table_argument}"
+}; declare -fr overwrite_target_partition_table
 
-	# Create partition
-	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	parted --script\
-		"${target_device}"\
-		mkpart\
-		primary\
-		fat32\
-		4MiB\
-		-- -1s # last sector of the disk
+# NOTE: This really should be done automatically by GNU Parted after every operation
+workaround_make_system_realize_partition_table_changed(){
+	util_check_function_parameters_quantity 1 $#
+	local -r target_device="$1"
 
 	# Reload the new partition table
 	# FIXME: Is `blockdev` and `partprobe` both required?
@@ -521,12 +542,60 @@ destroy_and_rebuild_entire_disk(){
 	echo "Wait 3 seconds for block device nodes to populate..."
 	sleep 3
 
+}; declare -fr workaround_make_system_realize_partition_table_changed
+
+create_target_partition(){
+	util_check_function_parameters_quantity 4 $#
+	local -r target_partition="$1"; shift
+	local -r filesystem_type="$1"; shift
+	local -r filesystem_label="$1"; shift
+	local -r command_mkdosfs="$1"
+
+	# Refer: GNU Parted's (info) manual: Using Parted » Command explanations » mkpart
+	# Refer: sudo parted --script /dev/sda help mkpart
+	local parted_mkpart_fs_type
+	case "${filesystem_type}" in
+		FAT|vfat)
+			parted_mkpart_fs_type="fat32"
+			;;
+		NTFS|ntfs)
+			parted_mkpart_fs_type="ntfs"
+			echo_with_color red "${FUNCNAME[0]}: Error:    Currently NTFS filesystem is not supported."
+			return 2
+			;;
+		*)
+			echo_with_color red "${FUNCNAME[0]}: Error: Filesystem not supported"
+			return 2
+			;;
+	esac
+
+	# Create partition
+	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
+	parted --script\
+		"${target_device}"\
+		mkpart\
+		primary\
+		"${parted_mkpart_fs_type}"\
+		4MiB\
+		-- -1s # last sector of the disk
+
+	workaround_make_system_realize_partition_table_changed\
+		"${target_device}"
+
 	# Create filesystem on partition
-	"${command_mkdosfs}"\
-		-F 32\
-		-n 'Windows USB' \
-		"${target_partition}"
-}; declare -fr destroy_and_rebuild_entire_disk
+	case "${filesystem_type}" in
+		FAT|vfat)
+			"${command_mkdosfs}"\
+				-F 32\
+				-n "${filesystem_label}" \
+				"${target_partition}"
+			;;
+		*)
+			echo_with_color red "${FUNCNAME}: FATAL: Shouldn't be here"
+			exit 1
+			;;
+	esac
+}; declare -fr create_target_partition
 
 check_target_filesystem(){
 	util_check_function_parameters_quantity 1 $#
