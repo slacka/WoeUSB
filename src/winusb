@@ -172,10 +172,7 @@ init(){
 		"${source_fs_mountpoint}"\
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
-		|| (
-			echo_with_color red "Error: Failed to mount filesystems"
-			exit 1
-		)
+		|| exit 1
 
 	check_target_filesystem_free_space\
 		"${target_fs_mountpoint}"\
