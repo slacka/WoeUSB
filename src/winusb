@@ -449,7 +449,7 @@ determine_target_parameters(){
 
 check_is_target_device_busy(){
 	util_check_function_parameters_quantity 1 $#
-	local -r "${target_device}"
+	local -r target_device="${1}"
 
 	if [ "$(mount | grep -c "${target_device}")" -ne 0 ]; then
 		return 1
