@@ -452,9 +452,9 @@ check_is_target_device_busy(){
 	local -r target_device="${1}"
 
 	if [ "$(mount | grep -c "${target_device}")" -ne 0 ]; then
-		return 1
-	else
 		return 0
+	else
+		return 1
 	fi
 }; declare -fr check_is_target_device_busy
 
