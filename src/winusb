@@ -64,6 +64,8 @@ declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
 declare -r APPLICATION_NAME="WinUSB"
 
+declare -r DEFAULT_NEW_FS_LABEL="Windows USB"
+
 declare -i\
 	verbose='0'\
 	only_for_gui='0'\
@@ -114,6 +116,8 @@ init(){
 		command_grubinstall\
 		name_grub_prefix
 
+	declare new_file_system_label="${DEFAULT_NEW_FS_LABEL}"
+
 	if ! check_runtime_dependencies\
 		command_mkdosfs\
 		command_grubinstall\
@@ -124,7 +128,8 @@ init(){
 	if ! process_commandline_parameters\
 			install_mode\
 			source_media\
-			target_media; then
+			target_media\
+			new_file_system_label; then
 		print_help
 		exit 1
 	fi
@@ -134,7 +139,8 @@ init(){
 	if ! check_runtime_parameters\
 		install_mode\
 		source_media\
-		target_media; then
+		target_media\
+		"${new_file_system_label}"; then
 		print_help
 		exit 1
 	fi
@@ -161,7 +167,7 @@ init(){
 		create_target_partition\
 			"${target_partition}"\
 			"FAT"\
-			"Windows USB"\
+			"${new_file_system_label}"\
 			"${command_mkdosfs}"
 	fi
 
@@ -235,13 +241,16 @@ print_help(){
 	echo -e "\t--help, -h           ""Show this help message and exit"
 	echo -e "\t--no-color           ""Disable color"
 	echo -e "\t--debug, -d          ""Enable script debugging"
+	echo -e "\t--label, -l          ""Label for the newly created file system in --format mode"
+	echo -e "\t                     ""Note that the label is not verified for validity and may be illegal for the filesystem"
 }; declare -fr print_help
 
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 3 "${#}"
+	util_check_function_parameters_quantity 4 "${#}"
 	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
-	local -n target_media_ref="${1}"
+	local -n target_media_ref="${1}"; shift
+	local -n new_file_system_label_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		print_help
@@ -300,6 +309,10 @@ process_commandline_parameters(){
 				;;
 			'--no-color')
 				no_color='1'
+				;;
+			'--label'|'-l')
+				shift_array parameters
+				new_file_system_label_ref="${parameters[0]}"
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
@@ -399,10 +412,11 @@ check_permission(){
 }; declare -fr check_permission
 
 check_runtime_parameters(){
-	util_check_function_parameters_quantity 3 $#
+	util_check_function_parameters_quantity 4 $#
 	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
-	local -n target_media_ref="${1}"
+	local -n target_media_ref="${1}"; shift
+	local new_file_system_label="${1}"
 
 	if ! util_is_parameter_set_and_not_empty install_mode_ref\
 		|| ! util_is_parameter_set_and_not_empty source_media_ref\
@@ -436,6 +450,11 @@ check_runtime_parameters(){
 		return 1
 	fi
 
+	if [ "${install_mode_ref}" != "device" ] \
+		&& [ "${new_file_system_label}" != "${DEFAULT_NEW_FS_LABEL}" ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: --label option only can be used with --format option"
+		return 1
+	fi
 	return 0
 }; declare -fr check_runtime_parameters
 
