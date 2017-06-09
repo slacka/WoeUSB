@@ -1,18 +1,25 @@
-#!/bin/bash
-
-# Config
-	# Le script quitte en cas d'erreur d'une commande
+#!/usr/bin/env bash
+## Makes debuggers' life easier - Unofficial Bash Strict Mode
+## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
 set -o errexit
-
-	# Le script quitte en cas de variables non déclarée
+set -o errtrace
 set -o nounset
+set -o pipefail
 
-while read path; do
-	if echo "$path" | grep '/block/sr' > /dev/null; then
-		devName="/dev/$(basename "$path")"
-		echo "$devName"
-		echo "$devName - $(cat "$path/device/model")"
+declare optical_disk_drive_devfs_path
+
+while read sysfs_block_device_path; do
+	if echo "${sysfs_block_device_path}"\
+		| grep '/block/sr' > /dev/null; then
+		optical_disk_drive_devfs_path="/dev/$(basename "${sysfs_block_device_path}")"
+		echo "${optical_disk_drive_devfs_path}"
+		echo "${optical_disk_drive_devfs_path} - $(cat "${sysfs_block_device_path}/device/model")"
 	fi
-done < <(find /sys/block -maxdepth 1 -mindepth 1)
+done < <(\
+	find\
+		/sys/block\
+		-maxdepth 1\
+		-mindepth 1\
+	)
 
 exit 0
