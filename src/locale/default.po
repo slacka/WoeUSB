@@ -138,7 +138,7 @@ msgid "bytes"
 msgstr ""
 
 #: ../AppConfig.hpp:7
-msgid "WinUSB"
+msgid "WinUSB+"
 msgstr ""
 
 #: ../DialogAbout.hpp:68

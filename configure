@@ -2773,7 +2773,7 @@ am__tar='$${TAR-tar} chof - "$$tardir"' am__untar='$${TAR-tar} xf -'
 
 	ISODATE=`date +%Y-%m-%d`
 
-	PACKAGE_NAME="WinUSB"
+	PACKAGE_NAME="WinUSB+"
 
 	cat >>confdefs.h <<_ACEOF
 #define PACKAGE_NAME "$PACKAGE_NAME"

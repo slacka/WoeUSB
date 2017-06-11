@@ -25,14 +25,14 @@
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{7B35966E-246C-4D0B-98E8-53F1F1C9D8F5}
-AppName=WinUSB
-AppVerName=WinUSB 1.0.11
+AppName=WinUSB+
+AppVerName=WinUSB+ 1.0.11
 AppPublisher=Congelli 501 / Colin GILLE
 AppPublisherURL=http://fr.congelli.eu/
 AppSupportURL=http://fr.congelli.eu/
 AppUpdatesURL=http://fr.congelli.eu/
-DefaultDirName={pf}\WinUSB
-DefaultGroupName=WinUSB
+DefaultDirName={pf}\WinUSB+
+DefaultGroupName=WinUSB+
 LicenseFile=../COPYING
 InfoBeforeFile=../ChangeLog
 OutputDir=.
@@ -49,5 +49,5 @@ Source: winPack/*; DestDir: {app}; Flags: ignoreversion recursesubdirs
 [Icons]
 ; Tt
 Name: {group}\{cm:ProgramOnTheWeb,Congelli 501}; Filename: http://www.congelli.eu/
-Name: {group}\WinUSB; Filename: {app}\WinUSB.exe
-Name: {group}\{cm:UninstallProgram,WinUSB}; Filename: {uninstallexe}
+Name: {group}\WinUSB+; Filename: {app}\WinUSB+.exe
+Name: {group}\{cm:UninstallProgram,WinUSB+}; Filename: {uninstallexe}

@@ -145,8 +145,8 @@ msgid "bytes"
 msgstr "octets"
 
 #: ../../../AppConfig.hpp:7
-msgid "WinUSB"
-msgstr "WinUSB"
+msgid "WinUSB+"
+msgstr "WinUSB+"
 
 #: ../../../DialogAbout.hpp:68
 msgid "About"

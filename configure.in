@@ -3,7 +3,7 @@ AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 AC_CONFIG_MACRO_DIR([m4])
 
-MY_PACKAGE_INIT([WinUSB])
+MY_PACKAGE_INIT([WinUSB+])
 
 dnl Checks for programs (must be here).
 AC_LANG([C++])
