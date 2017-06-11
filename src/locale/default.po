@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: winusb\n"
+"Project-Id-Version: winusb+\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-14 00:07+0100\n"
 "PO-Revision-Date: 2011-07-14 00:07+0100\n"
