@@ -1,47 +1,94 @@
-#!/bin/bash
+#!/usr/bin/env bash
+# An utility script to provide GUI available target devices
+# FIXME: Should be named listTargetDevices instead of listUsb
+# Copyright © 2013 Colin GILLE / congelli501
+# Copyright © 2017 slacka et. al.
 
-# Config
-	# Le script quitte en cas d'erreur d'une commande
+# This file is part of WinUSB.
+#
+# WinUSB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# WinUSB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with WinUSB  If not, see <http://www.gnu.org/licenses/>.
+
+
+## Makes debuggers' life easier - Unofficial Bash Strict Mode
+## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
 set -o errexit
-
-	# Le script quitte en cas de variables non déclarée
+set -o errtrace
 set -o nounset
+set -o pipefail
 
-showAll=0
-if [ "$#" -ge 1 ] && [ "$1" = 'all' ]; then
-	showAll=1
+# Show all devices, not just removable ones
+declare -i show_all_devices=0
+
+if [ "$#" -ge 1 ] \
+	&& [ "$1" = 'all' ]; then
+	show_all_devices=1
 fi
 
-function isUSBStick()
-{
-	if [ "$showAll" -eq 1 ]; then
-		if echo "$path" | grep '/block/loop' > /dev/null; then
-			if [ -d "$path/loop" ]; then # Initialised loops
-				return 0
-			else
-				return 1
-			fi
-		else
-			return 0 # On prend tout
-		fi
+is_removable_and_writable_device(){
+	local block_device_name="$1"
+
+	local -r sysfs_block_device_dir="/sys/block/${block_device_name}"
+	if [ -f "${sysfs_block_device_dir}/removable" ] \
+		&& [ "$(cat "${sysfs_block_device_dir}/removable")" -eq 1 ]\
+		&& [ "$(cat "${sysfs_block_device_dir}/ro")" -eq 0 ]; then
+		return 0
 	else
-		if [ -f "$path/removable" ] && [ "$(cat "$path/removable")" -eq 1 ] && [ "$(cat "$path/ro")" -eq 0 ]; then
-			return 0
-		else
-			return 1
-		fi
+		return 1
 	fi
 }
 
-while read path; do
-	if echo "$path" | grep '/block/\(sd\|loop\)' > /dev/null; then
-		if isUSBStick; then
-			devName="/dev/$(basename "$path")"
-			size=$(env LANG='C' parted -s "$devName" print | grep ^Disk | cut -f2 -d':' | sed 's/\s//g')
-			echo "$devName"
-			echo "$devName - $(cat "$path/device/model" 2> /dev/null | sed -e 's/\s\+$//g' ) - $size"
+declare block_device
+declare device_capacity
+declare device_model
+
+while read block_device_name; do
+	if expr match "${block_device_name}" "^sr[0-9]+$\|^cdrom[0-9]*$" >/dev/null; then
+		# Known non-target blacklist
+		continue
+	elif expr match "${block_device_name}" '^loop[0-9]+' >/dev/null; then
+		if [ "${show_all_devices}" -eq 0 ]; then
+			continue
+		fi
+	elif ! is_removable_and_writable_device "${block_device_name}"; then
+		if [ "${show_all_devices}" -eq 0 ]; then
+			continue
 		fi
 	fi
-done < <(find /sys/block -maxdepth 1 -mindepth 1)
+
+	# FIXME: Needs a more reliable detection mechanism instead of simply assuming it is under /dev
+	block_device="/dev/${block_device_name}"
+	device_capacity="$(\
+		lsblk\
+			--output SIZE\
+			--noheadings\
+			--nodeps\
+			"${block_device}"\
+	)"
+	device_model="$(\
+		lsblk\
+			--output MODEL\
+			--noheadings\
+			--nodeps\
+			"${block_device}"\
+	)"
+
+	# It's possible that the device has no model(e.g. loop device)
+	if [ -n "${device_model}" ]; then
+		echo "${block_device}(${device_model}, $device_capacity)"
+	else
+		echo "${block_device}($device_capacity)"
+	fi
+done < <(lsblk --output NAME --noheadings --nodeps)
 
 exit 0
