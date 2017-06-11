@@ -81,6 +81,7 @@ while read block_device_name; do
 			--noheadings\
 			--nodeps\
 			"${block_device}"\
+		| sed 's/\s//g'
 	)"
 
 	# It's possible that the device has no model(e.g. loop device)
