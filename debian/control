@@ -1,15 +1,15 @@
-Source: winusb
+Source: winusb+
 Section: x11
 Priority: extra
-Maintainer: Colin GILLE / congelli501 <colingille@hotmail.com>
+Maintainer: 林博仁 <Buo.Ren.Lin@gmail.com>
 Build-Depends: debhelper (>= 7), autotools-dev, libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev
 Standards-Version: 3.8.1
-Homepage: http://www.congelli.eu/
+Homepage: https://github.com/slacka/WinUSB
 
-Package: winusb
+Package: winusb+
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, parted, coreutils, bash, grub-pc | grub-efi-amd64 | grub-efi-i386, grub-pc-bin, gksu, ntfsprogs | ntfs-3g (>= 1:2011), p7zip-full
-Description: WinUSB can create bootable windows installer on usb.
+Description: WinUSB+ can create bootable windows installer on usb.
  This package contains two programs:
   - WinUSB-gui: a simple tool that enable you to create
  your own usb stick windows installer from iso image
@@ -18,3 +18,5 @@ Description: WinUSB can create bootable windows installer on usb.
  Supported images: Windows Vista, Seven, 8 installer
  for any language and any version (home, pro...)
  and Windows PE.
+
+ This is a fork of Colin GILLE / congelli501's WinUSB project
