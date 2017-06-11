@@ -1,6 +1,6 @@
-# WinUSB
-[![WinUSB Version](https://img.shields.io/badge/winusb-1.0.11-orange.svg)](https://github.com/slacka/WinUSB) 
-[![WinUSB License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSB/blob/master/COPYING) 
+# WinUSB+
+[![WinUSB+ Version](https://img.shields.io/badge/winusb-1.0.11-orange.svg)](https://github.com/slacka/WinUSB)
+[![WinUSB+ License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSB/blob/master/COPYING)
 
 <img src="winusb.jpg" align="right" />
 <br>
@@ -25,26 +25,26 @@ Supported bootmodes:
 This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/prog_info_winusb.html), which is not maintained since 2012, according to the official website.
 
 ## Installation
-Following is the instructions to install WinUSB if your Linux distro's packaged version is not available or too old.
+Following is the instructions to install WinUSB+ if your Linux distro's packaged version is not available or too old.
 
-### Acquire WinUSB's source code
+### Acquire WinUSB+'s source code
 Choose one of the following method:
 
 * Download and extract source code archive from GitHub
-* Cloning WinUSB's Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
+* Cloning WinUSB+'s Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
 
-### Install WinUSB's build dependencies
+### Install WinUSB+'s build dependencies
 ```shell
 # For Ubuntu
 $ sudo apt-get install devscripts equivs gdebi-core
-$ cd <WinUSB source code directory>
+$ cd <WinUSB+ source code directory>
 $ mk-build-deps debian/control # NOTE: Currently due to Debian Bug #679101 this command will fail if source path contains spaces.
 $ sudo gdebi winusb-build-deps_<version>_all.deb
 
 # For Fedora
 $ sudo dnf install wxGTK3-devel
 ```
-### Build & install WinUSB
+### Build & install WinUSB+
 ```shell
 # For Ubuntu
 $ dpkg-buildpackage -uc -b # NOTE: Currently due to bug in the build system this command will fail if source's path contains space or single quotes, refer issue #84 for details
@@ -57,4 +57,4 @@ $ sudo make install
 ```
 
 ## License
-WinUSB is sold under the [GPL license](https://github.com/slacka/WinUSB/blob/master/COPYING).
+WinUSB+ is sold under the [GPL license](https://github.com/slacka/WinUSB/blob/master/COPYING).
