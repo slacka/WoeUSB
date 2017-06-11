@@ -84,6 +84,8 @@ while read block_device_name; do
 		| sed 's/\s//g'
 	)"
 
+	echo "${block_device}"
+
 	# It's possible that the device has no model(e.g. loop device)
 	if [ -n "${device_model}" ]; then
 		echo "${block_device}(${device_model}, $device_capacity)"
