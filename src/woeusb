@@ -991,7 +991,7 @@ pulse(){
 	util_check_function_parameters_quantity 1 $#
 	if [ "$only_for_gui" -eq 1 ]; then
 		if [ ! "$pulse_current_pid" -eq 0 ]; then
-			kill "$pulse_current_pid"
+			kill "$pulse_current_pid" >/dev/null
 			#wait "$pulse_current_pid"
 			pulse_current_pid=0
 		fi
