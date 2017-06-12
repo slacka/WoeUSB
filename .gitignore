@@ -19,7 +19,7 @@ src/.deps/
 *.o
 
 ## Linked executable
-src/winusbgui
+src/woeusbgui
 
 ## Gettext compiled message catalogs
 *.mo
