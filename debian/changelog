@@ -1,5 +1,5 @@
 winusb+ (2.0.0) unstable; urgency=low
 
-  * Rename package name from winusb to winusb+
+  * This is a fake changelog for packaging purpose, for the actual changelog please refer Commits · slacka/WinUSB <https://github.com/slacka/WinUSB/commits>
 	
  -- 林博仁 <Buo.Ren.Lin@gmail.com>  Mon, 12 Jun 2017 09:04:00 +0100
