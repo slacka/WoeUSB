@@ -8,7 +8,7 @@ _A Linux program to create Windows USB stick installer from a real Windows DVD o
 
 This package contains two programs:
 
-* WinUSB-gui: a simple tool that enable you to create
+* winusbgui: a simple tool that enable you to create
 	 your own usb stick windows installer from iso image
 	 or a real DVD.
 * winusb: the command line tool.
