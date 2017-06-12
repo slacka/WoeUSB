@@ -13,7 +13,7 @@ Conflicts: winusb
 Replaces: winusb
 Description: WinUSB+ can create bootable windows installer on usb.
  This package contains two programs:
-  - WinUSB-gui: a simple tool that enable you to create
+  - winusbgui: a simple tool that enable you to create
  your own usb stick windows installer from iso image
  or a real DVD.
   - winusb: the command line tool.
