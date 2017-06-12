@@ -1,14 +1,14 @@
 SUBDIRS = data locale win32 linux-menu
 
-bin_PROGRAMS=winusbgui
+bin_PROGRAMS=woeusbgui
 
 INCLUDES = $(CFLAGS_ALL)
 
-winusbgui_LDFLAGS = $(EXTRA_LDFLAGS)
+woeusbgui_LDFLAGS = $(EXTRA_LDFLAGS)
 	
-winusbgui_LDADD = $(LIBS_ALL)
+woeusbgui_LDADD = $(LIBS_ALL)
 
-winusbguiSrcBase = AppConfig.hpp	 DialogAbout.hpp  MainPanel.cpp \
+woeusbguiSrcBase = AppConfig.hpp	 DialogAbout.hpp  MainPanel.cpp \
 	App.cpp		 findFile.cpp	  MainPanel.hpp     processManager.hpp \
 	App.hpp		 findFile.hpp	  MyException.cpp   strWxStdConv.cpp \
 	MainFrame.cpp	  MyException.hpp   strWxStdConv.hpp \
@@ -21,16 +21,16 @@ winusbguiSrcBase = AppConfig.hpp	 DialogAbout.hpp  MainPanel.cpp \
 	i586-mingw32msvc-windres $^ -o $@ $(EXTRA_WINDRES_ARG)
 
 if HAVE_WINDRES
-winusbgui_SOURCES=$(winusbguiSrcBase) rc.rc
+woeusbgui_SOURCES=$(woeusbguiSrcBase) rc.rc
 else
-winusbgui_SOURCES=$(winusbguiSrcBase)
+woeusbgui_SOURCES=$(woeusbguiSrcBase)
 endif
 ## --------------- Resources windows --------------- 
 
 # Install my_script in $(bindir) and distribute it.
-dist_bin_SCRIPTS = winusb
+dist_bin_SCRIPTS = woeusb
 
-man_MANS = winusbgui.1 winusb.1
+man_MANS = woeusbgui.1 woeusb.1
 
 if IS_MINGW
 install-data-hook:

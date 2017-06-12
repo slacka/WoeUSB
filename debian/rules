@@ -61,8 +61,8 @@ install: build
 	dh_prep  
 	dh_installdirs
 
-	# Add here commands to install the package into debian/winusb.
-	$(MAKE) DESTDIR="$(CURDIR)/debian/winusb+" install
+	# Add here commands to install the package into debian/woeusb.
+	$(MAKE) DESTDIR="$(CURDIR)/debian/woeusb" install
 
 
 # Build architecture-independent files here.

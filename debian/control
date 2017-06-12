@@ -1,5 +1,5 @@
-Source: winusb+
-Homepage: https://github.com/slacka/WinUSB
+Source: woeusb
+Homepage: https://github.com/slacka/WoeUSB
 Section: x11
 Priority: extra
 Maintainer: 林博仁 <Buo.Ren.Lin@gmail.com>
@@ -9,7 +9,7 @@ Build-Depends:
 	libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev
 Standards-Version: 3.8.1
 
-Package: winusb+
+Package: woeusb
 Architecture: any
 Depends: 
 	${shlibs:Depends}, 
@@ -22,14 +22,14 @@ Depends:
 	gksu, 
 	ntfsprogs | ntfs-3g (>= 1:2011), 
 	p7zip-full
-Conflicts: winusb
-Replaces: winusb
-Description: WinUSB+ can create bootable windows installer on usb.
+Conflicts: winusb, winusb+
+Replaces: winusb, winusb+
+Description: WoeUSB can create bootable windows installer on usb.
  This package contains two programs:
-  - winusbgui: a simple tool that enable you to create
+  - woeusbgui: a simple tool that enable you to create
  your own usb stick windows installer from iso image
  or a real DVD.
-  - winusb: the command line tool.
+  - woeusb: the command line tool.
  Supported images: Windows Vista, Seven, 8 installer
  for any language and any version (home, pro...)
  and Windows PE.

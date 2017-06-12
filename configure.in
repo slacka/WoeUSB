@@ -1,9 +1,9 @@
-AC_INIT(winusb+, @@WINUSB_VERSION@@)
+AC_INIT(woeusb, @@WINUSB_VERSION@@)
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE
 AC_CONFIG_MACRO_DIR([m4])
 
-MY_PACKAGE_INIT([WinUSB+])
+MY_PACKAGE_INIT([WoeUSB])
 
 dnl Checks for programs (must be here).
 AC_LANG([C++])

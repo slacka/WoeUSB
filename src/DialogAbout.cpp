@@ -1,20 +1,20 @@
 ///File : DialogAbout.cpp
 //------------------------------------------------------------------------------
 /*
-    This file is part of WinUSB+.
+    This file is part of WoeUSB.
 
-    WinUSB+ is free software: you can redistribute it and/or modify
+    WoeUSB is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    WinUSB+ is distributed in the hope that it will be useful,
+    WoeUSB is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with WinUSB+.  If not, see <http://www.gnu.org/licenses/>.
+    along with WoeUSB.  If not, see <http://www.gnu.org/licenses/>.
 */
 //------------------------------------------------------------------------------
 #include "DialogAbout.hpp"
@@ -54,7 +54,7 @@ DialogAbout::DialogAbout( wxWindow* parent, wxWindowID id, const wxString& title
 
 	// FIXME: Unable to make this page default
 	// FIXME: Unable to show whole logo image
-	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("slacka et al."), _T("data/winusb+-logo.png"), _T("github.com/slacka/WinUSBplus")), _("Authors"), true);
+	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("slacka et al."), _T("data/woeusb-logo.png"), _T("github.com/slacka/WoeUSB")), _("Authors"), true);
 	
 	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("Colin GILLE / Congelli501"), _T("data/c501-logo.png"), _T("www.congelli.eu")), _("Original WinUSB Developer"), true);
 

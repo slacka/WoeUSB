@@ -1,19 +1,19 @@
 ;	File : setup.iss
 ;------------------------------------------------------------------------------
-;	This file is part of winusb.
+;	This file is part of woeusb.
 ;
-;	winusb is free software: you can redistribute it and/or modify
+;	woeusb is free software: you can redistribute it and/or modify
 ;	it under the terms of the GNU General Public License as published by
 ;	the Free Software Foundation, either version 3 of the License, or
 ;	(at your option) any later version.
 ;
-;	winusb is distributed in the hope that it will be useful,
+;	woeusb is distributed in the hope that it will be useful,
 ;	but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;	GNU General Public License for more details.
 ;
 ;	You should have received a copy of the GNU General Public License
-;	along with winusb.  If not, see <http://www.gnu.org/licenses/>.
+;	along with woeusb.  If not, see <http://www.gnu.org/licenses/>.
 ;------------------------------------------------------------------------------
 
 
@@ -25,14 +25,14 @@
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
 AppId={{7B35966E-246C-4D0B-98E8-53F1F1C9D8F5}
-AppName=WinUSB+
-AppVerName=WinUSB+ 1.0.11
+AppName=WoeUSB
+AppVerName=WoeUSB 1.0.11
 AppPublisher=Congelli 501 / Colin GILLE
 AppPublisherURL=http://fr.congelli.eu/
 AppSupportURL=http://fr.congelli.eu/
 AppUpdatesURL=http://fr.congelli.eu/
-DefaultDirName={pf}\WinUSB+
-DefaultGroupName=WinUSB+
+DefaultDirName={pf}\WoeUSB
+DefaultGroupName=WoeUSB
 LicenseFile=../COPYING
 InfoBeforeFile=../ChangeLog
 OutputDir=.
@@ -49,5 +49,5 @@ Source: winPack/*; DestDir: {app}; Flags: ignoreversion recursesubdirs
 [Icons]
 ; Tt
 Name: {group}\{cm:ProgramOnTheWeb,Congelli 501}; Filename: http://www.congelli.eu/
-Name: {group}\WinUSB+; Filename: {app}\WinUSB+.exe
-Name: {group}\{cm:UninstallProgram,WinUSB+}; Filename: {uninstallexe}
+Name: {group}\WoeUSB; Filename: {app}\WoeUSB.exe
+Name: {group}\{cm:UninstallProgram,WoeUSB}; Filename: {uninstallexe}

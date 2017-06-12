@@ -1,6 +1,6 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: winusb+\n"
+"Project-Id-Version: woeusb\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2011-07-14 00:07+0100\n"
 "PO-Revision-Date: 2011-07-14 00:07+0100\n"
@@ -138,7 +138,7 @@ msgid "bytes"
 msgstr ""
 
 #: ../AppConfig.hpp:7
-msgid "WinUSB+"
+msgid "WoeUSB"
 msgstr ""
 
 #: ../DialogAbout.hpp:68
