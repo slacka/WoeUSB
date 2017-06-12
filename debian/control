@@ -8,7 +8,8 @@ Build-Depends:
 	autotools-dev, 
 	libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev, 
 	git, 
-	bash
+	bash, 
+	realpath | coreutils (>= 8.23-1)
 Standards-Version: 3.8.1
 
 Package: woeusb
@@ -23,7 +24,8 @@ Depends:
 	grub-pc-bin, 
 	gksu, 
 	ntfsprogs | ntfs-3g (>= 1:2011), 
-	p7zip-full
+	p7zip-full, 
+	realpath | coreutils (>= 8.23-1)
 Conflicts: winusb, winusb+
 Replaces: winusb, winusb+
 Description: WoeUSB can create bootable windows installer on usb.
