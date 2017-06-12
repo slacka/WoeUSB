@@ -10,6 +10,7 @@ Package: winusb+
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, parted, coreutils, bash, grub-pc | grub-efi-amd64 | grub-efi-i386, grub-pc-bin, gksu, ntfsprogs | ntfs-3g (>= 1:2011), p7zip-full
 Conflicts: winusb
+Replaces: winusb
 Description: WinUSB+ can create bootable windows installer on usb.
  This package contains two programs:
   - WinUSB-gui: a simple tool that enable you to create
