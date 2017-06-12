@@ -1,5 +1,5 @@
 # WinUSB+
-[![WinUSB+ Version](https://img.shields.io/badge/winusb-1.0.11-orange.svg)](https://github.com/slacka/WinUSB)
+[![Latest Release](https://img.shields.io/github/release/slacka/WinUSB.svg)](https://github.com/slacka/WinUSB/releases)
 [![WinUSB+ License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSB/blob/master/COPYING)
 
 <img src="src/data/winusb+-logo.png" align="right" />
