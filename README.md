@@ -1,6 +1,6 @@
 # WinUSB+
-[![Latest Release](https://img.shields.io/github/release/slacka/WinUSB.svg)](https://github.com/slacka/WinUSB/releases)
-[![WinUSB+ License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSB/blob/master/COPYING)
+[![Latest Release](https://img.shields.io/github/release/slacka/WinUSBplus.svg)](https://github.com/slacka/WinUSBplus/releases)
+[![WinUSB+ License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSBplus/blob/master/COPYING)
 
 <img src="src/data/winusb+-logo.png" align="right" />
 <br>
@@ -64,4 +64,4 @@ $ sudo make install
 ```
 
 ## License
-WinUSB+ is sold under the [GPL license](https://github.com/slacka/WinUSB/blob/master/COPYING).
+WinUSB+ is sold under the [GPL license](https://github.com/slacka/WinUSBplus/blob/master/COPYING).
