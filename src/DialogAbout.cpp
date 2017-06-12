@@ -46,7 +46,7 @@ DialogAbout::DialogAbout( wxWindow* parent, wxWindowID id, const wxString& title
 	m_staticTextVersion = new wxStaticText( this, wxID_ANY, wxString::Format(_("Version %s"), NUM_VERSION));
 	m_staticTextVersion->SetFont( wxFont( 10, 74, 90, 92, false, wxT("Sans") ) );
 	m_staticTextVersion->SetForegroundColour( wxColour( 69, 141, 196 ) );
-	sizerTxt->Add( m_staticTextVersion, 0, wxLEFT, 50 );
+	sizerTxt->Add( m_staticTextVersion, 0, wxLEFT, 5 );
 	sizerImg->Add( sizerTxt, 0, 0, 5 );
 	sizerAll->Add( sizerImg, 0, wxEXPAND, 5 );
 
