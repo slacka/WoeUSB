@@ -1,4 +1,5 @@
 Source: winusb+
+Homepage: https://github.com/slacka/WinUSB
 Section: x11
 Priority: extra
 Maintainer: 林博仁 <Buo.Ren.Lin@gmail.com>
