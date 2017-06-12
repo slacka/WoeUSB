@@ -8,6 +8,21 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
+for required_command in\
+	realpath\
+	basename\
+	dirname\
+	git\
+	rm
+	do
+	if ! command -v "${required_command}" >/dev/null; then
+		printf\
+			"Error: This program requires \"${required_command}\" command in your \$PATH.\n"\
+			1>&2
+		exit 1
+	fi
+done
+
 ## Non-overridable Primitive Variables
 ## BASHDOC: Shell Variables » Bash Variables
 ## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
