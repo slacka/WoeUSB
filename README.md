@@ -27,10 +27,9 @@ This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/
 Following is the instructions to install WinUSB+ if your Linux distro's packaged version is not available or too old.
 
 ### Acquire WinUSB+'s source code
-Choose one of the following method:
+Clone WinUSB+'s Git repository to local machine using `git clone https://github.com/slacka/WinUSBplus.git`
 
-* Download and extract source code archive from GitHub
-* Cloning WinUSB+'s Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
+NOTE: We no longer support building from source archive provided in the GitHub Releases page as the software version is not set.
 
 ### Setting application version string
 This step is required for generating proper version name from Git tags, it should be redone if the version is changed
