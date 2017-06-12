@@ -3,7 +3,6 @@
 [![WinUSB+ License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WinUSBplus/blob/master/COPYING)
 
 <img src="src/data/winusb+-logo.png" align="right" />
-<br>
 _A Linux program to create Windows USB stick installer from a real Windows DVD or an image._
 
 This package contains two programs:
