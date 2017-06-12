@@ -1,0 +1,2 @@
+configure.in filter=version
+debian/changelog filter=version

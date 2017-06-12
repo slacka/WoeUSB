@@ -1,0 +1,5 @@
+# Project-specific Git Configuration
+# DOC: man: git-config
+[filter "version"]
+	clean = filters/clean-version.bash
+	smudge = filters/smudge-version.bash

@@ -1,4 +1,4 @@
-winusb+ (2.0.0) unstable; urgency=low
+winusb+ (@@WINUSB_VERSION@@) unstable; urgency=low
 
   * This is a fake changelog for packaging purpose, for the actual changelog please refer Commits · slacka/WinUSB <https://github.com/slacka/WinUSB/commits>
 	
