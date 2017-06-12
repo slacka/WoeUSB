@@ -1,5 +1,5 @@
-winusb (1.0.11) unstable; urgency=low
+winusb+ (2.0.0) unstable; urgency=low
 
-  * Add dependency to grub-pc OR grub-efi.
+  * Rename package name from winusb to winusb+
 	
- -- Colin GILLE / congelli501 <colingille@hotmail.com>  Wed, 27 Mar 2013 22:35:31 +0100
+ -- 林博仁 <Buo.Ren.Lin@gmail.com>  Mon, 12 Jun 2017 09:04:00 +0100
