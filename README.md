@@ -33,7 +33,7 @@ Choose one of the following method:
 * Cloning WinUSB+'s Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
 
 ### Setting application version string
-This step is required for generating proper version name from Git tags, it should be redo if the version is changed
+This step is required for generating proper version name from Git tags, it should be redone if the version is changed
 
 ```shell
 $ ./setup-development-environment.bash

@@ -54,7 +54,7 @@ DialogAbout::DialogAbout( wxWindow* parent, wxWindowID id, const wxString& title
 
 	// FIXME: Unable to make this page default
 	// FIXME: Unable to show whole logo image
-	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("slacka et. al."), _T("data/winusb+-logo.png"), _T("github.com/slacka/WinUSBplus")), _("Authors"), true);
+	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("slacka et al."), _T("data/winusb+-logo.png"), _T("github.com/slacka/WinUSBplus")), _("Authors"), true);
 	
 	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("Colin GILLE / Congelli501"), _T("data/c501-logo.png"), _T("www.congelli.eu")), _("Original WinUSB Developer"), true);
 
