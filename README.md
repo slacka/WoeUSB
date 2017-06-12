@@ -33,6 +33,13 @@ Choose one of the following method:
 * Download and extract source code archive from GitHub
 * Cloning WinUSB+'s Git repository to local machine using `git clone https://github.com/slacka/WinUSB.git`
 
+### Setting application version string
+This step is required for generating proper version name from Git tags, it should be redo if the version is changed
+
+```shell
+$ ./setup-development-environment.bash
+```
+
 ### Install WinUSB+'s build dependencies
 ```shell
 # For Ubuntu
