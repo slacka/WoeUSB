@@ -13,6 +13,7 @@ dist: trusty
 addons:
   apt:
     packages:
+    - realpath # Not required least after 16.04
     - debhelper
     - autotools-dev
     - libwxgtk2.8-dev
