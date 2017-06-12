@@ -14,7 +14,7 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 
 ## Info of My Environment
 ### WoeUSB Version
-For build from source code, run `git describe --tags --always --dirty`, for releases launch WoeUSB from the application menu then go to Help >> About and check the version line.
+For build from source code, run `git describe --tags --always --dirty` under the source tree, for releases launch WoeUSB from the application menu then go to Help >> About and check the version line.
 
 ### OS Distribution
 
