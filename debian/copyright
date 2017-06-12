@@ -6,9 +6,14 @@ Upstream Author(s):
 
     Colin GILLE / congelli501 <colingille@hotmail.com>
 
+WinUSB+ Author(s):
+
+    Contributors to slacka/WinUSB <https://github.com/slacka/WinUSB/graphs/contributors>
+
 Copyright: 
 
-    Copyright (C) 2008 Colin GILLE / congelli501 <colingille@hotmail.com>
+    Copyright (C) 2012 Colin GILLE / congelli501 <colingille@hotmail.com>
+    Copyright (C) 2017 slacka et. al. <https://github.com/slacka/WinUSB/graphs/contributors>
 
 License:
 
@@ -30,5 +35,5 @@ On Debian systems, the complete text of the GNU General
 Public License can be found in `/usr/share/common-licenses/GPL'.
 
 The Debian packaging is (C) 2008,
-Colin GILLE / congelli501 <colingille@hotmail.com> and
+Colin GILLE / congelli501 <colingille@hotmail.com>, (C) 2017, slacka et. al. <https://github.com/slacka/WinUSB/graphs/contributors> and
 is licensed under the GPL, see above.
