@@ -890,15 +890,88 @@ workaround_support_windows_7_uefi_boot(){
 		echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
 		return 0
 	fi
+
+	# Detect **case-insensitive** existing efi directories according to UEFI spec
+	local\
+		test_efi_directory\
+		efi_directory
+	test_efi_directory="$(
+		find\
+			"${target_fs_mountpoint}"\
+			-ipath "${target_fs_mountpoint}/efi"
+	)"
+	if [ -z "${test_efi_directory}" ]; then
+		efi_directory="${target_fs_mountpoint}/efi"
+		if [ "${verbose}" = "1" ]; then
+			printf\
+				"%s: DEBUG: Can't find efi directory, use %s.\n"\
+				"${FUNCNAME[0]}"\
+				"${efi_directory}"
+		fi
+	else # efi directory(case don't care) exists
+		efi_directory="${test_efi_directory}"
+		if [ "${verbose}" = "1" ]; then
+			printf\
+				"%s: DEBUG: %s detected.\n"\
+				"${FUNCNAME[0]}"\
+				"${efi_directory}"
+		fi
+	fi
+	unset test_efi_directory
+
+	local\
+		test_efi_boot_directory\
+		efi_boot_directory
+	test_efi_boot_directory="$(
+		find\
+			"${target_fs_mountpoint}"\
+			-ipath "${efi_directory}/boot"
+	)"
+	if [ -z "${test_efi_boot_directory}" ]; then
+		efi_boot_directory="${efi_directory}/boot"
+		if [ "${verbose}" = "1" ]; then
+			printf\
+				"%s: DEBUG: Can't find efi/boot directory, use %s.\n"\
+				"${FUNCNAME[0]}"\
+				"${efi_boot_directory}"
+		fi
+	else # boot directory(case don't care) exists
+		efi_boot_directory="${test_efi_boot_directory}"
+		if [ "${verbose}" = "1" ]; then
+			printf\
+				"%s: DEBUG: %s detected.\n"\
+				"${FUNCNAME[0]}"\
+				"${efi_boot_directory}"
+		fi
+	fi
+	unset\
+		efi_directory\
+		test_efi_boot_directory
+
+	# If there's already an EFI bootloader existed, skip the workaround
+	local test_efi_bootloader
+	test_efi_bootloader="$(
+		find\
+			"${target_fs_mountpoint}"\
+			-ipath "${target_fs_mountpoint}/efi/boot/boot*.efi"
+	)"
+	if [ -n "${test_efi_bootloader}" ]; then
+		printf\
+			"INFO: Detected existing EFI bootloader, workaround skipped.\n"
+		return 0
+	fi
+
 	mkdir\
 		--parents\
-		"${target_fs_mountpoint}/EFI/Boot"
+		"${efi_boot_directory}"
+
+	# Skip workaround if EFI bootloader already exist in efi_boot_directory
 	7z\
 		e\
 		-so\
 		"${source_fs_mountpoint}/sources/install.wim"\
 		"Windows/Boot/EFI/bootmgfw.efi"\
-		> "${target_fs_mountpoint}/EFI/Boot/bootx64.efi"
+		> "${efi_boot_directory}/bootx64.efi"
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 install_bootloader_grub(){
