@@ -46,7 +46,7 @@ init(){
 		"${version}"\
 		1>&2
 
-	sed "s/@@WINUSB_VERSION@@/${version/#v/}/"
+	sed "s/@@WOEUSB_VERSION@@/${version/#v/}/"
 
 	printf "DEBUG: %s is done\n"\
 		"${RUNTIME_EXECUTABLE_NAME}"\
