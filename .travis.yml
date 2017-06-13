@@ -34,7 +34,6 @@ deploy:
     secure: RJHRp/Ou83QtkZXdS/UXiOIf1hfsUzg1ZPVZNi18oNTQcMwcHut9IqsaJEb5ZmwdC9/0TIqkoXaPTXUatVS5G+OaPXhFh0FPWFlzpIKIa4xiM7juhoettvK50r7B0+QyfIcMuZ+wTP6h3itXkeGm97xTqOnMmGn2BpefmAQ8nMKcw6ehD9F1LFPIiGJSw16Sli5b4s9hkyJtslyxjriWsLypuIFA+z7/PAPFj4UmbAqNCTQH3yHUHkNPHomf0S405uecgGlV4eYqc10nNP0Y/2gN1pDwSx7HNbCSR/ufhLXc2dH+JBho7lJRCCaJKZ2PX2JeCndWOLAmKkuz2snV/aMcDzaXb6G5MQ3UPKsbaMJHaiKzz48LBDVeOsbhL7FF4cs+JdiPQGaTzTTSg35j6MXM28WirJ7VxEpVRxjrILgbRXasJIRXaB0Ttimgu2L2fJr2GDT3EBfVj5mT+GpXgsqwXlGP/QBKrB1170g4ATPHKmzmXqCYo7DZw6qZ5T1G0ZiZm9TX82OlYuNNo7fkuquo6Q7z6kJRlwmI0PPnR54IUuI6wrcOvWc/PoEBhRQvGpzyBadiLeFoQrAgHofcnGPfIbqmY/2cZiZza/XvnxVwa1NEHCGXZEcRYHeAQyRGtikxUNuhlP93sDLvPg61QuQVV/y+yXVVtuFDrLuL+L4=
   file_glob: true
   file:
-    - ../woeusb_*
     - ".github/The source code archives provided here is NOT supported, please use git-clone instead"
   on:
     repo: slacka/WoeUSB
