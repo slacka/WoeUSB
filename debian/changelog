@@ -1,4 +1,4 @@
-woeusb (@@WINUSB_VERSION@@) unstable; urgency=low
+woeusb (@@WOEUSB_VERSION@@) unstable; urgency=low
 
   * This is a fake changelog for packaging purpose, for the actual changelog please refer Commits · slacka/WoeUSB <https://github.com/slacka/WoeUSB/commits>
 	
