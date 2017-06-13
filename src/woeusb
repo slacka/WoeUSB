@@ -632,11 +632,11 @@ check_target_filesystem(){
 	local target_partition="${1}"
 
 	local target_filesystem
-	target_filesystem="$(\
+	target_filesystem="$(
 		lsblk\
 			--output FSTYPE\
 			--noheadings\
-			"${target_partition}"\
+			"${target_partition}"
 	)"
 
 	if [ "${target_filesystem}" != "vfat" ]; then
@@ -708,33 +708,33 @@ check_target_filesystem_free_space(){
 	local -r target_fs_mountpoint="${1}"; shift
 	local -r source_fs_mountpoint="${1}"
 
-	free_space=$(\
+	free_space=$(
 		df\
 			--block-size=1\
 			"${target_fs_mountpoint}"\
 		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
+		| awk '{print $4}'
 	)
-	free_space_human_readable=$(\
+	free_space_human_readable=$(
 		df\
 			--human-readable\
 			"${target_fs_mountpoint}"\
 		| grep "${target_fs_mountpoint}"\
-		| awk '{print $4}'\
+		| awk '{print $4}'
 	)
-	needed_space=$(\
+	needed_space=$(
 		du\
 			--summarize\
 			--bytes\
 			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
+		| awk '{print $1}'
 	)
-	needed_space_human_readable=$(\
+	needed_space_human_readable=$(
 		du\
 			--summarize\
 			--human-readable\
 			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
+		| awk '{print $1}'
 	)
 	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
 	((needed_space = needed_space + additional_space_required_for_grub_installation))
@@ -753,12 +753,12 @@ copy_filesystem_files(){
 	local target_fs_mountpoint="${1}"
 
 	local -i total_size
-	total_size=$(\
+	total_size=$(
 		du\
 			--summarize\
 			--bytes\
 			"${source_fs_mountpoint}"\
-		| awk '{print $1}'\
+		| awk '{print $1}'
 	)
 
 	# FIXME: Why do we `pulse off` and on here?
@@ -771,10 +771,10 @@ copy_filesystem_files(){
 	local -i copied_size=0 percentage; while IFS='' read -r -d '' source_file; do
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
-		source_file_size=$(\
+		source_file_size=$(
 			stat\
 				--format=%s\
-				"${source_file}"\
+				"${source_file}"
 		)
 
 		if [ -d "${source_file}" ]; then
@@ -828,10 +828,10 @@ copy_large_file(){
 	local -ir caller_total_size="${1}"
 
 	local -i source_file_size
-	source_file_size=$(\
+	source_file_size=$(
 		stat\
 		--format=%s\
-		"${source_file}"\
+		"${source_file}"
 	)
 
 	# block count of the source file
@@ -989,11 +989,11 @@ install_bootloader_grub(){
 
 	echo_with_color green "Installing grub.cfg..."
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
-	local -r target_fs_uuid=$(\
+	local -r target_fs_uuid=$(
 		lsblk\
 			--output UUID\
 			--noheadings\
-			"${target_partition}"\
+			"${target_partition}"
 	)
 
 	mkdir --parents "$(dirname "${grub_cfg}")"
