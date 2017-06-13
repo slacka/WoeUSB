@@ -44,7 +44,7 @@ $ ./setup-development-environment.bash
 # For Ubuntu
 $ sudo apt-get install devscripts equivs gdebi-core
 $ cd <WoeUSB source code directory>
-$ mk-build-deps debian/control # NOTE: Currently due to Debian Bug #679101 this command will fail if source path contains spaces.
+$ mk-build-deps # NOTE: Currently due to Debian Bug #679101 this command will fail if source path contains spaces.
 $ sudo gdebi woeusb-build-deps_<version>_all.deb
 
 # For Fedora
