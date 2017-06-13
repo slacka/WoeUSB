@@ -3,7 +3,7 @@
 Version=1.0
 Encoding=UTF-8
 Exec=woeusbgui
-Icon=woeusbgui-icon.png
+Icon=woeusbgui-icon
 Terminal=false
 X-MultipleArgs=false
 Type=Application
