@@ -1,3 +1,3 @@
-2013-03-27 Colin GILLE / congelli501 <colingille@hotmail.com>
+2017-06-13 林博仁 <Buo.Ren.Lin@gmail.com>
 
-	* winusb: Add dependency to grub-pc OR grub-efi
+	* We no longer use ChangeLog as we use Git as our VCS, please refer `git log` or refer Commits · slacka/WoeUSB <https://github.com/slacka/WoeUSB/commits/master> for changelog of WoeUSB.
