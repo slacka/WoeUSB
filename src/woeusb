@@ -370,11 +370,15 @@ check_runtime_dependencies(){
 
 	if command -v 'mkdosfs' &> /dev/null; then
 		command_mkdosfs_ref='mkdosfs'
-	elif command -v 'make.msdos' &> /dev/null; then
+	elif command -v 'mkfs.msdos' &> /dev/null; then
 		command_mkdosfs_ref='mkfs.msdos'
+	elif command -v 'mkfs.vfat' &>/dev/null; then
+		command_mkdosfs_ref='mkfs.vfat'
+	elif command -v 'mkfs.fat' &>/dev/null; then
+		command_mkdosfs_ref='mkfs.fat'
 	else
 		echo_with_color red\
-			"${FUNCNAME[0]}: Error: mkdosfs or mkfs.msdos command not found!" >&2
+			"${FUNCNAME[0]}: Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!" >&2
 		echo_with_color red\
 			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
 		result="failed"
