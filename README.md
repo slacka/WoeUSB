@@ -41,7 +41,7 @@ $ ./setup-development-environment.bash
 
 ### Install WoeUSB's build dependencies
 ```shell
-# For Ubuntu
+# For Ubuntu (NOTE: For your convenience this package is already provided in the release page)
 $ sudo apt-get install devscripts equivs gdebi-core
 $ cd <WoeUSB source code directory>
 $ mk-build-deps # NOTE: Currently due to Debian Bug #679101 this command will fail if source path contains spaces.
