@@ -227,21 +227,21 @@ print_help(){
 	echo -e
 	echo -e "Copy Windows files to an existing FAT partition of an USB storage and make it bootable"
 	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
-	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --install <source media path> <partition>"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install win7_amd64.iso /dev/sdX1"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --install /dev/sr0 /dev/sdX1"
+	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition win7_amd64.iso /dev/sdX1"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
 	echo -e
-	echo -e "Completely DESTROY all previous data on an USB storage, copy Windows files and make it bootable"
-	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --format <source media path> <device>"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format win7_amd64.iso /dev/sdX"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --format /dev/sr0 /dev/sdX"
+	echo -e "Completely DESTROY all previous data on an USB storage and recreate partition table and target partition, copy Windows files and make it bootable"
+	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device win7_amd64.iso /dev/sdX"
+	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
 	echo -e
 	echo -e "Options"
 	echo -e "\t--verbose, -v        ""Verbose mode"
 	echo -e "\t--help, -h           ""Show this help message and exit"
 	echo -e "\t--no-color           ""Disable color"
 	echo -e "\t--debug, -d          ""Enable script debugging"
-	echo -e "\t--label, -l          ""Label for the newly created file system in --format mode"
+	echo -e "\t--label, -l          ""Label for the newly created file system in --device mode"
 	echo -e "\t                     ""Note that the label is not verified for validity and may be illegal for the filesystem"
 }; declare -fr print_help
 
@@ -267,11 +267,17 @@ process_commandline_parameters(){
 				print_help;
 				exit 0
 				;;
-			"--debug"\
-			|"-d")
+			"--debug")
 				enable_debug="Y"
 				;;
-			'--install')
+			'--install'\
+			|--partition\
+			|-p)
+				if [ "${parameters[0]}" = --install ]; then
+					echo_with_color\
+						yellow\
+						"WARNING: The deprecated --install option is still available but will be dropped in ${APPLICATION_NAME} v3.0!"
+				fi
 				install_mode_ref='partition'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
@@ -284,7 +290,14 @@ process_commandline_parameters(){
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
 				;;
-			'--format')
+			'--format'\
+			|--device\
+			|-d)
+				if [ "${parameters[0]}" = --format ]; then
+					echo_with_color\
+						yellow\
+						"WARNING: The deprecated --format option is still available but will be dropped in ${APPLICATION_NAME} v3.0!"
+				fi
 				# Limitation of ShellCheck to detect usage of indirection variables
 				# https://github.com/koalaman/shellcheck/wiki/SC2034
 				# shellcheck disable=SC2034
