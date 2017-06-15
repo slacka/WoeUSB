@@ -38,6 +38,8 @@ is_removable_and_writable_device(){
 	local block_device_name="$1"
 
 	local -r sysfs_block_device_dir="/sys/block/${block_device_name}"
+
+	# We consider device not removable if the removable sysfs item not exist
 	if [ -f "${sysfs_block_device_dir}/removable" ] \
 		&& [ "$(cat "${sysfs_block_device_dir}/removable")" -eq 1 ]\
 		&& [ "$(cat "${sysfs_block_device_dir}/ro")" -eq 0 ]; then
@@ -52,13 +54,14 @@ declare device_capacity
 declare device_model
 
 while read block_device_name; do
-	if expr match "${block_device_name}" "^sr[0-9]+$\|^cdrom[0-9]*$" >/dev/null; then
+	if grep --extended-regexp "^sr.*$|^cdrom.*$" <<< "${block_device_name}" >/dev/null; then
 		# Known non-target blacklist
 		continue
-	elif expr match "${block_device_name}" '^loop[0-9]+' >/dev/null; then
-		if [ "${show_all_devices}" -eq 0 ]; then
-			continue
-		fi
+# NOTE: We might not need this check at all as loop devices also has removable sysfs entry
+# 	elif grep '^loop.*$' <<< "${block_device_name}" >/dev/null; then
+# 		if [ "${show_all_devices}" -eq 0 ]; then
+# 			continue
+# 		fi
 	elif ! is_removable_and_writable_device "${block_device_name}"; then
 		if [ "${show_all_devices}" -eq 0 ]; then
 			continue
