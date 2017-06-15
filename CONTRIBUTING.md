@@ -12,6 +12,15 @@ Use keywords instead of full sentences as search query, for example search "cras
 ### Report Software Bugs Effectively
 How you report software bugs greatly effects how fast it has been processed and fixed, refer [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) for more information
 
+## Improving Documentation
+The documentation of this project may be outdated through time, and needs help to make it updated.
+
+### Manual Pages(manpages)
+Refer following articles for reference on writing manpages:
+
+* [Linux Man Page Howto](http://www.schweikhardt.net/man_page_howto.html)
+* [The GNU Troff Manual: Macro Packages » man » Usage](https://www.gnu.org/software/groff/manual/html_node/Man-usage.html#Man-usage)
+
 ## Improving Code
 There's so many aspects of the code that can be improved, however please consider the following topics while doing so.
 
