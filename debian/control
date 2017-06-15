@@ -22,7 +22,6 @@ Depends:
 	bash, 
 	grub-pc | grub-efi-amd64 | grub-efi-i386, 
 	grub-pc-bin, 
-	gksu, 
 	ntfsprogs | ntfs-3g (>= 1:2011), 
 	p7zip-full, 
 	realpath | coreutils (>= 8.23-1)
