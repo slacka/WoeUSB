@@ -62,5 +62,8 @@ $ make
 $ sudo make install
 ```
 
+# Distribution Packages
+[Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
+
 ## License
 WoeUSB is sold under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
