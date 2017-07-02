@@ -1,4 +1,3 @@
-AUTOMAKE_OPTIONS = gnu
 
 SUBDIRS = src innoSetup debian
 
