@@ -12,6 +12,11 @@ Use keywords instead of full sentences as search query, for example search "cras
 ### Report Software Bugs Effectively
 How you report software bugs greatly effects how fast it has been processed and fixed, refer [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) for more information
 
+## Localize(Translate) the Software
+If you are an user of non-English locale you may help this project by translate it to your language, this is call localization, or L10N for short.  This software has been internationalized so that it is capable of  showing to user with different languages.
+
+Also you may translate our documentation to the language you are acquainted of.
+
 ## Improving Code
 There's so many aspects of the code that can be improved, however please consider the following topics while doing so.
 
@@ -44,3 +49,13 @@ It is welcomed to share this project to others so that they can try it.  Also if
 
 ## Design Artwork/Logos for This Software
 All current artworks are under src/data.  Please only use materials that are under a free license.
+
+## Hints on Using the Git VCS
+### Create commits based on minimal independent changes
+Avoid creating commits that does multiple things at once for best effort, this helps other developers to learn about the change history.
+
+### Write Comprehensible Commit Message
+Use concrete language on what the commit does in the commit message.
+
+### Avoid Changing history that has been pushed to remote repository
+
