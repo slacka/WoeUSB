@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/slacka/WoeUSB.svg?branch=master)](https://travis-ci.org/slacka/WoeUSB)
 
 <img src="src/data/woeusb-logo.png" align="right" />
+
 _A Linux program to create Windows USB stick installer from a real Windows DVD or an image._
 
 This package contains two programs:
