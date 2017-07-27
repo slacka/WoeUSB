@@ -4,6 +4,7 @@
 [![Build Status](https://travis-ci.org/slacka/WoeUSB.svg?branch=master)](https://travis-ci.org/slacka/WoeUSB)
 
 <img src="src/data/woeusb-logo.png" align="right" />
+
 _A Linux program to create Windows USB stick installer from a real Windows DVD or an image._
 
 This package contains two programs:
@@ -57,10 +58,14 @@ $ dpkg-buildpackage -uc -b # NOTE: Currently due to bug in the build system this
 $ sudo gdebi ../woeusb_<version>_<architecture>.deb
 
 # Generic method
+$ autoreconf --force --install # Most non-debian derived distros will need this
 $ ./configure
 $ make
 $ sudo make install
 ```
 
+# Distribution Packages
+[Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
+
 ## License
-WoeUSB is sold under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
+WoeUSB is distributed under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
