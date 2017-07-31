@@ -36,5 +36,5 @@ Description: Bootable Windows installation/PE USB storage creator
  Supported images: Windows Vista~10+ installation media for any language and
  edition(Home/Professional...) and Windows PE-based media.
  .
- This software is a fork of Colin GILLE / congelli501's WinUSB software.
+ WoeUSB is a fork of Colin GILLE / congelli501's WinUSB software.
  http://en.congelli.eu/prog_info_winusb.html
