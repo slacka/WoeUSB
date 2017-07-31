@@ -64,7 +64,9 @@ $ make
 $ sudo make install
 ```
 
-# Distribution Packages
+## Third-party Distribution Packages
+Note that we are not responsible for these packages
+
 [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
 
 ## License
