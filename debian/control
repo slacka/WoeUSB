@@ -25,14 +25,16 @@ Depends:
 	ntfsprogs | ntfs-3g (>= 1:2011), 
 	p7zip-full, 
 	realpath | coreutils (>= 8.23-1)
-Description: WoeUSB can create bootable windows installer on usb.
+Description: WoeUSB can create bootable windows installer on USB.
  This package contains two programs:
-  - woeusbgui: a simple tool that enable you to create
- your own usb stick windows installer from iso image
- or a real DVD.
-  - woeusb: the command line tool.
- Supported images: Windows Vista, Seven, 8 installer
- for any language and any version (home, pro...)
- and Windows PE.
  .
- This is a fork of Colin GILLE / congelli501's WinUSB software(http://en.congelli.eu/prog_info_winusb.html)
+  - woeusb: An command-line utility that enables you to create your own bootable
+  Windows installation USB storage device from an existing Windows Installation 
+  DVD or its ISO image.
+  - woeusbgui: A woeusb's GUI wrapper program based on WxWidgets GUI library
+ .
+ Supported images: Windows Vista~10+ installation media for any language and
+ edition(Home/Professional...) and Windows PE-based media.
+ .
+ This software is a fork of Colin GILLE / congelli501's WinUSB software.
+ http://en.congelli.eu/prog_info_winusb.html
