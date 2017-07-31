@@ -31,7 +31,7 @@ Description: Bootable Windows installation/PE USB storage creator
   - woeusb: An command-line utility that enables you to create your own bootable
   Windows installation USB storage device from an existing Windows Installation 
   DVD or its ISO image.
-  - woeusbgui: A woeusb's GUI wrapper program based on WxWidgets GUI library
+  - woeusbgui: A woeusb's GUI wrapper program based on WxWidgets GUI library.
  .
  Supported images: Windows Vista~10+ installation media for any language and
  edition(Home/Professional...) and Windows PE-based media.
