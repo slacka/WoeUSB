@@ -1,15 +1,109 @@
-.\" woeusb man page. 
-.TH man 6 "3 October 2010" "1.0" "woeusb"
+.TH woeusb 1 "@@WOEUSB_VERSION@@" "WoeUSB" "WoeUSB User Manual"
 .SH NAME
-woeusb \- A simple command line tool to create Windows Installation's USB stick under Linux.
+woeusb \- Bootable Windows installation/PE USB storage creator
+
 .SH SYNOPSIS
-.\" Syntax goes here. 
 .B woeusb
+[OPTIONS] --device|--partition
+.I source_media target_media
+
 .SH DESCRIPTION
-This manpage is currently not completed, refer `woeusb --help` for usage of woeusb
-.SH AUTHOR
-.nf
-Colin GILLE / congelli501 (colingille@hotmail.com)
-.fi
-.SH HISTORY
-2011 \- Initial version
+.B woeusb
+is an command-line utility that enables you to create your own bootable Windows installation USB storage device from an existing Windows Installation DVD or its ISO image.
+.PP
+
+It mainly extracts all files from
+.I source_media
+to
+.I target_media
+, then installs GNU GRUB bootloader and a small configuration into it to support chainloading Windows BOOTMGR.
+.PP
+
+It also supports UEFI bootstrap scheme, however in this case Windows UEFI bootloader is used instead.
+.PP
+
+Currently
+.B woeusb
+only support FAT32 filesystem, thus the generated filesystem has a 4GiB single file size limit.  NTFS may be supported in the future.
+
+.SH COMMAND\-LINE OPTIONS
+.SS INSTALLATION MODE
+.TP
+.B --device / -d
+Drop
+.I target_media
+\'s partition table, recreate a new PC/Legacy/MBR partition table, create a FAT32 partition spanning (almost) the full disk, then setup bootable Windows on it.
+
+WARNING: ALL PREVIOUS DATA ON TARGET MEDIA WILL BE DROPPED!
+
+COMPATIBILITY: This mode is previously named
+.B --format
+, which will be obselute in future release.
+
+.TP
+.B --partition / -p
+Mount
+.I target_media
+\'s file system, extracts all files from
+.I source_media
+, then make it bootable.
+
+WARNING: ALL FILES EXISTING ON DISK WITH THE SAME FILENAME IN SOURCE MEDIA WILL BE OVERWRITTEN!
+
+NOTE: UEFI bootability is available only when removable booting spec. is matched.
+
+COMPATIBILITY: This mode is previously named
+.B --install
+, which will be obselute in future release.
+
+.SS MISCELLANEOUS
+.TP
+.B --verbose / -v
+Be more verbose
+.TP
+.B --debug / -d
+Enable script debugging
+.TP
+.B --no-color
+Disable color message
+.TP
+.B --label / -l
+Label for the newly created file system in
+.B --device
+installation mode.
+
+Note that the label is not verified for validity and may be illegal for the filesystem
+
+.SH EXAMPLES
+We love examples!
+
+Completely DESTROY all previous data on an USB storage and recreate partition table and target partition, copy Windows files and make it bootable
+.EX
+# woeusb --device win7_amd64.iso /dev/sdX
+# woeusb --device /dev/sr0 /dev/sdX
+.EE
+
+Copy Windows files to an existing FAT partition of an USB storage and make it bootable
+.EX
+# woeusb --partition win7_amd64.iso /dev/sdX1
+# woeusb --partition /dev/sr0 /dev/sdX1
+.EE
+
+.SH EXIT STATUS
+0 when success, 1 (and non-zero if there's any) when failure
+
+.SH BUGS
+Refer our
+.UR https://github.com/slacka/WoeUSB/issues
+issue tracker
+.UE
+ for any known issues
+.br
+
+.SH SEE ALSO
+woeusbgui(1)
+
+.SH AUTHORS
+Colin GILLE / congelli501 <colingille@hotmail.com>
+.br
+林博仁 <Buo.Ren.Lin@gmail.com>

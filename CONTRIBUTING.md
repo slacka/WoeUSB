@@ -17,6 +17,15 @@ If you are an user of non-English locale you may help this project by translate 
 
 Also you may translate our documentation to the language you are acquainted of.
 
+## Improving Documentation
+The documentation of this project may be outdated through time, and needs help to make it updated.
+
+### Manual Pages(manpages)
+Refer following articles for reference on writing manpages:
+
+* [Linux Man Page Howto](http://www.schweikhardt.net/man_page_howto.html)
+* [The GNU Troff Manual: Macro Packages » man » Usage](https://www.gnu.org/software/groff/manual/html_node/Man-usage.html#Man-usage)
+
 ## Improving Code
 There's so many aspects of the code that can be improved, however please consider the following topics while doing so.
 
