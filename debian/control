@@ -25,7 +25,7 @@ Depends:
 	ntfsprogs | ntfs-3g (>= 1:2011), 
 	p7zip-full, 
 	realpath | coreutils (>= 8.23-1)
-Description: WoeUSB can create bootable windows installer on USB.
+Description: Bootable Windows installation/PE USB storage creator
  This package contains two programs:
  .
   - woeusb: An command-line utility that enables you to create your own bootable
