@@ -9,10 +9,8 @@ _A Linux program to create Windows USB stick installer from a real Windows DVD o
 
 This package contains two programs:
 
-* woeusbgui: a simple tool that enable you to create
-	 your own usb stick windows installer from iso image
-	 or a real DVD.
-* woeusb: the command line tool.
+* woeusb: An command-line utility that enables you to create your own bootable Windows installation USB storage device from an existing Windows Installation disc or disk image
+* woeusbgui: A GUI wrapper of woeusb based on WxWidgets
 
 Supported images:
 
