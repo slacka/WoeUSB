@@ -26,19 +26,25 @@ This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/
 ## Installation
 Following is the instructions to install WoeUSB if your Linux distro's packaged version is not available or too old.
 
-### Acquire WoeUSB's source code
+### Third-party Distribution Packages
+Note that we are not responsible for these packages
+
+* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
+
+### Build from source
+#### Acquire WoeUSB's source code
 Clone WoeUSB's Git repository to local machine using `git clone https://github.com/slacka/WoeUSB.git`
 
 NOTE: We no longer support building from source archive provided in the GitHub Releases page as the software version is not set.
 
-### Setting application version string
+#### Setting application version string
 This step is required for generating proper version name from Git tags, it should be redone if the version is changed
 
 ```shell
 $ ./setup-development-environment.bash
 ```
 
-### Install WoeUSB's build dependencies
+#### Install WoeUSB's build dependencies
 ```shell
 # For Ubuntu (NOTE: For your convenience this package is already provided in the release page)
 $ sudo apt-get install devscripts equivs gdebi-core
@@ -49,7 +55,7 @@ $ sudo gdebi woeusb-build-deps_<version>_all.deb
 # For Fedora
 $ sudo dnf install wxGTK3-devel
 ```
-### Build & install WoeUSB
+#### Build & install WoeUSB
 ```shell
 # For Ubuntu
 $ dpkg-buildpackage -uc -b # NOTE: Currently due to bug in the build system this command will fail if source's path contains space or single quotes, refer issue #84 for details
@@ -61,11 +67,6 @@ $ ./configure
 $ make
 $ sudo make install
 ```
-
-## Third-party Distribution Packages
-Note that we are not responsible for these packages
-
-[Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
 
 ## License
 WoeUSB is distributed under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
