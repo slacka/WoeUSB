@@ -14,7 +14,6 @@ addons:
   apt:
     packages:
     - realpath # Not required least after 16.04
-    - debhelper
     - autotools-dev
     - libwxgtk2.8-dev
     - devscripts # For mk-build-deps
@@ -29,7 +28,10 @@ script:
 # For triggering smudge-version
 - ./setup-development-environment.bash
 - mk-build-deps && mv woeusb-build-deps*.deb ..
-- dpkg-buildpackage -uc -b
+- autoreconf --force --install
+- ./configure
+- ./make
+
 deploy:
   provider: releases
   api_key:
