@@ -1,4 +1,4 @@
-AC_INIT(woeusb, @@WOEUSB_VERSION@@)
+AC_INIT(woeusb, 2.1.0-5-g353d7db)
 AC_CONFIG_SRCDIR([src])
 AM_INIT_AUTOMAKE([foreign])
 AC_CONFIG_MACRO_DIR([m4])
