@@ -1,39 +1,20 @@
-This package was created debianized by 
-Colin GILLE / congelli501 <colingille@hotmail.com> on
-Wed, 27 Mar 2013 22:35:31 +0100.
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: WoeUSB
+Upstream-Contact: WoeUSB Issue Tracker <https://github.com/Lin-Buo-Ren/Hello-Debian-Packaging/issues>
+Source: https://github.com/slacka/WoeUSB
+License: GPL-3.0+
 
-Upstream Author(s): 
+Files: *
+Copyright: Copyright 2013 Colin GILLE / congelli501 <colingille@hotmail.com>
+	Copyright 2017 slacka et. al.
+License: GPL-3.0+
 
-    Colin GILLE / congelli501 <colingille@hotmail.com>
-
-WoeUSB Author(s):
-
-    Contributors to slacka/WoeUSB <https://github.com/slacka/WoeUSB/graphs/contributors>
-
-Copyright: 
-
-    Copyright (C) 2012 Colin GILLE / congelli501 <colingille@hotmail.com>
-    Copyright (C) 2017 slacka et. al. <https://github.com/slacka/WoeUSB/graphs/contributors>
-
-License:
-
-    This package is free software; you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation; either version 2 of the License, or
-    (at your option) any later version.
- 
-    This package is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
- 
-    You should have received a copy of the GNU General Public License
-    along with this package; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
-
-On Debian systems, the complete text of the GNU General
-Public License can be found in `/usr/share/common-licenses/GPL'.
-
-The Debian packaging is (C) 2008,
-Colin GILLE / congelli501 <colingille@hotmail.com>, (C) 2017, slacka et. al. <https://github.com/slacka/WinUSB/graphs/contributors> and
-is licensed under the GPL, see above.
+License: GPL-3.0+
+ This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or  (at your option) any later version.
+ .
+ This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian systems, the full text of the GNU General Public License version 3 can be found in the file
+ `/usr/share/common-licenses/GPL-3'.
