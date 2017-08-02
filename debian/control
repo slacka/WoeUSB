@@ -3,33 +3,31 @@ Homepage: https://github.com/slacka/WoeUSB
 Section: utils
 Priority: extra
 Maintainer: 林博仁 <Buo.Ren.Lin@gmail.com>
-Build-Depends: 
-	debhelper (>= 10), 
-	autotools-dev, 
-	libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev, 
-	git-core, 
-	bash, 
-	realpath | coreutils (>= 8.23-1)
+Build-Depends: autotools-dev,
+               bash,
+               debhelper (>= 10),
+               git-core,
+               libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev,
+               realpath | coreutils (>= 8.23-1)
 Standards-Version: 3.8.1
 
 Package: woeusb
 Architecture: any
-Depends: 
-	${shlibs:Depends}, 
-	${misc:Depends}, 
-	parted, 
-	coreutils, 
-	bash, 
-	grub-pc | grub-efi-amd64 | grub-efi-i386, 
-	grub-pc-bin, 
-	ntfsprogs | ntfs-3g (>= 1:2011), 
-	p7zip-full, 
-	realpath | coreutils (>= 8.23-1)
+Depends: bash,
+         coreutils,
+         grub-pc | grub-efi-amd64 | grub-efi-i386,
+         grub-pc-bin,
+         ntfsprogs | ntfs-3g (>= 1:2011),
+         p7zip-full,
+         parted,
+         realpath | coreutils (>= 8.23-1),
+         ${misc:Depends},
+         ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator
  This package contains two programs:
  .
   - woeusb: An command-line utility that enables you to create your own bootable
-  Windows installation USB storage device from an existing Windows Installation 
+  Windows installation USB storage device from an existing Windows Installation
   DVD or its ISO image.
   - woeusbgui: A woeusb's GUI wrapper program based on WxWidgets GUI library.
  .
