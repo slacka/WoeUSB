@@ -30,7 +30,7 @@ script:
 - mk-build-deps && mv woeusb-build-deps*.deb ..
 - autoreconf --force --install
 - ./configure
-- ./make
+- make
 
 deploy:
   provider: releases
