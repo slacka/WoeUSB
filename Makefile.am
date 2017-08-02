@@ -1,5 +1,8 @@
 
-SUBDIRS = src innoSetup debian
+SUBDIRS = \
+	src\
+	innoSetup\
+	debian
 
 # M4
 

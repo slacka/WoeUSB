@@ -1,4 +1,8 @@
-SUBDIRS = data locale win32 linux-menu
+SUBDIRS = \
+	data\
+	locale\
+	win32\
+	linux-menu
 
 bin_PROGRAMS=woeusbgui
 
@@ -8,11 +12,24 @@ woeusbgui_LDFLAGS = $(EXTRA_LDFLAGS)
 	
 woeusbgui_LDADD = $(LIBS_ALL)
 
-woeusbguiSrcBase = AppConfig.hpp	 DialogAbout.hpp  MainPanel.cpp \
-	App.cpp		 findFile.cpp	  MainPanel.hpp     processManager.hpp \
-	App.hpp		 findFile.hpp	  MyException.cpp   strWxStdConv.cpp \
-	MainFrame.cpp	  MyException.hpp   strWxStdConv.hpp \
-	DialogAbout.cpp  MainFrame.hpp	  nbStrConvert.hpp \
+woeusbguiSrcBase = \
+	AppConfig.hpp\
+	DialogAbout.hpp\
+	MainPanel.cpp\
+	App.cpp\
+	findFile.cpp\
+	MainPanel.hpp\
+	processManager.hpp\
+	App.hpp\
+	findFile.hpp\
+	MyException.cpp\
+	strWxStdConv.cpp\
+	MainFrame.cpp\
+	MyException.hpp\
+	strWxStdConv.hpp\
+	DialogAbout.cpp\
+	MainFrame.hpp\
+	nbStrConvert.hpp\
 	processManager.cpp
 
 
@@ -30,7 +47,9 @@ endif
 # Install my_script in $(bindir) and distribute it.
 dist_bin_SCRIPTS = woeusb
 
-man_MANS = woeusbgui.1 woeusb.1
+man_MANS = \
+	woeusbgui.1\
+	woeusb.1
 
 if IS_MINGW
 install-data-hook:
@@ -38,4 +57,8 @@ install-data-hook:
 	"$(srcdir)/installDll.sh" "$(prefix)" "$(host)"
 endif
 
-EXTRA_DIST = $(srcdir)/*.cbp $(man_MANS) $(srcdir)/rc.rc $(srcdir)/installDll.sh
+EXTRA_DIST = \
+	$(srcdir)/*.cbp\
+	$(man_MANS)\
+	$(srcdir)/rc.rc\
+	$(srcdir)/installDll.sh
