@@ -22,7 +22,6 @@ MY_INIT_DATA_PATH dnl Define data path for unix / win32 depending on the current
 AM_FIND_WINDRES dnl Find windres is needed
 
 MY_INIT_DEBUG_SWITCH([false]) dnl Allow the user tu build the program in debug mode ; doesn't edit any cpp options ; true to force debug
-MY_INIT_BUILD_OPTION([-g], [-s -O1]) dnl Init CXXFLAGS and CPPFLAGS
 
 dnl Libs
 MY_FIND_STDCPP
