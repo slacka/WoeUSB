@@ -3,7 +3,7 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: wxstd\n"
-"Report-Msgid-Bugs-To: \n"
+"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
 "POT-Creation-Date: 2008-04-24 09:56+0200\n"
 "PO-Revision-Date: 2008-10-25 17:56+0100\n"
 "Last-Translator: GILLE <colingille@hotmail.com>\n"
