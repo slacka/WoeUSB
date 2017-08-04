@@ -42,7 +42,7 @@ msgid "Error..."
 msgstr "Erreur..."
 
 #: ../../../App.cpp:117
-msgid "Unknown error as occured !"
+msgid "Unknown error as occurred !"
 msgstr "Une erreur inconnue s'est produite !"
 
 #: ../../../App.cpp:124

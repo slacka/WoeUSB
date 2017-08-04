@@ -104,7 +104,7 @@ int App::OnRun()
     }
     catch(int errCode)
     {
-        msg << _T("Error \"") << errCode << _T("\" has occured !");
+        msg << _T("Error \"") << errCode << _T("\" has occurred !");
         isException = true;
     }
     catch(wxString info)
@@ -114,7 +114,7 @@ int App::OnRun()
     }
     catch(...)
     {
-        msg = _("Unknown error as occured !");
+        msg = _("Unknown error as occurred !");
         isException = true;
     }
 

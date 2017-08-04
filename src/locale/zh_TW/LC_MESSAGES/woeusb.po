@@ -41,7 +41,7 @@ msgid "Error..."
 msgstr "錯誤……"
 
 #: ../../../App.cpp:117
-msgid "Unknown error as occured !"
+msgid "Unknown error as occurred !"
 msgstr "發生了未知的錯誤！"
 
 #: ../../../App.cpp:124
