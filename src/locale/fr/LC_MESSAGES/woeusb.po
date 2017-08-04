@@ -120,7 +120,7 @@ msgid "Cancel"
 msgstr "Annuler"
 
 #: ../../../MainPanel.cpp:312
-msgid "Installation succeded !"
+msgid "Installation succeeded !"
 msgstr "Installation réussie !"
 
 #: ../../../MainPanel.cpp:312

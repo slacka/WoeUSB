@@ -307,7 +307,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
         int exitCode = pipe.Close();
         if(exitCode == 0)
         {
-            wxMessageBox(_("Installation succeded !"), _("Installation"), wxOK | wxICON_INFORMATION, this);
+            wxMessageBox(_("Installation succeeded !"), _("Installation"), wxOK | wxICON_INFORMATION, this);
         }
         else
         {

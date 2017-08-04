@@ -117,7 +117,7 @@ msgid "Cancel"
 msgstr "取消"
 
 #: ../../../MainPanel.cpp:312
-msgid "Installation succeded !"
+msgid "Installation succeeded !"
 msgstr "安裝成功！"
 
 #: ../../../MainPanel.cpp:312 ../../../MainPanel.cpp:316
