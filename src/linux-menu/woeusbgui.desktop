@@ -6,6 +6,7 @@ Terminal=false
 X-MultipleArgs=false
 Type=Application
 Categories=System;
+Keywords=Windows;UEFI;EFI;booting;
 StartupNotify=true
 Name=WoeUSB
 Name[fr_FR]=WoeUSB
