@@ -11,9 +11,7 @@ Standards-Version: 3.8.1
 
 Package: woeusb
 Architecture: any
-Depends: bash,
-         coreutils,
-         grub-pc | grub-efi-amd64 | grub-efi-i386,
+Depends: grub-pc | grub-efi-amd64 | grub-efi-i386,
          grub-pc-bin,
          ntfsprogs | ntfs-3g (>= 1:2011),
          p7zip-full,
