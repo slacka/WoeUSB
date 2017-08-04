@@ -4,4 +4,4 @@ pkgdatadir=$(mypkgdatadir)/locale/zh_TW/LC_MESSAGES
 %.mo: %.po
 	msgfmt -o $@ $<
 
-dist_pkgdata_DATA = $(srcdir)/trad.mo
+dist_pkgdata_DATA = $(srcdir)/woeusb.mo

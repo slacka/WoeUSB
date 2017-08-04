@@ -5,5 +5,5 @@ pkgdatadir=$(mypkgdatadir)/locale/fr/LC_MESSAGES
 	msgfmt -o $@ $<
 
 dist_pkgdata_DATA = \
-	$(srcdir)/trad.mo\
+	$(srcdir)/woeusb.mo\
 	$(srcdir)/wxstd.mo
