@@ -18,7 +18,7 @@ Depends: bash,
          ntfsprogs | ntfs-3g (>= 1:2011),
          p7zip-full,
          parted,
-         realpath | coreutils (>= 8.23-1),
+         realpath | coreutils (>= 8.23),
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator
