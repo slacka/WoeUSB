@@ -52,8 +52,11 @@ $ cd <WoeUSB source code directory>
 $ mk-build-deps # NOTE: Currently due to Debian Bug #679101 this command will fail if source path contains spaces.
 $ sudo gdebi woeusb-build-deps_<version>_all.deb
 
-# For Fedora
+# For Fedora > 22
 $ sudo dnf install wxGTK3-devel
+
+# For Fedora 22
+$ sudo dnf install wxGTK-devel dh-autoreconf.noarch
 ```
 #### Build & install WoeUSB
 ```shell
