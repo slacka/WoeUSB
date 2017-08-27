@@ -603,7 +603,7 @@ create_target_partition(){
 			;;
 		NTFS|ntfs)
 			parted_mkpart_fs_type="ntfs"
-			echo_with_color red "${FUNCNAME[0]}: Error:    Currently NTFS filesystem is not supported."
+			echo_with_color red "${FUNCNAME[0]}: Error: Currently NTFS filesystem is not supported."
 			return 2
 			;;
 		*)
