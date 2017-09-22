@@ -1,70 +1,69 @@
 # Contributing Guidelines
-This documents explains how to contribute this project in many aspects, make sure to read them thoroughly before making any contributions
+This documents explains how to contribute to this project in many aspects. Please make sure to read this thoroughly before making any contributions.
 
 ## Reporting Issues
-The so-called "issue" includes but not limited to software bugs and suggestions
+The so-called "issue" includes but is not limited to software bugs and suggestions
 
-### Always search for duplicates before filing a new one
-There is possibility that your issue is already been filed on the issue tracker, please search it before considering filing a new one
+### Always Search for Duplicates Before Filing a New Issue
+There is a possibility that your issue has already been filed, so please search the issue tracker before filing a new one
 
-Use keywords instead of full sentences as search query, for example search "crash unbounded variable" instead of "The program crashes with 'unbounded variable' message printed on screen"
+When searching, use keywords instead of full sentences. For example, search "crash unbounded variable" instead of "The program crashes with 'unbounded variable' message printed on screen".
 
 ### Report Software Bugs Effectively
-How you report software bugs greatly effects how fast it has been processed and fixed, refer [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) for more information
+How you report software bugs greatly affects how fast it can be processed and fixed, refer to [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) for more information
 
-## Localize(Translate) the Software
-If you are an user of non-English locale you may help this project by translate it to your language, this is call localization, or L10N for short.  This software has been internationalized so that it is capable of  showing to user with different languages.
+## Localize (Translate) the Software
+If you are a fluent in a language other than English, you may help this project by translating it to your language. This is called localization or L10N for short.  This software has already been internationalized so that it is capable of displaying different languages.
 
-Also you may translate our documentation to the language you are acquainted of.
+Also, please consider translating our documentation to the language that you are fluent in.
 
 ## Improving Documentation
-The documentation of this project may be outdated through time, and needs help to make it updated.
+The documentation of this project may be outdated through time, and needs help to keep it up to date.
 
-### Manual Pages(manpages)
-Refer following articles for reference on writing manpages:
+### Manual Pages (manpages)
+Refer to the following articles for reference on writing manpages:
 
 * [Linux Man Page Howto](http://www.schweikhardt.net/man_page_howto.html)
 * [The GNU Troff Manual: Macro Packages » man » Usage](https://www.gnu.org/software/groff/manual/html_node/Man-usage.html#Man-usage)
 
 ## Improving Code
-There's so many aspects of the code that can be improved, however please consider the following topics while doing so.
+There are so many aspects of the code that can be improved, however, please consider the following topics while doing so.
 
 ### Coding Style
 It is required to mimic the coding style of the current code
 
 #### Indentation
-This project uses tab characters as indentation character as it's width can be flexibly configured in any modern text editors
+This project uses tab characters for indentation as it's width can be flexibly configured in many text editors
 
 #### Padding Spaces
-* Padding are required for operators
-* Padding are avoided for the outer of the curly braces
+* Padding is required for operators
+* Padding is avoided for the outer curly braces
 
 #### Word Separating Method
-NOTE: Currently this only applies to the GNU Bash shell scripts.
+NOTE: This currently only applies to the GNU Bash shell scripts.
 
 * Underscore for variable names
 * Underscore for function names
 
 ### Defensive Bash Programming
-* READONLY all parameters that is assigned a value and is not changed in the rest of the code
-* All parameters that is confirmed to not be used should be UNSET
-* Function parameters should be catched by `local` paramters instead of directly referenced using positional parameter syntax
+* All parameters that are assigned a value should be treated as read-only and remain unchanged throughout the code
+* All parameters that are confirmed to not be used should be UNSET
+* Function parameters should be caught by `local` parameters instead of directly referenced using positional parameter syntax
 
-### Character Encoding of File
-We use UTF-8 for all of our files
+### Character Encoding of Files
+We use UTF-8 encoding for all of our files
 
 ## Promote This Project to Others
-It is welcomed to share this project to others so that they can try it.  Also if you write an article about this project plese share with us, we'd love to hear!
+It is appreciated if you share this project with others.  Also, if you write an article about this project, plese share it with us, we'd love to hear about it!
 
 ## Design Artwork/Logos for This Software
-All current artworks are under src/data.  Please only use materials that are under a free license.
+All current artwork is stored under src/data.  Please only use materials that are under a free license.
 
 ## Hints on Using the Git VCS
 ### Create commits based on minimal independent changes
-Avoid creating commits that does multiple things at once for best effort, this helps other developers to learn about the change history.
+Avoid creating commits that do multiple things at once as this will help other developers understand the change history.
 
-### Write Comprehensible Commit Message
+### Write Comprehensible Commit Messages
 Use concrete language on what the commit does in the commit message.
 
-### Avoid Changing history that has been pushed to remote repository
-
+### Avoid Changing History That Has Been Pushed to Remote Repository
