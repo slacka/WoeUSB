@@ -1,5 +1,5 @@
 # Contributing Guidelines
-This documents explains how to contribute to this project in many aspects. Please make sure to read this thoroughly before making any contributions.
+This document explains how to contribute to this project in many aspects. Please make sure to read this thoroughly before making any contributions.
 
 ## Reporting Issues
 The so-called "issue" includes but is not limited to software bugs and suggestions
@@ -13,7 +13,7 @@ When searching, use keywords instead of full sentences. For example, search "cra
 How you report software bugs greatly affects how fast it can be processed and fixed, refer to [How to Report Bugs Effectively](http://www.chiark.greenend.org.uk/~sgtatham/bugs.html) for more information
 
 ## Localize (Translate) the Software
-If you are a fluent in a language other than English, you may help this project by translating it to your language. This is called localization or L10N for short.  This software has already been internationalized so that it is capable of displaying different languages.
+If you are fluent in a language other than English, you may help this project by translating it to your language. This is called localization or L10N for short.  This software has already been internationalized so that it is capable of displaying different languages.
 
 Also, please consider translating our documentation to the language that you are fluent in.
 
