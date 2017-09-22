@@ -225,13 +225,13 @@ print_help(){
 	echo -e "=========================="
 	echo -e "Create a bootable Windows USB device from a bootable Windows optical disk or an disk image"
 	echo -e
-	echo -e "Copy Windows files to an existing FAT partition of an USB storage and make it bootable"
+	echo -e "Copy Windows files to an existing FAT partition of a USB storage device and make it bootable"
 	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition win7_amd64.iso /dev/sdX1"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
 	echo -e
-	echo -e "Completely DESTROY all previous data on an USB storage and recreate partition table and target partition, copy Windows files and make it bootable"
+	echo -e "Completely DESTROY all previous data on a USB storage device, recreate the partition table and the target partition, copy the Windows files, and make it bootable"
 	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device win7_amd64.iso /dev/sdX"
 	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"

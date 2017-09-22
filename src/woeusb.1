@@ -77,13 +77,13 @@ Note that the label is not verified for validity and may be illegal for the file
 .SH EXAMPLES
 We love examples!
 
-Completely DESTROY all previous data on an USB storage and recreate partition table and target partition, copy Windows files and make it bootable
+Completely DESTROY all previous data on a USB storage device, recreate the partition table and the target partition, copy the Windows files, and make it bootable
 .EX
 # woeusb --device win7_amd64.iso /dev/sdX
 # woeusb --device /dev/sr0 /dev/sdX
 .EE
 
-Copy Windows files to an existing FAT partition of an USB storage and make it bootable
+Copy Windows files to an existing FAT partition of a USB storage device and make it bootable
 .EX
 # woeusb --partition win7_amd64.iso /dev/sdX1
 # woeusb --partition /dev/sr0 /dev/sdX1

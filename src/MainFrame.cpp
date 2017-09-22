@@ -38,7 +38,7 @@ MainFrame::MainFrame(const wxString& title, const wxPoint& pos, const wxSize& si
 
         // File menu
     wxMenu *FileMenu = new wxMenu;
-    m_menuItemShowAll = new wxMenuItem(FileMenu, wxID_ANY, wxString(_("Show all drive")) + _T("\tCtrl+A"), _("Show all drives, even those not detected as USB stick."), wxITEM_CHECK);
+    m_menuItemShowAll = new wxMenuItem(FileMenu, wxID_ANY, wxString(_("Show all drives")) + _T("\tCtrl+A"), _("Show all drives, even those not detected as USB stick."), wxITEM_CHECK);
     FileMenu->Append(m_menuItemShowAll);
 
     FileMenu->AppendSeparator();
