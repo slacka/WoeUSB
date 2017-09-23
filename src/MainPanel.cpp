@@ -265,7 +265,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
 
                     if(!dialog->Update(progress))
                     {
-                        if(wxMessageBox(_("Are you sure you want to cancel the insatallation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
+                        if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
                         {
                             dialog->Resume();
                         }
@@ -284,7 +284,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
 
                     if(!dialog->Pulse(StrStdToWx(tmp)))
                     {
-                        if(wxMessageBox(_("Are you sure you want to cancel the insatallation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
+                        if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
                         {
                             dialog->Resume();
                         }
