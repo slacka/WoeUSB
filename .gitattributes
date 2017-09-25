@@ -1,2 +1,2 @@
-configure.in filter=version
+configure.ac filter=version
 debian/changelog filter=version
