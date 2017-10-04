@@ -354,23 +354,23 @@ check_runtime_dependencies(){
 	local result="unknown"
 
 	for required_command in\
-		mount\
-		grep\
+		awk\
+		blockdev\
 		dd\
-		id\
-		mkdir\
 		df\
 		du\
-		awk\
-		parted\
-		blockdev\
-		partprobe\
-		stat\
-		rm\
-		readlink\
+		expr\
 		find\
+		grep\
+		id\
 		lsblk\
-		expr
+		mkdir\
+		mount\
+		parted\
+		partprobe\
+		readlink\
+		rm\
+		stat
 		do
 		if ! command -v "${required_command}" >/dev/null; then
 			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
