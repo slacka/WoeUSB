@@ -1281,15 +1281,13 @@ util_call_external_command(){
 }; declare -fr util_call_external_command
 
 ## Configure the terminal to print future messages with certain color
-## $1:
-##     <color>: color of the next message
-##     none: reset color to default
+## Parameters:
+## - color: color of the next message, or `none` to reset to default color
 util_switch_terminal_text_color(){
 	util_check_function_parameters_quantity 1 $#
-	case "$1" in
-		none)
-			tput sgr0
-			;;
+	local -r color="$1"
+
+	case "${color}" in
 		black)
 			echo -en '\033[0;30m'
 			;;
@@ -1307,6 +1305,16 @@ util_switch_terminal_text_color(){
 			;;
 		white)
 			echo -en '\033[0;37m'
+			;;
+		none)
+			tput sgr0
+			;;
+		*)
+			printf --\
+				'Fatal: %s: Illegal parameter, please report bug.'\
+				"${FUNCNAME[0]}"\
+				1>&2
+			exit 1
 			;;
 	esac
 }; declare -fr util_switch_terminal_text_color
