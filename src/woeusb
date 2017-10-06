@@ -885,13 +885,13 @@ workaround_support_windows_7_uefi_boot(){
 	local source_fs_mountpoint="${1}"; shift
 	local target_fs_mountpoint="${1}"
 
-	if !(\
-		grep\
+	# Apply workaround only if the source is based on Windows 7, and EFI version of bootmgr is in place
+	if ! grep\
 			--extended-regexp\
 			--quiet\
 			"^MinServer=7[0-9]{3}\.[0-9]"\
 			"${source_fs_mountpoint}/sources/cversion.ini"\
-		&& [ -f "${source_fs_mountpoint}/bootmgr.efi" ] ); then
+		|| ! [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		return 0
 	fi
 
