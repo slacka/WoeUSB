@@ -366,7 +366,6 @@ check_runtime_dependencies(){
 		dd\
 		df\
 		du\
-		expr\
 		find\
 		grep\
 		id\
@@ -458,14 +457,14 @@ check_runtime_parameters(){
 	fi
 
 	if [ "${install_mode_ref}" = device ] \
-		&& expr match "${target_media}" '.*[0-9]' >/dev/null
+		&& [[ "${target_media}" =~ .*[0-9] ]]
 		then
 		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an entire storage device!"
 		return 1
 	fi
 
 	if [ "${install_mode_ref}" = partition ] \
-		&& ! expr match "${target_media}" '.*[0-9]' >/dev/null
+		&& ! [[ "${target_media}" =~ .*[0-9] ]]
 		then
 		echo_with_color red "${FUNCNAME[0]}: Error: Target media \"${target_media_ref}\" is not an partition!"
 		return 1
