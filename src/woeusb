@@ -224,22 +224,22 @@ print_help(){
 	echo -e
 	echo -e "Copy Windows files to an existing FAT partition of a USB storage device and make it bootable"
 	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
-	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition win7_amd64.iso /dev/sdX1"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
+	echo -e '	'"${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
+	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --partition win7_amd64.iso /dev/sdX1"
+	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
 	echo -e
 	echo -e "Completely DESTROY all previous data on a USB storage device, recreate the partition table and the target partition, copy the Windows files, and make it bootable"
-	echo -e "\t""${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device win7_amd64.iso /dev/sdX"
-	echo -e "\t""Example: ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
+	echo -e '	'"${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
+	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --device win7_amd64.iso /dev/sdX"
+	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
 	echo -e
 	echo -e "Options"
-	echo -e "\t--verbose, -v        ""Verbose mode"
-	echo -e "\t--help, -h           ""Show this help message and exit"
-	echo -e "\t--no-color           ""Disable color"
-	echo -e "\t--debug, -d          ""Enable script debugging"
-	echo -e "\t--label, -l          ""Label for the newly created file system in --device mode"
-	echo -e "\t                     ""Note that the label is not verified for validity and may be illegal for the filesystem"
+	echo -e '	--verbose, -v        '"Verbose mode"
+	echo -e '	--help, -h           '"Show this help message and exit"
+	echo -e '	--no-color           '"Disable color"
+	echo -e '	--debug, -d          '"Enable script debugging"
+	echo -e '	--label, -l          '"Label for the newly created file system in --device mode"
+	echo -e '	                     '"Note that the label is not verified for validity and may be illegal for the filesystem"
 }; declare -fr print_help
 
 process_commandline_parameters(){
@@ -417,7 +417,7 @@ check_permission(){
 	if [ ! "$(id --user)" = 0 ]; then
 		util_switch_terminal_text_color yellow
 		printf --\
-			"%s\n%s\n"\
+			'%s\n%s\n'\
 			"Warning: You are not running WoeUSB as root!"\
 			"Warning: This might be the reason of the following failure." >&2
 		util_switch_terminal_text_color none
@@ -791,7 +791,7 @@ copy_filesystem_files(){
 			mkdir --parents "${dest_file}"
 		elif [ -f "${source_file}" ]; then
 			if [ "${verbose}" = 1 ]; then
-				echo -e "\nINFO: Copying "${source_file}"..."
+				echo -e "\\nINFO: Copying \"${source_file}\"..."
 			fi
 			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
@@ -812,7 +812,7 @@ copy_filesystem_files(){
 		# BASHDOC: Bash Features » Shell Arithmetic
 		let "copied_size = copied_size + source_file_size" || true
 		let "percentage = (copied_size * 100) / total_size" || true
-		echo -en "${percentage}%\r"
+		echo -en "${percentage}%\\r"
 	done < <(\
 		find\
 			.\
@@ -870,7 +870,7 @@ copy_large_file(){
 		# BASHDOC: Bash Features » Shell Arithmetic
 		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
 		let "percentage = (copied_size_total * 100) / caller_total_size" || true
-		echo -en "${percentage}%\r"
+		echo -en "${percentage}%\\r"
 	done; unset i copied_size_total percentage
 
 	return 0
@@ -889,7 +889,7 @@ workaround_support_windows_7_uefi_boot(){
 	if ! grep\
 			--extended-regexp\
 			--quiet\
-			"^MinServer=7[0-9]{3}\.[0-9]"\
+			'^MinServer=7[0-9]{3}\.[0-9]'\
 			"${source_fs_mountpoint}/sources/cversion.ini"\
 		|| ! [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		return 0
@@ -914,7 +914,7 @@ workaround_support_windows_7_uefi_boot(){
 		efi_directory="${target_fs_mountpoint}/efi"
 		if [ "${verbose}" = "1" ]; then
 			printf\
-				"%s: DEBUG: Can't find efi directory, use %s.\n"\
+				"%s: DEBUG: Can't find efi directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
 				"${efi_directory}"
 		fi
@@ -922,7 +922,7 @@ workaround_support_windows_7_uefi_boot(){
 		efi_directory="${test_efi_directory}"
 		if [ "${verbose}" = "1" ]; then
 			printf\
-				"%s: DEBUG: %s detected.\n"\
+				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
 				"${efi_directory}"
 		fi
@@ -941,7 +941,7 @@ workaround_support_windows_7_uefi_boot(){
 		efi_boot_directory="${efi_directory}/boot"
 		if [ "${verbose}" = "1" ]; then
 			printf\
-				"%s: DEBUG: Can't find efi/boot directory, use %s.\n"\
+				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
 				"${efi_boot_directory}"
 		fi
@@ -949,7 +949,7 @@ workaround_support_windows_7_uefi_boot(){
 		efi_boot_directory="${test_efi_boot_directory}"
 		if [ "${verbose}" = "1" ]; then
 			printf\
-				"%s: DEBUG: %s detected.\n"\
+				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
 				"${efi_boot_directory}"
 		fi
@@ -967,7 +967,7 @@ workaround_support_windows_7_uefi_boot(){
 	)"
 	if [ -n "${test_efi_bootloader}" ]; then
 		printf\
-			"INFO: Detected existing EFI bootloader, workaround skipped.\n"
+			'INFO: Detected existing EFI bootloader, workaround skipped.\n'
 		return 0
 	fi
 
@@ -1140,7 +1140,7 @@ trap_exit(){
 }; declare -fr trap_exit
 
 trap_interrupt(){
-	printf "\n" # Separate message with previous output
+	printf '\n' # Separate message with previous output
 	echo_with_color yellow "Recieved SIGINT, program is interrupted." 1>&2
 	return 1
 }; declare -fr trap_interrupt
@@ -1243,22 +1243,22 @@ util_switch_terminal_text_color(){
 			tput sgr0
 			;;
 		black)
-			echo -en "\033[0;30m"
+			echo -en '\033[0;30m'
 			;;
 		red)
-			echo -en "\033[0;31m"
+			echo -en '\033[0;31m'
 			;;
 		green)
-			echo -en "\033[0;32m"
+			echo -en '\033[0;32m'
 			;;
 		yellow)
-			echo -en "\033[0;33m"
+			echo -en '\033[0;33m'
 			;;
 		blue)
-			echo -en "\033[0;34m"
+			echo -en '\033[0;34m'
 			;;
 		white)
-			echo -en "\033[0;37m"
+			echo -en '\033[0;37m'
 			;;
 	esac
 }; declare -fr util_switch_terminal_text_color
@@ -1284,7 +1284,7 @@ util_shift_array(){
 	local -n array_ref="${1}"
 
 	if [ "${#array_ref[@]}" -eq 0 ]; then
-		printf "%s: FATAL: array is empty!\n" "${FUNCNAME[0]}" 1>&2
+		printf '%s: FATAL: array is empty!\n' "${FUNCNAME[0]}" 1>&2
 		exit 1
 	fi
 
@@ -1323,7 +1323,7 @@ util_is_parameter_set_and_not_empty(){
 util_check_function_parameters_quantity(){
 	if [ "${#}" -ne 2 ]; then
 		printf --\
-			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
 			"${FUNCNAME[0]}"\
 			2\
 			"${#}"
@@ -1338,7 +1338,7 @@ util_check_function_parameters_quantity(){
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
 		switch_terminal_text_color red
 		printf --\
-			"%s: FATAL: Function requires %u parameters, but %u is given\n"\
+			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
 			"${FUNCNAME[1]}"\
 			"${expected_parameter_quantity}"\
 			"${given_parameter_quantity}"\
