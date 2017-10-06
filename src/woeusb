@@ -20,6 +20,9 @@
 #
 # Notes:
 # * Use --strip instead of --no-symlinks for compatibility of Ubuntu 14.04(EoL: April 2019)
+#
+# We use indirections and primitive variables, which is false positive of this rule
+# shellcheck disable=SC2034
 
 ## Makes debuggers' life easier - Unofficial Bash Strict Mode
 ## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
