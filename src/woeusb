@@ -19,7 +19,6 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 #
 # Notes:
-#
 # * Use --strip instead of --no-symlinks for compatibility of Ubuntu 14.04(EoL: April 2019)
 
 ## Makes debuggers' life easier - Unofficial Bash Strict Mode
