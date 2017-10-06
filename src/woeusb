@@ -631,7 +631,7 @@ create_target_partition(){
 				"${target_partition}"
 			;;
 		*)
-			echo_with_color red "${FUNCNAME}: FATAL: Shouldn't be here"
+			echo_with_color red "${FUNCNAME[0]}: FATAL: Shouldn't be here"
 			exit 1
 			;;
 	esac
@@ -1044,11 +1044,11 @@ cleanup_mountpoints(){
 		echo_with_color green "Unmounting and removing '${source_fs_mountpoint}'..."
 		if umount "${source_fs_mountpoint}"; then
 			if ! rmdir "${source_fs_mountpoint}"; then
-				echo_with_color yellow "${FUNCNAME}: Warning: Unable to remove source mountpoint"
+				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove source mountpoint"
 				clean_result="unclean"
 			fi
 		else
-			echo_with_color yellow "${FUNCNAME}: Warning: Unable to unmount source filesystem."
+			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount source filesystem."
 			clean_result="unclean"
 		fi
 	fi
@@ -1057,11 +1057,11 @@ cleanup_mountpoints(){
 	echo_with_color green "Unmounting and removing '${target_fs_mountpoint}'..."
 		if umount "${target_fs_mountpoint}"; then
 			if ! rmdir "${target_fs_mountpoint}"; then
-				echo_with_color yellow "${FUNCNAME}: Warning: Unable to remove target mountpoint"
+				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove target mountpoint"
 				clean_result="unclean"
 			fi
 		else
-			echo_with_color yellow "${FUNCNAME}: Warning: Unable to unmount target filesystem."
+			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount target filesystem."
 			clean_result="unsafe"
 		fi
 	fi
