@@ -2,7 +2,7 @@
 # A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
 # Copyright © 2013 Colin GILLE / congelli501
 # Copyright © 2017 slacka et. al.
-
+#
 # This file is part of WoeUSB.
 #
 # WoeUSB is free software: you can redistribute it and/or modify
@@ -17,7 +17,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
-
+#
 # Notes:
 #
 # * Use --strip instead of --no-symlinks for compatibility of Ubuntu 14.04(EoL: April 2019)
