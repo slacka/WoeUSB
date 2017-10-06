@@ -815,10 +815,10 @@ copy_filesystem_files(){
 		fi
 
 		# Calculate and report progress
-		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Basic Shell Features » Shell Expansions » Arithmetic Expansion
 		# BASHDOC: Bash Features » Shell Arithmetic
-		let "copied_size = copied_size + source_file_size" || true
-		let "percentage = (copied_size * 100) / total_size" || true
+		((copied_size = copied_size + source_file_size)) || true
+		((percentage = (copied_size * 100) / total_size)) || true
 		echo -en "${percentage}%\\r"
 	done < <(\
 		find\
@@ -873,10 +873,10 @@ copy_large_file(){
 		((i = i + 1))
 
 		# Calculate and report progress
-		# BASHDOC: Bash Builtin Commands » Bash Builtin Commands » let
+		# BASHDOC: Basic Shell Features » Shell Expansions » Arithmetic Expansion
 		# BASHDOC: Bash Features » Shell Arithmetic
-		let "copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i" || true
-		let "percentage = (copied_size_total * 100) / caller_total_size" || true
+		((copied_size_total = caller_copied_size + DD_BLOCK_SIZE * i)) || true
+		((percentage = (copied_size_total * 100) / caller_total_size)) || true
 		echo -en "${percentage}%\\r"
 	done; unset i copied_size_total percentage
 
