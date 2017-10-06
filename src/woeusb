@@ -913,7 +913,7 @@ workaround_support_windows_7_uefi_boot(){
 	if [ -z "${test_efi_directory}" ]; then
 		efi_directory="${target_fs_mountpoint}/efi"
 		if [ "${verbose}" = "1" ]; then
-			printf\
+			printf --\
 				"%s: DEBUG: Can't find efi directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
 				"${efi_directory}"
@@ -921,7 +921,7 @@ workaround_support_windows_7_uefi_boot(){
 	else # efi directory(case don't care) exists
 		efi_directory="${test_efi_directory}"
 		if [ "${verbose}" = "1" ]; then
-			printf\
+			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
 				"${efi_directory}"
@@ -940,7 +940,7 @@ workaround_support_windows_7_uefi_boot(){
 	if [ -z "${test_efi_boot_directory}" ]; then
 		efi_boot_directory="${efi_directory}/boot"
 		if [ "${verbose}" = "1" ]; then
-			printf\
+			printf --\
 				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
 				"${efi_boot_directory}"
@@ -948,7 +948,7 @@ workaround_support_windows_7_uefi_boot(){
 	else # boot directory(case don't care) exists
 		efi_boot_directory="${test_efi_boot_directory}"
 		if [ "${verbose}" = "1" ]; then
-			printf\
+			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
 				"${efi_boot_directory}"
@@ -966,7 +966,7 @@ workaround_support_windows_7_uefi_boot(){
 			-ipath "${target_fs_mountpoint}/efi/boot/boot*.efi"
 	)"
 	if [ -n "${test_efi_bootloader}" ]; then
-		printf\
+		printf --\
 			'INFO: Detected existing EFI bootloader, workaround skipped.\n'
 		return 0
 	fi
