@@ -160,6 +160,8 @@ init(){
 		"${target_partition}"
 
 	if [ "${install_mode}" = 'device' ]; then
+		wipe_existing_partition_table_and_filesystem_signatures\
+			"${target_device}"
 		overwrite_target_partition_table\
 			"${target_device}"\
 			"legacy"
@@ -376,7 +378,8 @@ check_runtime_dependencies(){
 		partprobe\
 		readlink\
 		rm\
-		stat
+		stat\
+		wipefs
 		do
 		if ! command -v "${required_command}" >/dev/null; then
 			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
@@ -536,6 +539,14 @@ check_source_and_target_not_busy(){
 		fi
 	fi
 }; declare -fr check_source_and_target_not_busy
+
+wipe_existing_partition_table_and_filesystem_signatures(){
+	util_check_function_parameters_quantity 1 $#
+	local -r target_device="${1}"
+
+	echo_with_color green "Wiping all existing partition table and filesystem signatures in \"${target_device}\"..."
+	wipefs --all "${target_device}"
+}; declare -fr wipe_existing_partition_table_and_filesystem_signatures
 
 overwrite_target_partition_table(){
 	util_check_function_parameters_quantity 2 $#
