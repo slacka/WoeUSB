@@ -89,7 +89,8 @@ alias\
 	echo_with_color=util_echo_with_color\
 	switch_terminal_text_color=util_switch_terminal_text_color\
 	shift_array=util_shift_array\
-	is_target_busy=check_is_target_device_busy
+	is_target_busy=check_is_target_device_busy\
+	printf_with_color=util_printf_with_color
 
 ## Entry point of the main code
 init(){
@@ -424,12 +425,11 @@ check_runtime_dependencies(){
 
 check_permission(){
 	if [ ! "$(id --user)" = 0 ]; then
-		util_switch_terminal_text_color yellow
-		printf --\
+		printf_with_color\
+			yellow\
 			'%s\n%s\n'\
 			"Warning: You are not running WoeUSB as root!"\
 			"Warning: This might be the reason of the following failure." >&2
-		util_switch_terminal_text_color none
 	fi
 	return 0
 }; declare -fr check_permission
@@ -1030,11 +1030,10 @@ workaround_linux_make_writeback_buffering_not_suck(){
 			echo 0 > /proc/sys/vm/dirty_bytes
 		;;
 		*)
-			util_switch_terminal_text_color red
-			printf --\
+			printf_with_color\
+				red\
 				'Fatal: %s: Unexpected *mode* encountered, please report bug.\n'\
 				"${FUNCNAME[0]}"
-			util_switch_terminal_text_color none
 		;;
 	esac
 }; declare -fr workaround_linux_make_writeback_buffering_not_suck
@@ -1232,7 +1231,7 @@ trap_debug(){
 
 	local -r command_base="${command_to_be_executed%% *}"
 
-	for ignored_command in util_check_function_parameters_quantity util_is_parameter_set_and_not_empty echo_with_color switch_terminal_text_color tput; do
+	for ignored_command in util_check_function_parameters_quantity util_is_parameter_set_and_not_empty echo_with_color switch_terminal_text_color tput printf_with_color; do
 		if [ "${command_base}" = "${ignored_command}" ]; then
 			return 0
 		fi
@@ -1348,6 +1347,34 @@ util_echo_with_color(){
 	fi
 }; declare -fr util_echo_with_color
 
+## Print formatted message with color
+util_printf_with_color(){
+	if [ ${#} -lt 2 ]; then
+		if [ "${no_color}" == 0 ]; then
+			switch_terminal_text_color red
+		fi
+		printf --\
+			"Fatal: %s: Parameter quantity illegal, please report bug.\\n"\
+			"${FUNCNAME[0]}"
+		if [ "${no_color}" == 0 ]; then
+			switch_terminal_text_color none
+		fi
+		exit 1
+	fi
+	local -r color="${1}"; shift
+	local -ar printf_parameters=("${@}")
+
+	if [ "${no_color}" == 1 ]; then
+		printf --\
+			"${printf_parameters[@]}"
+	else # no_color = 0
+		switch_terminal_text_color "${color}"
+		printf --\
+			"${printf_parameters[@]}"
+		switch_terminal_text_color none
+	fi
+}; declare -fr util_printf_with_color
+
 util_shift_array(){
 	util_check_function_parameters_quantity 1 "${#}"
 
@@ -1392,7 +1419,8 @@ util_is_parameter_set_and_not_empty(){
 ## NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
 util_check_function_parameters_quantity(){
 	if [ "${#}" -ne 2 ]; then
-		printf --\
+		printf_with_color\
+			red\
 			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
 			"${FUNCNAME[0]}"\
 			2\
@@ -1406,14 +1434,13 @@ util_check_function_parameters_quantity(){
 	local -i given_parameter_quantity="${1}"
 
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
-		switch_terminal_text_color red
-		printf --\
+		printf_with_color\
+			red\
 			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
 			"${FUNCNAME[1]}"\
 			"${expected_parameter_quantity}"\
 			"${given_parameter_quantity}"\
 			1>&2
-		switch_terminal_text_color none
 		exit 1
 	fi
 	return 0
