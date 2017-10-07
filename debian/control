@@ -17,6 +17,7 @@ Depends: grub-pc | grub-efi-amd64 | grub-efi-i386,
          p7zip-full,
          parted,
          realpath | coreutils (>= 8.23),
+         util-linux, 
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator
