@@ -60,7 +60,7 @@ $ sudo dnf install wxGTK-devel dh-autoreconf.noarch
 ```
 #### Build & Install WoeUSB
 ```shell
-# For Ubuntu
+# For Debian-based distributions
 $ dpkg-buildpackage -uc -b # NOTE: Currently, due to a bug in the build system, this command will fail if the source's path contains space or single quotes, refer to issue #84 for details
 $ sudo gdebi ../woeusb_<version>_<architecture>.deb
 
