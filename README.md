@@ -29,7 +29,7 @@ Below are the instructions to install WoeUSB if your Linux distro's packaged ver
 ### Third-party Distribution Packages
 Note that we are not responsible for these packages
 
-* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/)
+* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
 
 ### Build From Source
 #### Acquire WoeUSB's Source Code
