@@ -26,8 +26,15 @@ This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/
 ## Installation
 Below are the instructions to install WoeUSB if your Linux distro's packaged version is not available or too old.
 
-### Third-party Distribution Packages
-Note that we are not responsible for these packages
+### Packages
+
+The developers of WoeUSB are not responsible for the packages below as they are maintained by community members.
+
+#### Official Distribution Packages
+
+* [Fedora](https://src.fedoraproject.org/rpms/WoeUSB) packages are maintained by mprahl
+
+#### Third-party Distribution Packages
 
 * [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
 * [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages maintained by WebUpd8
