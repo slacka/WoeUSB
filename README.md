@@ -71,6 +71,11 @@ $ ./configure
 $ make
 $ sudo make install
 ```
+#### Fedora 26+
+
+For WoeUSB to run properly on Fedora / CentOS / RHEL you have to add the user binary to the `$PATH` visible to root:
+
+`ln -s /usr/local/bin/woeusb /usr/bin/`
 
 ## License
 WoeUSB is distributed under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
