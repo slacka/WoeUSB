@@ -16,6 +16,9 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 ### WoeUSB Version
 For build from source code, run `git describe --tags --always --dirty` under the source tree, for releases launch WoeUSB from the application menu then go to Help >> About and check the version line.
 
+### GNU Bash Version
+WoeUSB exploits several advanced features of the Bash scripting language and requires a relatively-recent Bash intepreter.  Run `bash --version` in a terminal to acquire the information.
+
 ### OS Distribution
 
 ### Model Name of Target Device
