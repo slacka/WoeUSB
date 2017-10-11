@@ -19,7 +19,8 @@ For build from source code, run `git describe --tags --always --dirty` under the
 ### GNU Bash Version
 WoeUSB exploits several advanced features of the Bash scripting language and requires a relatively-recent Bash intepreter.  Run `bash --version` in a terminal to acquire the information.
 
-### OS Distribution
+### Operating System Distribution Name and Version
+Different OS distributions provides different characteristics and may influence the result of running WoeUSB.  Run `lsb_release --description` or `lsb_release -d` in a terminal to acquire the information.
 
 ### Model Name of Target Device
 
