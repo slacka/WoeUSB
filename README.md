@@ -36,8 +36,8 @@ The developers of WoeUSB are not responsible for the packages below as they are 
 
 #### Third-party Distribution Packages
 
-* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
-* [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages maintained by WebUpd8
+* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages are maintained by darkfm
+* [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages are maintained by WebUpd8
 
 ### Build From Source
 #### Acquire WoeUSB's Source Code
