@@ -24,22 +24,19 @@ Supported bootmodes:
 This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/prog_info_winusb.html), which has not been maintained since 2012, according to the official website.
 
 ## Installation
-Below are the instructions to install WoeUSB if your Linux distro's packaged version is not available or too old.
-
-### Packages
-
-The developers of WoeUSB are not responsible for the packages below as they are maintained by community members.
+### Prebuilt Packages
+Note that prebuilt packages are not necessarily the latest release and we are NOT responsible for the trustworthiness of these packages.  Regarding any related issues contact its maintainer first.
 
 #### Official Distribution Packages
-
 * [Fedora](https://src.fedoraproject.org/rpms/WoeUSB) packages are maintained by mprahl
 
 #### Third-party Distribution Packages
-
 * [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages are maintained by darkfm
-* [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages are maintained by WebUpd8
+* [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages are maintained by [WebUpd8](http://www.webupd8.org/)
 
 ### Build From Source
+The following are the instructions to install WoeUSB if prebuilt version is not available or too old.
+
 #### Acquire WoeUSB's Source Code
 Clone WoeUSB's Git repository to your local machine using `git clone https://github.com/slacka/WoeUSB.git`
 
@@ -54,7 +51,7 @@ $ ./setup-development-environment.bash
 
 #### Install WoeUSB's Build Dependencies
 ```shell
-# For Ubuntu (NOTE: For your convenience, this package is already provided in the release page)
+# For Debian-based distributions (NOTE: For your convenience, this package is already provided in the release page)
 $ sudo apt-get install devscripts equivs gdebi-core
 $ cd <WoeUSB source code directory>
 $ mk-build-deps # NOTE: Currently, due to Debian Bug #679101, this command will fail if the source path contains spaces.
