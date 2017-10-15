@@ -18,6 +18,11 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 ### WoeUSB Version
 > For source code build, run `git describe --tags --always --dirty` under the source tree, for prebuilt releases refer the source that provides WoeUSB
 
+### WoeUSB Source
+> Built from source code, commit abcdefg
+> Installed from Ubuntu 16.04 software archive
+> Installed from WebUpd8 PPA
+
 ### GNU Bash Version
 > WoeUSB exploits several advanced features of the Bash scripting language and requires a relatively-recent Bash intepreter.  Run `bash --version` in a terminal to acquire this information.
 
