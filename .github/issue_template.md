@@ -1,5 +1,5 @@
 ## Good Habit Checklist for Issue Reporting
-Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) if you needs help on the Markdown syntax.
+Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) if you needs help on the GitHub-flavored Markdown syntax.  You may remove sections and content that doesn't apply.
 
 * [ ] I've searched the issue tracker and is pretty sure that there's no duplicate issue already filed.
 * [ ] I've built the latest development snapshot using the instructions in README and verified that the issue can still be reproduced (for bug reports)
@@ -9,8 +9,10 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 > 2. <Do blablabla...>
 
 ## Expected Behavior
+> No error
 
 ## Current Behavior
+> WoeUSB errors with message "blablabla"
 
 ## Info of My Environment
 ### WoeUSB Version
@@ -22,9 +24,11 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 ### Operating System Distribution Name and Version
 > Different OS distributions provides different characteristics and may influence the result of running WoeUSB.  Run `lsb_release --description` or `lsb_release -d` in a terminal to acquire the information.
 
-### Model Name of Target Device
+### Information about the Target Device
+> Transcend JetFlash® 790K 64GB (USB 3.1 variant) 
 
 ### WoeUSB Commandline(if run with CLI(`woeusb`))
+> sudo woeusb --device Windows9.iso /dev/sdx
 
 ### Source Media Info
-> "Windows 9 Professional Edition" or "Win9_9999_Chinese(Traditional)_x64.iso"
+> "Windows 9 Professional Edition" downloaded from <https://microsoft.com/download/windows-9>
