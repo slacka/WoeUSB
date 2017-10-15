@@ -6,7 +6,7 @@ Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/feature
 
 ## Issue Reproduce Instructions
 > 1. Launch WoeUSB by running `<command>`
-> 2. <Do blablabla...>
+> 2. Do blablabla...
 
 ## Expected Behavior
 > No error
