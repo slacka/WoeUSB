@@ -724,6 +724,7 @@ mount_target_filesystem(){
 			return 1
 		)
 	mount\
+		--options utf8=1\
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
 		|| (
