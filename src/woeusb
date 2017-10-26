@@ -1210,7 +1210,7 @@ trap_exit(){
 		util_is_parameter_set_and_not_empty\
 			target_device; then
 		if is_target_busy "${target_device}"; then
-			echo_with_color yellow "Target device is busy, please make sure you unmount all filesystems on target device before detaching it."
+			echo_with_color yellow "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it."
 		else
 			echo_with_color green "You may now safely detach the target device"
 		fi
