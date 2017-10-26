@@ -1093,7 +1093,7 @@ install_bootloader_grub(){
 			insmod fat
 			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
 			ntldr /bootmgr
-			echo -n "Press ENTER to continue booting..."
+			echo -n "Press ENTER to continue booting: "
 			read key_holder
 			boot
 		END_OF_FILE
