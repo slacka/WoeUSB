@@ -428,7 +428,7 @@ check_permission(){
 		printf_with_color\
 			yellow\
 			'%s\n%s\n'\
-			"Warning: You are not running WoeUSB as root!"\
+			"Warning: You are not running ${APPLICATION_NAME} as root!"\
 			"Warning: This might be the reason of the following failure." >&2
 	fi
 	return 0
