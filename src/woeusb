@@ -709,6 +709,9 @@ mount_source_filesystem(){
 	fi
 }; declare -fr mount_source_filesystem
 
+# Mount target filesystem to existing path as mountpoint
+# target_partition: The partition device file target filesystem resides, for example /dev/sdX1
+# target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
 mount_target_filesystem(){
 	util_check_function_parameters_quantity 2 $#
 	local target_partition="$1"; shift
