@@ -188,7 +188,8 @@ init(){
 
 	if ! mount_target_filesystem\
 		"${target_partition}"\
-		"${target_fs_mountpoint}"; then
+		"${target_fs_mountpoint}"\
+		vfat; then
 		echo_with_color red "Error: Unable to mount target filesystem"
 		exit 1
 	fi
@@ -712,10 +713,14 @@ mount_source_filesystem(){
 # Mount target filesystem to existing path as mountpoint
 # target_partition: The partition device file target filesystem resides, for example /dev/sdX1
 # target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
+# target_fs_type: The filesystem of the target filesystem, this is same as the --types argument of mount(8), currently supports: vfat
 mount_target_filesystem(){
-	util_check_function_parameters_quantity 2 $#
+	util_check_function_parameters_quantity 3 $#
 	local target_partition="$1"; shift
-	local target_fs_mountpoint="$1"
+	local target_fs_mountpoint="$1"; shift
+	local target_fs_type="$1"
+
+	local mount_options="defaults"
 
 	echo_with_color green "Mounting target filesystem..."
 
@@ -726,8 +731,23 @@ mount_target_filesystem(){
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${target_fs_mountpoint}\" mountpoint directory"
 			return 1
 		)
+
+	# Determine proper mount options according to filesystem type
+	case "${target_fs_type}" in
+		vfat)
+			mount_options='utf8=1'
+		;;
+		*)
+			printf_with_color\
+				red\
+				'Fatal: %s: Unsupported `target_fs_type`, please report bug.\n'\
+				"${FUNCNAME[0]}"
+			exit 1
+		;;
+	esac
+
 	mount\
-		--options utf8=1\
+		--options "${mount_options}"\
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
 		|| (
