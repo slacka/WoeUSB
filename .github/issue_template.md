@@ -1,5 +1,5 @@
 ## Good Habit Checklist for Issue Reporting
-Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) if you needs help on the GitHub-flavored Markdown syntax.  You may remove sections and contents that do't apply.
+Checkout [Mastering Markdown · GitHub Guides](https://guides.github.com/features/mastering-markdown/#GitHub-flavored-markdown) if you needs help on the GitHub-flavored Markdown syntax.  You may remove sections and contents that don't apply.
 
 * [ ] I've searched the issue tracker and is pretty sure that there's no duplicate issue already filed
 * [ ] I've built the latest development snapshot using the instructions in README and verified that the issue can still be reproduced (for bug reports)
