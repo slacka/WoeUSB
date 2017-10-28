@@ -229,28 +229,49 @@ print_help(){
 	util_check_function_parameters_quantity 0 "${#}"
 
 	set +o xtrace
-	echo -e "${APPLICATION_NAME}'s Help"
-	echo -e "=========================="
-	echo -e "Create a bootable Windows USB device from a bootable Windows optical disk or an disk image"
+	echo -e "${APPLICATION_NAME}'s Help Information"
+	echo -e "======================================"
+	echo -e "${APPLICATION_NAME} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
+	echo -e 
+	echo -e "Currently two creation methods are supported:"
 	echo -e
-	echo -e "Copy Windows files to an existing FAT partition of a USB storage device and make it bootable"
-	echo -e "NOTE: All files that has the same name will be OVERWRITTEN!"
-	echo -e '	'"${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
-	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --partition win7_amd64.iso /dev/sdX1"
-	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
+	echo -e '	--device'
 	echo -e
-	echo -e "Completely DESTROY all previous data on a USB storage device, recreate the partition table and the target partition, copy the Windows files, and make it bootable"
-	echo -e '	'"${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
-	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --device win7_amd64.iso /dev/sdX"
-	echo -e '	'"Example: ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
+	echo -e '		'"Completely WIPE the entire USB storage device, then build a bootable Windows USB device from scratch."
+	echo -e '		'"WARNING: All previous data on the device will be gone!"
 	echo -e
-	echo -e "Options"
-	echo -e '	--verbose, -v        '"Verbose mode"
-	echo -e '	--help, -h           '"Show this help message and exit"
-	echo -e '	--no-color           '"Disable color"
-	echo -e '	--debug, -d          '"Enable script debugging"
-	echo -e '	--label, -l          '"Label for the newly created file system in --device mode"
-	echo -e '	                     '"Note that the label is not verified for validity and may be illegal for the filesystem"
+	echo -e '		'"${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
+	echo -e '		'"Examples:"
+	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device Windows7_x64.iso /dev/sdX"
+	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
+	echo -e
+	echo -e '	--partition'
+	echo -e
+	echo -e '		'"Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists."
+	echo -e '		'"WARNING: All files that has the same name will be overwritten!"
+	echo -e
+	echo -e '		'"${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
+	echo -e '		'"Examples:"
+	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --partition Windows7_x64.iso /dev/sdX1"
+	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
+	echo -e
+	echo -e '## '"Command-line Options"' ##'
+	echo -e '	--verbose, -v'
+	echo -e '		'"Verbose mode"
+	echo -e
+	echo -e '	--help, -h'
+	echo -e '		'"Show this help message and exit"
+	echo -e
+	echo -e '	--no-color'
+	echo -e '		'"Disable color"
+	echo -e
+	echo -e '	--debug, -d'
+	echo -e '		'"Enable script debugging"
+	echo -e
+	echo -e '	--label, -l'
+	echo -e '		'"Label for the newly created file system in --device mode"
+	echo -e '		'"Note that the label is not verified for validity and may be illegal for the filesystem"
+	echo -e
 }; declare -fr print_help
 
 process_commandline_parameters(){
