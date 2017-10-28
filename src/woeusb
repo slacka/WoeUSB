@@ -793,7 +793,7 @@ mount_target_filesystem(){
 		*)
 			printf_with_color\
 				red\
-				'Fatal: %s: Unsupported `target_fs_type`, please report bug.\n'\
+				'Fatal: %s: Unsupported target_fs_type, please report bug.\n'\
 				"${FUNCNAME[0]}"
 			exit 1
 		;;
@@ -1442,10 +1442,14 @@ util_printf_with_color(){
 	local -ar printf_parameters=("${@}")
 
 	if [ "${no_color}" == 1 ]; then
+		# False positive: not format string(ShellCheck #1028)
+		# shellcheck disable=SC2059
 		printf --\
 			"${printf_parameters[@]}"
 	else # no_color = 0
 		switch_terminal_text_color "${color}"
+		# False positive: not format string(ShellCheck #1028)
+		# shellcheck disable=SC2059
 		printf --\
 			"${printf_parameters[@]}"
 		switch_terminal_text_color none
