@@ -106,6 +106,8 @@ init(){
 
 	local target_partition
 
+	local workaround_bios_boot_flag="N"
+
 	source_fs_mountpoint="/media/woeusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/woeusb_target_$(date +%s)_$$"
 
@@ -129,7 +131,8 @@ init(){
 			install_mode\
 			source_media\
 			target_media\
-			new_file_system_label; then
+			new_file_system_label\
+			workaround_bios_boot_flag; then
 		print_help
 		exit 1
 	fi
@@ -218,6 +221,11 @@ init(){
 		"${command_grubinstall}"\
 		"${name_grub_prefix}"
 
+	if [ "${workaround_bios_boot_flag}" == "Y" ]; then
+		workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled\
+			"${target_device}"
+	fi
+
 	current_state="finished"
 
 	pulse off
@@ -272,14 +280,18 @@ print_help(){
 	echo -e '		'"Label for the newly created file system in --device mode"
 	echo -e '		'"Note that the label is not verified for validity and may be illegal for the filesystem"
 	echo -e
+	echo -e '	--workaround-bios-boot-flag'
+	echo -e '		'"Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled"
+	echo -e 
 }; declare -fr print_help
 
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 4 "${#}"
+	util_check_function_parameters_quantity 5 "${#}"
 	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
 	local -n target_media_ref="${1}"; shift
-	local -n new_file_system_label_ref="${1}"
+	local -n new_file_system_label_ref="${1}"; shift
+	local -n workaround_bios_boot_flag_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		print_help
@@ -355,6 +367,9 @@ process_commandline_parameters(){
 			'--label'|'-l')
 				shift_array parameters
 				new_file_system_label_ref="${parameters[0]}"
+				;;
+			'--workaround-bios-boot-flag')
+				workaround_bios_boot_flag_ref="Y"
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
@@ -675,6 +690,23 @@ create_target_partition(){
 			;;
 	esac
 }; declare -fr create_target_partition
+
+## Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
+workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
+	util_check_function_parameters_quantity 1 $#
+
+	local -r target_device="$1"
+
+	printf_with_color\
+		yellow\
+		'%s\n'\
+		'Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled'
+	parted --script\
+		"${target_device}"\
+		set 1 boot on
+	
+	return $?
+}; declare -fr workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled
 
 check_target_filesystem(){
 	util_check_function_parameters_quantity 1 $#
