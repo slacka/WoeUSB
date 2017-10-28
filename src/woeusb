@@ -324,7 +324,7 @@ process_commandline_parameters(){
 				if [ "${#parameters[@]}" -lt 2 ]; then
 					echo_with_color\
 						"red"\
-						"${FUNCNAME[0]}: Error: --install option requires 2 arguments!"
+						"${FUNCNAME[0]}: Error: --partition option requires 2 arguments!"
 					return 1
 				fi
 				source_media_ref="${parameters[0]}"
