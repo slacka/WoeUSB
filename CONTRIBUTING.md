@@ -49,9 +49,10 @@ NOTE: This currently only applies to the GNU Bash shell scripts.
 * Underscore for function names
 
 ### Defensive Bash Programming
-* All parameters that are assigned a value should be treated as read-only and remain unchanged throughout the code
-* All parameters that are confirmed to not be used should be UNSET
+* All parameters that are assigned a value should be declared as read-only parameter to remain unchanged throughout the code
+* All non-readonly parameters should be UNSET right after they are not used.
 * Function parameters should be caught by `local` parameters instead of directly referenced using positional parameter syntax
+* To increase code reusability, avoid referencing global variables from a function, alway pass it by function arguments
 
 ### Character Encoding of Files
 We use UTF-8 encoding for all of our files
