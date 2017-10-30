@@ -1172,11 +1172,7 @@ install_legacy_pc_bootloader_grub_config(){
 	mkdir --parents "$(dirname "${grub_cfg}")"
 	{
 		cat <<- END_OF_FILE
-			echo '${APPLICATION_NAME} Legacy PC Bootloader'
-			echo '========================================'
 			ntldr /bootmgr
-			echo -n "Press ENTER to continue booting: "
-			read key_holder
 			boot
 		END_OF_FILE
 	} > "${grub_cfg}"; unset target_fs_uuid
