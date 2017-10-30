@@ -215,10 +215,13 @@ init(){
 		"${source_fs_mountpoint}"\
 		"${target_fs_mountpoint}"
 
-	install_bootloader_grub\
+	install_legacy_pc_bootloader_grub\
 		"${target_fs_mountpoint}"\
 		"${target_device}"\
-		"${command_grubinstall}"\
+		"${command_grubinstall}"
+
+	install_legacy_pc_bootloader_grub_config\
+		"${target_fs_mountpoint}"\
 		"${name_grub_prefix}"
 
 	if [ "${workaround_bios_boot_flag}" == "Y" ]; then
@@ -1124,12 +1127,11 @@ workaround_linux_make_writeback_buffering_not_suck(){
 	esac
 }; declare -fr workaround_linux_make_writeback_buffering_not_suck
 
-install_bootloader_grub(){
-	util_check_function_parameters_quantity 4 "${#}"
+install_legacy_pc_bootloader_grub(){
+	util_check_function_parameters_quantity 3 "${#}"
 	local -r target_fs_mountpoint="${1}"; shift 1
 	local -r target_device="${1}"; shift 1
-	local -r command_grubinstall="${1}"; shift 1
-	local -r name_grub_prefix="${1}"
+	local -r command_grubinstall="${1}"
 
 	echo_with_color green "Installing GRUB bootloader for legacy boot support..."
 	"${command_grubinstall}"\
@@ -1137,13 +1139,30 @@ install_bootloader_grub(){
 		--boot-directory="${target_fs_mountpoint}"\
 		--force "${target_device}"
 
+
+}; declare -fr install_legacy_pc_bootloader_grub
+
+## Install a GRUB config file to chainload Microsoft Windows's bootloader in Legacy PC bootmode
+## target_fs_mountpoint: Target filesystem's mountpoint(where GRUB is installed)
+## name_grub_prefix: May be different between distributions, so need to be specified (grub/grub2)
+install_legacy_pc_bootloader_grub_config(){
+	util_check_function_parameters_quantity 2 $#
+
+	local -r target_fs_mountpoint="$1"; shift
+	local -r name_grub_prefix="$1"
+
 	echo_with_color green "Installing grub.cfg..."
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
-	local -r target_fs_uuid=$(
+	local target_fs_uuid; target_fs_uuid=$(
 		lsblk\
-			--output UUID\
 			--noheadings\
-			"${target_partition}"
+			--raw\
+			--output UUID,MOUNTPOINT\
+		| grep\
+			"${target_fs_mountpoint}\$"\
+		| cut\
+			--fields=1\
+			--delimiter=' '
 	)
 
 	mkdir --parents "$(dirname "${grub_cfg}")"
@@ -1158,8 +1177,8 @@ install_bootloader_grub(){
 			read key_holder
 			boot
 		END_OF_FILE
-	} > "${grub_cfg}"
-}; declare -fr install_bootloader_grub
+	} > "${grub_cfg}"; unset target_fs_uuid
+}; declare -fr install_legacy_pc_bootloader_grub_config
 
 ## Unmount mounted filesystems and clean-up mountpoints before exiting program
 ## exit status:
