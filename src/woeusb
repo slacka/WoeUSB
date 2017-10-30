@@ -241,7 +241,7 @@ print_help(){
 	util_check_function_parameters_quantity 0 "${#}"
 
 	set +o xtrace
-	echo -e "${APPLICATION_NAME}'s Help Information"
+	echo -e "${APPLICATION_NAME} ${APPLICATION_VERSION} Help Information"
 	echo -e "======================================"
 	echo -e "${APPLICATION_NAME} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
 	echo -e 
