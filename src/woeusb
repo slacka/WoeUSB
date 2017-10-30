@@ -1137,7 +1137,7 @@ install_legacy_pc_bootloader_grub(){
 	local -r target_device="${1}"; shift 1
 	local -r command_grubinstall="${1}"
 
-	echo_with_color green "Installing GRUB bootloader for legacy boot support..."
+	echo_with_color green "Installing GRUB bootloader for legacy PC booting support..."
 	"${command_grubinstall}"\
 		--target=i386-pc\
 		--boot-directory="${target_fs_mountpoint}"\
