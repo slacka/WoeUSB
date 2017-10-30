@@ -593,7 +593,7 @@ wipe_existing_partition_table_and_filesystem_signatures(){
 	util_check_function_parameters_quantity 1 $#
 	local -r target_device="${1}"
 
-	echo_with_color green "Wiping all existing partition table and filesystem signatures in \"${target_device}\"..."
+	echo_with_color green "Wiping all existing partition table and filesystem signatures in ${target_device}..."
 	wipefs --all "${target_device}"
 }; declare -fr wipe_existing_partition_table_and_filesystem_signatures
 
