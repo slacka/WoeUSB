@@ -283,6 +283,10 @@ print_help(){
 	echo -e '	--workaround-bios-boot-flag'
 	echo -e '		'"Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled"
 	echo -e 
+	echo -e '	--debugging-internal-function-call'
+	echo -e '		'"Development option for developers to test certain function without running the entire build"
+	echo -e
+	
 }; declare -fr print_help
 
 process_commandline_parameters(){
@@ -370,6 +374,11 @@ process_commandline_parameters(){
 				;;
 			'--workaround-bios-boot-flag')
 				workaround_bios_boot_flag_ref="Y"
+				;;
+			'--debugging-internal-function-call')
+				shift_array parameters
+				"${parameters[@]}"
+				exit ${?}
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
