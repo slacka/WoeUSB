@@ -675,6 +675,10 @@ create_target_partition(){
 			;;
 	esac
 
+	printf_with_color green\
+		"%s\n"\
+		"Creating target partition..."
+
 	# Create partition
 	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
 	parted --script\
