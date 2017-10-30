@@ -246,7 +246,7 @@ print_help(){
 	echo -e 
 	echo -e "Currently two creation methods are supported:"
 	echo -e
-	echo -e '	--device'
+	echo -e '	--device, -d'
 	echo -e
 	echo -e '		'"Completely WIPE the entire USB storage device, then build a bootable Windows USB device from scratch."
 	echo -e '		'"WARNING: All previous data on the device will be gone!"
@@ -276,7 +276,7 @@ print_help(){
 	echo -e '	--no-color'
 	echo -e '		'"Disable message coloring"
 	echo -e
-	echo -e '	--debug, -d'
+	echo -e '	--debug'
 	echo -e '		'"Enable script debugging"
 	echo -e
 	echo -e '	--label, -l <filesystem_label>'
