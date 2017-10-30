@@ -312,7 +312,7 @@ process_commandline_parameters(){
 		case "${parameters[0]}" in
 			"--help"\
 			|"-h")
-				print_help;
+				print_help
 				exit 0
 				;;
 			"--debug")
