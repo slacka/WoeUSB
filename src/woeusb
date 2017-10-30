@@ -277,7 +277,7 @@ print_help(){
 	echo -e '		'"Enable script debugging"
 	echo -e
 	echo -e '	--label, -l'
-	echo -e '		'"Label for the newly created file system in --device creation method"
+	echo -e '		'"Specify label for the newly created file system in --device creation method"
 	echo -e '		'"Note that the label is not verified for validity and may be illegal for the filesystem"
 	echo -e
 	echo -e '	--workaround-bios-boot-flag'
