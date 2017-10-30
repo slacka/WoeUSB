@@ -274,7 +274,7 @@ print_help(){
 	echo -e '		'"Show this help message and exit"
 	echo -e
 	echo -e '	--no-color'
-	echo -e '		'"Disable color"
+	echo -e '		'"Disable message coloring"
 	echo -e
 	echo -e '	--debug, -d'
 	echo -e '		'"Enable script debugging"
