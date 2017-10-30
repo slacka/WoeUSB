@@ -1140,9 +1140,8 @@ install_bootloader_grub(){
 	mkdir --parents "$(dirname "${grub_cfg}")"
 	{
 		cat <<- END_OF_FILE
-			echo '------------------------------------'
-			echo '|      Windows USB - Loading...    |'
-			echo '------------------------------------'
+			echo '${APPLICATION_NAME} Legacy PC Bootloader'
+			echo '========================================'
 			insmod fat
 			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
 			ntldr /bootmgr
