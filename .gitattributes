@@ -1,4 +1,5 @@
 configure.ac filter=version
 debian/changelog filter=version
+src/woeusb filter=version
 src/woeusb.1 filter=version
 src/woeusbgui.1 filter=version

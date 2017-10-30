@@ -62,6 +62,7 @@ fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
 declare -r APPLICATION_NAME="WoeUSB"
+declare -r APPLICATION_VERSION="@@WOEUSB_VERSION@@"
 
 declare -r DEFAULT_NEW_FS_LABEL="Windows USB"
 
@@ -273,6 +274,9 @@ print_help(){
 	echo -e '	--help, -h'
 	echo -e '		'"Show this help message and exit"
 	echo -e
+	echo -e '	--version, -V'
+	echo -e '		'"Print application version"
+	echo -e
 	echo -e '	--no-color'
 	echo -e '		'"Disable message coloring"
 	echo -e
@@ -291,6 +295,14 @@ print_help(){
 	echo -e
 	
 }; declare -fr print_help
+
+print_version(){
+	util_check_function_parameters_quantity 0 $#
+
+	printf --\
+		'%s\n'\
+		"${APPLICATION_VERSION}"
+}; declare -fr print_version
 
 process_commandline_parameters(){
 	util_check_function_parameters_quantity 5 "${#}"
@@ -313,6 +325,11 @@ process_commandline_parameters(){
 			"--help"\
 			|"-h")
 				print_help
+				exit 0
+				;;
+			--version\
+			|-V)
+				print_version
 				exit 0
 				;;
 			"--debug")
