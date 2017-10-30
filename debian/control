@@ -18,6 +18,7 @@ Depends: grub-common,
          parted,
          realpath | coreutils (>= 8.23),
          util-linux, 
+         wget,
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator
