@@ -602,7 +602,7 @@ create_target_partition_table(){
 	local -r target_device="${1}"; shift
 	local -r partition_table_type="${1}"
 
-	echo_with_color green "Overwriting \"${target_device}\"'s partition table..."
+	echo_with_color green "Overwriting ${target_device}'s partition table..."
 
 	local parted_partiton_table_argument
 
