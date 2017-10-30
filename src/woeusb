@@ -166,7 +166,7 @@ init(){
 	if [ "${install_mode}" = 'device' ]; then
 		wipe_existing_partition_table_and_filesystem_signatures\
 			"${target_device}"
-		overwrite_target_partition_table\
+		create_target_partition_table\
 			"${target_device}"\
 			"legacy"
 		create_target_partition\
@@ -597,7 +597,7 @@ wipe_existing_partition_table_and_filesystem_signatures(){
 	wipefs --all "${target_device}"
 }; declare -fr wipe_existing_partition_table_and_filesystem_signatures
 
-overwrite_target_partition_table(){
+create_target_partition_table(){
 	util_check_function_parameters_quantity 2 $#
 	local -r target_device="${1}"; shift
 	local -r partition_table_type="${1}"
@@ -630,7 +630,7 @@ overwrite_target_partition_table(){
 		"${target_device}"\
 		mklabel\
 		"${parted_partiton_table_argument}"
-}; declare -fr overwrite_target_partition_table
+}; declare -fr create_target_partition_table
 
 # NOTE: This really should be done automatically by GNU Parted after every operation
 workaround_make_system_realize_partition_table_changed(){
