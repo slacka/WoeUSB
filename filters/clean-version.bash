@@ -39,7 +39,7 @@ init(){
 	fi
 
 	sed\
-		's/[0-9]*\.[0-9]*\.[0-9]*[^)]*/@@WOEUSB_VERSION@@/'
+		's/[0-9]+\.[0-9]+\.[0-9]+[^)]*/@@WOEUSB_VERSION@@/'
 	exit 0
 }; declare -fr init
 
