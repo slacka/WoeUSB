@@ -24,7 +24,10 @@ The documentation of this project may be outdated through time, and needs help t
 Refer to the following articles for reference on writing manpages:
 
 * [Linux Man Page Howto](http://www.schweikhardt.net/man_page_howto.html)
-* [The GNU Troff Manual: Macro Packages » man » Usage](https://www.gnu.org/software/groff/manual/html_node/Man-usage.html#Man-usage)
+* [The GNU Troff Manual](https://www.gnu.org/software/groff/manual)
+	- [The GNU Troff Manual: Macro Packages » man » Usage](https://www.gnu.org/software/groff/manual/html_node/Man-usage.html#Man-usage)
+	- [The GNU Troff Manual: Escapes](https://www.gnu.org/software/groff/manual/html_node/Escapes.html#Escapes)
+	- [The GNU Troff Manual: Fonts and Symbols](https://www.gnu.org/software/groff/manual/html_node/Fonts-and-Symbols.html#Fonts-and-Symbols)
 
 ## Improving Code
 There are so many aspects of the code that can be improved, however, please consider the following topics while doing so.
