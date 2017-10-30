@@ -1174,8 +1174,6 @@ install_legacy_pc_bootloader_grub_config(){
 		cat <<- END_OF_FILE
 			echo '${APPLICATION_NAME} Legacy PC Bootloader'
 			echo '========================================'
-			insmod fat
-			search --no-floppy --fs-uuid ${target_fs_uuid} --set root
 			ntldr /bootmgr
 			echo -n "Press ENTER to continue booting: "
 			read key_holder
