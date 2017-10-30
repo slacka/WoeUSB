@@ -29,32 +29,30 @@ only support FAT32 filesystem, thus the generated filesystem has a 4GiB single f
 .SH COMMAND\-LINE OPTIONS
 .SS CREATION METHOD
 .TP
-.B --device / -d
+\fB--device\fR / \fB-d\fR \fIsource_media\fR \fItarget_device\fR
 Drop
-.I target_media
-\'s partition table, recreate a new PC/Legacy/MBR partition table, create a FAT32 partition spanning (almost) the entire disk, then setup bootable Windows on it.
+.I target_device
+\'s partition table(if there's any), create a new PC/Legacy/MBR partition table, create a FAT32 partition spanning (almost) the entire disk, then setup bootable Windows on it.
 
-WARNING: ALL PREVIOUS DATA ON TARGET MEDIA WILL BE DROPPED!
+WARNING: ALL PREVIOUS DATA ON \fItarget_device\fR WILL BE DROPPED!
 
 COMPATIBILITY: This mode is previously named
 .B --format
 , which will be obselute in future release.
 
 .TP
-.B --partition / -p
+\fB--partition\fR / \fB-p\fR \fIsource_media\fR \fItarget_partition\fR
 Mount
-.I target_media
+.I target_partition
 \'s file system, extracts all files from
 .I source_media
-, then make it bootable.
+into it, then make it bootable.
 
-WARNING: ALL FILES EXISTING ON DISK WITH THE SAME FILENAME IN SOURCE MEDIA WILL BE OVERWRITTEN!
-
-NOTE: UEFI bootability is available only when removable booting spec. is matched.
+WARNING: ALL FILES EXISTING ON \fItarget_partition\fR WITH THE SAME FILENAME IN \fIsource_media\fR WILL BE OVERWRITTEN!
 
 COMPATIBILITY: This mode is previously named
 .B --install
-, which will be obselute in future release.
+, which will be obseluted in future release.
 
 .SS MISCELLANEOUS
 .TP
@@ -65,9 +63,9 @@ Be more verbose
 Enable script debugging
 .TP
 .B --no-color
-Disable color message
+Disable message coloring
 .TP
-.B --label / -l
+\fB--label\fR / \fB-l\fR \fIfilesystem_label\fR
 Specify label for the newly created file system in
 .B --device
 creation method
