@@ -27,7 +27,7 @@ Currently
 only support FAT32 filesystem, thus the generated filesystem has a 4GiB single file size limit.  NTFS may be supported in the future.
 
 .SH COMMAND\-LINE OPTIONS
-.SS INSTALLATION MODE
+.SS CREATION METHOD
 .TP
 .B --device / -d
 Drop
@@ -68,9 +68,9 @@ Enable script debugging
 Disable color message
 .TP
 .B --label / -l
-Label for the newly created file system in
+Specify label for the newly created file system in
 .B --device
-installation mode.
+creation method
 
 Note that the label is not verified for validity and may be illegal for the filesystem
 .TP
