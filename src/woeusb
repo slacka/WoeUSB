@@ -256,7 +256,7 @@ print_help(){
 	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device Windows7_x64.iso /dev/sdX"
 	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
 	echo -e
-	echo -e '	--partition'
+	echo -e '	--partition, -p'
 	echo -e
 	echo -e '		'"Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists."
 	echo -e '		'"WARNING: All files that has the same name will be overwritten!"
