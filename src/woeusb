@@ -279,14 +279,14 @@ print_help(){
 	echo -e '	--debug, -d'
 	echo -e '		'"Enable script debugging"
 	echo -e
-	echo -e '	--label, -l'
+	echo -e '	--label, -l <filesystem_label>'
 	echo -e '		'"Specify label for the newly created file system in --device creation method"
 	echo -e '		'"Note that the label is not verified for validity and may be illegal for the filesystem"
 	echo -e
 	echo -e '	--workaround-bios-boot-flag'
 	echo -e '		'"Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled"
 	echo -e 
-	echo -e '	--debugging-internal-function-call'
+	echo -e '	--debugging-internal-function-call <function name> (function_argument)...'
 	echo -e '		'"Development option for developers to test certain function without running the entire build"
 	echo -e
 	
