@@ -1155,7 +1155,7 @@ install_legacy_pc_bootloader_grub_config(){
 	local -r target_fs_mountpoint="$1"; shift
 	local -r name_grub_prefix="$1"
 
-	echo_with_color green "Installing grub.cfg..."
+	echo_with_color green "Installing custom GRUB config for legacy PC booting..."
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
 	local target_fs_uuid; target_fs_uuid=$(
 		lsblk\
