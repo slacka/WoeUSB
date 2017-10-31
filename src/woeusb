@@ -61,11 +61,7 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
-declare -r APPLICATION_NAME="WoeUSB"
-declare -r APPLICATION_VERSION="@@WOEUSB_VERSION@@"
-
-declare -r DEFAULT_NEW_FS_LABEL="Windows USB"
-
+## TODO: Global parameter cleanup
 declare -i\
 	verbose='0'\
 	only_for_gui='0'\
@@ -83,6 +79,7 @@ declare\
 declare -i pulse_current_pid=0
 
 ## Execution state for cleanup functions to determine if clean up is required
+## NOTE: Need to pass to traps, so need to be global
 declare current_state="pre-init"
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
@@ -95,8 +92,25 @@ alias\
 
 ## Entry point of the main code
 init(){
+	util_check_function_parameters_quantity 1 $#
+	local -r runtime_executable_name="$1"; shift
+
+	declare -r application_name="WoeUSB"
+	declare -r application_version="@@WOEUSB_VERSION@@"
+
+	declare -r DEFAULT_NEW_FS_LABEL="Windows USB"
+
 	current_state="enter-init"
 
+	local\
+		flag_print_help=N\
+		flag_print_version=N\
+		flag_print_about=N\
+
+	local -r \
+		application_site_url="https://github.com/slacka/WoeUSB"\
+		application_copyright_declaration="Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"\
+		application_copyright_notice="${application_name} is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
 	local install_mode
 
 	# source_media may be a optical disk drive or a disk image
@@ -122,21 +136,41 @@ init(){
 	declare new_file_system_label="${DEFAULT_NEW_FS_LABEL}"
 
 	if ! check_runtime_dependencies\
+		"${application_name}"\
 		command_mkdosfs\
 		command_grubinstall\
 		name_grub_prefix; then
 		exit 1
 	fi
 
-	if ! process_commandline_parameters\
+	if !\
+		process_commandline_parameters\
+			flag_print_help\
+			flag_print_version\
+			flag_print_about\
 			install_mode\
 			source_media\
 			target_media\
 			new_file_system_label\
 			workaround_bios_boot_flag; then
-		print_help
+		print_help\
+			"${application_name}"\
+			"${application_version}"\
+			"${runtime_executable_name}"
 		exit 1
+
 	fi
+
+	process_miscellaneous_requests\
+		"${flag_print_help}"\
+		"${flag_print_version}"\
+		"${flag_print_about}"\
+		"${application_name}"\
+		"${application_version}"\
+		"${application_site_url}"\
+		"${application_copyright_declaration}"\
+		"${application_copyright_notice}"\
+		"${runtime_executable_name}"
 
 	check_permission
 
@@ -145,7 +179,10 @@ init(){
 		source_media\
 		target_media\
 		"${new_file_system_label}"; then
-		print_help
+		print_help\
+			"${application_name}"\
+			"${application_version}"\
+			"${runtime_executable_name}"
 		exit 1
 	fi
 
@@ -238,12 +275,16 @@ init(){
 }; declare -fr init
 
 print_help(){
-	util_check_function_parameters_quantity 0 "${#}"
+	util_check_function_parameters_quantity 3 "${#}"
+
+	local -r application_name="$1"; shift 1
+	local -r application_version="$1"; shift 1
+	local -r runtime_executable_name="$1"
 
 	set +o xtrace
-	echo -e "${APPLICATION_NAME} ${APPLICATION_VERSION} Help Information"
+	echo -e "${application_name} ${application_version} Help Information"
 	echo -e "======================================"
-	echo -e "${APPLICATION_NAME} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
+	echo -e "${application_name} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
 	echo -e 
 	echo -e "Currently two creation methods are supported:"
 	echo -e
@@ -252,20 +293,20 @@ print_help(){
 	echo -e '		'"Completely WIPE the entire USB storage device, then build a bootable Windows USB device from scratch."
 	echo -e '		'"WARNING: All previous data on the device will be gone!"
 	echo -e
-	echo -e '		'"${RUNTIME_EXECUTABLE_NAME} --device <source media path> <device>"
+	echo -e '		'"${runtime_executable_name} --device <source media path> <device>"
 	echo -e '		'"Examples:"
-	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device Windows7_x64.iso /dev/sdX"
-	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --device /dev/sr0 /dev/sdX"
+	echo -e '		'"- ${runtime_executable_name} --device Windows7_x64.iso /dev/sdX"
+	echo -e '		'"- ${runtime_executable_name} --device /dev/sr0 /dev/sdX"
 	echo -e
 	echo -e '	--partition, -p'
 	echo -e
 	echo -e '		'"Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists."
 	echo -e '		'"WARNING: All files that has the same name will be overwritten!"
 	echo -e
-	echo -e '		'"${RUNTIME_EXECUTABLE_NAME} --partition <source media path> <partition>"
+	echo -e '		'"${runtime_executable_name} --partition <source media path> <partition>"
 	echo -e '		'"Examples:"
-	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --partition Windows7_x64.iso /dev/sdX1"
-	echo -e '		'"- ${RUNTIME_EXECUTABLE_NAME} --partition /dev/sr0 /dev/sdX1"
+	echo -e '		'"- ${runtime_executable_name} --partition Windows7_x64.iso /dev/sdX1"
+	echo -e '		'"- ${runtime_executable_name} --partition /dev/sr0 /dev/sdX1"
 	echo -e
 	echo -e '## '"Command-line Options"' ##'
 	echo -e '	--verbose, -v'
@@ -276,6 +317,9 @@ print_help(){
 	echo -e
 	echo -e '	--version, -V'
 	echo -e '		'"Print application version"
+	echo -e
+	echo -e '	--about, -ab'
+	echo -e '		'"Show info about this application"
 	echo -e
 	echo -e '	--no-color'
 	echo -e '		'"Disable message coloring"
@@ -296,16 +340,38 @@ print_help(){
 	
 }; declare -fr print_help
 
+## Print application version then exit, for debugging purpose.
+## application_version: Version of the application
 print_version(){
-	util_check_function_parameters_quantity 0 $#
+	util_check_function_parameters_quantity 1 $#
+
+	local -r application_version="$1"
 
 	printf --\
 		'%s\n'\
-		"${APPLICATION_VERSION}"
+		"${application_version}"
 }; declare -fr print_version
 
+print_application_info(){
+	util_check_function_parameters_quantity 5 $#
+	local -r application_name="$1"; shift
+	local -r application_version="$1"; shift
+	local -r application_site_url="$1"; shift
+	local -r application_copyright_declaration="$1"; shift
+	local -r application_copyright_notice="$1"
+
+	echo "${application_name} ${application_version}"
+	echo -e "${application_site_url}"
+	echo -e "${application_copyright_declaration}"
+	echo -e "${application_copyright_notice}"
+
+}; declare -fr print_application_info
+
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 5 "${#}"
+	util_check_function_parameters_quantity 8 "${#}"
+	local -n flag_print_help_ref="${1}"; shift
+	local -n flag_print_version_ref="${1}"; shift
+	local -n flag_print_about_ref="${1}"; shift
 	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
 	local -n target_media_ref="${1}"; shift
@@ -313,24 +379,35 @@ process_commandline_parameters(){
 	local -n workaround_bios_boot_flag_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
-		print_help
-		exit 0
+		flag_print_help_ref=Y
+		return 0
 	fi
 
 	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
-	local enable_debug=N
+	local\
+		enable_debug=N\
+		enable_device=N\
+		enable_partition=N\
+		enable_label=N\
+		enable_workaround_bios_boot_flag=N\
+		enable_debugging_internal_function_call=N
 
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
 			"--help"\
 			|"-h")
-				print_help
-				exit 0
+				flag_print_help_ref=Y
+				return 0
 				;;
 			--version\
 			|-V)
-				print_version
-				exit 0
+				flag_print_version_ref=Y
+				return 0
+				;;
+			--about\
+			|-ab)
+				flag_print_about_ref=Y
+				return 0
 				;;
 			"--debug")
 				enable_debug="Y"
@@ -338,6 +415,7 @@ process_commandline_parameters(){
 			'--install'\
 			|--partition\
 			|-p)
+				enable_partition=Y
 				if [ "${parameters[0]}" = --install ]; then
 					echo_with_color\
 						yellow\
@@ -358,6 +436,7 @@ process_commandline_parameters(){
 			'--format'\
 			|--device\
 			|-d)
+				enable_device=Y
 				if [ "${parameters[0]}" = --format ]; then
 					echo_with_color\
 						yellow\
@@ -389,14 +468,26 @@ process_commandline_parameters(){
 				no_color='1'
 				;;
 			'--label'|'-l')
+				enable_label=Y
 				shift_array parameters
 				new_file_system_label_ref="${parameters[0]}"
 				;;
 			'--workaround-bios-boot-flag')
+				enable_workaround_bios_boot_flag=Y
 				workaround_bios_boot_flag_ref="Y"
 				;;
 			'--debugging-internal-function-call')
+				enable_debugging_internal_function_call=Y
 				shift_array parameters
+
+				if [ ${#parameters[@]} -eq 0 ]; then
+					printf_with_color\
+						red\
+						'%s: %s\n'\
+						"${FUNCNAME[0]}"\
+						"ERROR: --debugging-internal-function-call option requires at least 1 argument."
+					return 1
+				fi
 				"${parameters[@]}"
 				exit ${?}
 				;;
@@ -408,6 +499,30 @@ process_commandline_parameters(){
 		shift_array parameters
 	done
 
+	# None useful action is specified
+	if \
+		[ "${enable_device}" == N ] \
+		&& [ "${enable_partition}" == N ] \
+		&& [ "${enable_debugging_internal_function_call}" == N ]; then
+		# intentionally don't mention about the internal function call option
+		echo_with_color\
+			red\
+			"${FUNCNAME[0]}: Error: No install method specified!" >&2
+	elif\
+		[ "${enable_device}" == Y ] \
+		&& [ "${enable_partition}" == Y ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: --device and --partition creation method are mutual-exclusive." >&2
+		return 1
+	fi
+	
+	# --label option is no use with --partition creation method
+	if \
+		[ "${enable_partition}" == Y ] \
+		&& [ "${enable_label}" == Y ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: --label option only can be used with --device creation method"
+		return 1
+	fi
+
 	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
 
@@ -415,14 +530,54 @@ process_commandline_parameters(){
 		# trap 'trap_debug "${BASH_COMMAND}"' DEBUG
 	fi
 
+	# Always be the last condition so that less debug message from this function will be printed
 	if [ "${enable_debug}" = "Y" ]; then
 		set -o xtrace
 	fi
 	return 0
 }; declare -fr process_commandline_parameters
 
+process_miscellaneous_requests(){
+	util_check_function_parameters_quantity 9 $#
+	local -r flag_print_help="${1}"; shift
+	local -r flag_print_version="${1}"; shift
+	local -r flag_print_about="${1}"; shift
+	local -r application_name="${1}"; shift
+	local -r application_version="${1}"; shift
+	local -r application_site_url="${1}"; shift
+	local -r application_copyright_declaration="${1}"; shift
+	local -r application_copyright_notice="${1}"; shift
+	local -r runtime_executable_name="${1}"; shift
+
+	if [ "${flag_print_help}" == 'Y' ]; then
+		print_help\
+			"${application_name}"\
+			"${application_version}"\
+			"${runtime_executable_name}"
+		exit 0
+	fi
+
+	if [ "${flag_print_version}" == 'Y' ]; then
+		print_version\
+			"${application_version}"
+		exit 0
+	fi
+
+	if [ "${flag_print_about}" == 'Y' ]; then
+		print_application_info\
+			"${application_name}"\
+			"${application_version}"\
+			"${application_site_url}"\
+			"${application_copyright_declaration}"\
+			"${application_copyright_notice}"
+		exit 0
+	fi
+
+}; declare -fr process_miscellaneous_requests
+
 check_runtime_dependencies(){
-	util_check_function_parameters_quantity 3 $#
+	util_check_function_parameters_quantity 4 $#
+	local -r application_name="$1"; shift
 	local -n command_mkdosfs_ref="$1"; shift
 	local -n command_grubinstall_ref="$1"; shift
 	local -n name_grub_prefix_ref="$1"
@@ -449,10 +604,10 @@ check_runtime_dependencies(){
 		wipefs
 		do
 		if ! command -v "${required_command}" >/dev/null; then
-			echo_with_color red "${FUNCNAME[0]}: Error: ${APPLICATION_NAME} requires ${required_command} command in the executable search path, but it is not found."
+			echo_with_color red "${FUNCNAME[0]}: Error: ${application_name} requires ${required_command} command in the executable search path, but it is not found."
 			result=failed
 		fi
-	done
+	done; unset required_command
 
 	if command -v 'mkdosfs' &> /dev/null; then
 		command_mkdosfs_ref='mkdosfs'
@@ -504,15 +659,7 @@ check_runtime_parameters(){
 	util_check_function_parameters_quantity 4 $#
 	local -n install_mode_ref="${1}"; shift
 	local -n source_media_ref="${1}"; shift
-	local -n target_media_ref="${1}"; shift
-	local new_file_system_label="${1}"
-
-	if ! util_is_parameter_set_and_not_empty install_mode_ref\
-		|| ! util_is_parameter_set_and_not_empty source_media_ref\
-		|| ! util_is_parameter_set_and_not_empty target_media_ref; then
-		echo_with_color red "${FUNCNAME[0]}: Error: No install method specified!" >&2
-		return 1
-	fi
+	local -n target_media_ref="${1}"
 
 	if [ ! -f "${source_media_ref}" ] \
 		&& [ ! -b "${source_media_ref}" ]; then
@@ -539,11 +686,6 @@ check_runtime_parameters(){
 		return 1
 	fi
 
-	if [ "${install_mode_ref}" != "device" ] \
-		&& [ "${new_file_system_label}" != "${DEFAULT_NEW_FS_LABEL}" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: --label option only can be used with --format option"
-		return 1
-	fi
 	return 0
 }; declare -fr check_runtime_parameters
 
@@ -1573,4 +1715,5 @@ trap trap_exit EXIT
 trap trap_errexit ERR
 trap trap_interrupt INT
 
-init "${@}"
+init\
+	"${RUNTIME_EXECUTABLE_NAME}"
