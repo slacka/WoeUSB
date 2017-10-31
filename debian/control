@@ -19,6 +19,7 @@ Depends: bash (>4.4),
          parted,
          realpath | coreutils (>= 8.23),
          util-linux, 
+         wget,
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator

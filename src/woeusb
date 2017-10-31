@@ -34,7 +34,7 @@ set -o pipefail
 ## Enable aliases for easy access to functions
 shopt -s expand_aliases
 
-for critical_command in realpath basename dirname; do
+for critical_command in realpath basename dirname mktemp; do
 	if ! command -v "${critical_command}" &> /dev/null; then
 		echo "Fatal: This program requires GNU Coreutils in the executable search path"
 		exit 1
@@ -90,6 +90,13 @@ alias\
 	is_target_busy=check_is_target_device_busy\
 	printf_with_color=util_printf_with_color
 
+declare temp_directory; temp_directory=$(
+	mktemp\
+		--tmpdir\
+		--directory\
+		WoeUSB.XXXXXX.tempdir
+); declare -r temp_directory
+
 ## Entry point of the main code
 init(){
 	util_check_function_parameters_quantity 1 $#
@@ -123,6 +130,8 @@ init(){
 
 	local workaround_bios_boot_flag="N"
 
+	local target_filesystem_type="FAT"
+
 	source_fs_mountpoint="/media/woeusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/woeusb_target_$(date +%s)_$$"
 
@@ -130,6 +139,7 @@ init(){
 	# due to different names in distributions
 	declare\
 		command_mkdosfs\
+		command_mkntfs\
 		command_grubinstall\
 		name_grub_prefix
 
@@ -138,6 +148,7 @@ init(){
 	if ! check_runtime_dependencies\
 		"${application_name}"\
 		command_mkdosfs\
+		command_mkntfs\
 		command_grubinstall\
 		name_grub_prefix; then
 		exit 1
@@ -145,6 +156,7 @@ init(){
 
 	if !\
 		process_commandline_parameters\
+			application_name\
 			flag_print_help\
 			flag_print_version\
 			flag_print_about\
@@ -152,7 +164,8 @@ init(){
 			source_media\
 			target_media\
 			new_file_system_label\
-			workaround_bios_boot_flag; then
+			workaround_bios_boot_flag\
+			target_filesystem_type; then
 		print_help\
 			"${application_name}"\
 			"${application_version}"\
@@ -172,7 +185,8 @@ init(){
 		"${application_copyright_notice}"\
 		"${runtime_executable_name}"
 
-	check_permission
+	check_permission\
+		"${application_name}"
 
 	if ! check_runtime_parameters\
 		install_mode\
@@ -209,13 +223,28 @@ init(){
 			"legacy"
 		create_target_partition\
 			"${target_partition}"\
-			"FAT"\
+			"${target_filesystem_type}"\
 			"${new_file_system_label}"\
-			"${command_mkdosfs}"
+			"${command_mkdosfs}"\
+			"${command_mkntfs}"
+
+		if [ "${target_filesystem_type}" == "NTFS" ]; then
+			create_uefi_ntfs_support_partition\
+				"${target_device}"
+			install_uefi_ntfs_support_partition\
+				"${target_device}2"\
+				"${temp_directory}"\
+				"${target_device}"
+		fi
 	fi
 
 	if [ "${install_mode}" = 'partition' ]; then
 		check_target_filesystem "${target_partition}"
+
+		if [ "${target_filesystem_type}" == "NTFS" ]; then
+			check_uefi_ntfs_support_partition\
+				"${target_device}"
+		fi
 	fi
 
 	current_state="start-mounting"
@@ -337,7 +366,10 @@ print_help(){
 	echo -e '	--debugging-internal-function-call <function name> (function_argument)...'
 	echo -e '		'"Development option for developers to test certain function without running the entire build"
 	echo -e
-	
+	echo -e '	--target-filesystem, --tgt-fs <filesystem name>'
+	echo -e '		'"Specify the filesystem to use as the target partition's filesystem."
+	echo -e '		'"Currently supported: FAT(default)/NTFS"
+	echo -e
 }; declare -fr print_help
 
 ## Print application version then exit, for debugging purpose.
@@ -368,7 +400,8 @@ print_application_info(){
 }; declare -fr print_application_info
 
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 8 "${#}"
+	util_check_function_parameters_quantity 10 "${#}"
+	local -r application_name="${1}"; shift
 	local -n flag_print_help_ref="${1}"; shift
 	local -n flag_print_version_ref="${1}"; shift
 	local -n flag_print_about_ref="${1}"; shift
@@ -376,7 +409,8 @@ process_commandline_parameters(){
 	local -n source_media_ref="${1}"; shift
 	local -n target_media_ref="${1}"; shift
 	local -n new_file_system_label_ref="${1}"; shift
-	local -n workaround_bios_boot_flag_ref="${1}"
+	local -n workaround_bios_boot_flag_ref="${1}"; shift
+	local -n target_filesystem_type_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		flag_print_help_ref=Y
@@ -419,7 +453,7 @@ process_commandline_parameters(){
 				if [ "${parameters[0]}" = --install ]; then
 					echo_with_color\
 						yellow\
-						"WARNING: The deprecated --install option is still available but will be dropped in ${APPLICATION_NAME} v3.0!"
+						"WARNING: The deprecated --install option is still available but will be dropped in ${application_name} v3.0!"
 				fi
 				install_mode_ref='partition'
 				shift_array parameters
@@ -440,7 +474,7 @@ process_commandline_parameters(){
 				if [ "${parameters[0]}" = --format ]; then
 					echo_with_color\
 						yellow\
-						"WARNING: The deprecated --format option is still available but will be dropped in ${APPLICATION_NAME} v3.0!"
+						"WARNING: The deprecated --format option is still available but will be dropped in ${application_name} v3.0!"
 				fi
 				# Limitation of ShellCheck to detect usage of indirection variables
 				# https://github.com/koalaman/shellcheck/wiki/SC2034
@@ -470,6 +504,14 @@ process_commandline_parameters(){
 			'--label'|'-l')
 				enable_label=Y
 				shift_array parameters
+				if [ ${#parameters[@]} -eq 0 ]; then
+					printf_with_color\
+						red\
+						'%s: %s\n'\
+						"${FUNCNAME[0]}"\
+						"ERROR: --label option requires at least 1 argument."
+					return 1
+				fi
 				new_file_system_label_ref="${parameters[0]}"
 				;;
 			'--workaround-bios-boot-flag')
@@ -490,6 +532,20 @@ process_commandline_parameters(){
 				fi
 				"${parameters[@]}"
 				exit ${?}
+				;;
+			--target-filesystem\
+			|--tgt-fs)
+				shift_array parmameters
+
+				if [ ${#parameters[@]} -eq 0 ]; then
+					printf_with_color\
+						red\
+						'%s: %s\n'\
+						"${FUNCNAME[0]}"\
+						"ERROR: --target-filesystem option requires at least 1 argument."
+					return 1
+				fi
+				target_filesystem_type_ref="${parameters[0]}"
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
@@ -576,9 +632,10 @@ process_miscellaneous_requests(){
 }; declare -fr process_miscellaneous_requests
 
 check_runtime_dependencies(){
-	util_check_function_parameters_quantity 4 $#
+	util_check_function_parameters_quantity 5 $#
 	local -r application_name="$1"; shift
 	local -n command_mkdosfs_ref="$1"; shift
+	local -n command_mkntfs_ref="$1"; shift
 	local -n command_grubinstall_ref="$1"; shift
 	local -n name_grub_prefix_ref="$1"
 
@@ -595,12 +652,14 @@ check_runtime_dependencies(){
 		id\
 		lsblk\
 		mkdir\
+		mktemp\
 		mount\
 		parted\
 		partprobe\
 		readlink\
 		rm\
 		stat\
+		wget\
 		wipefs
 		do
 		if ! command -v "${required_command}" >/dev/null; then
@@ -625,6 +684,16 @@ check_runtime_dependencies(){
 		result="failed"
 	fi
 
+	if command -v 'mkntfs' &>/dev/null; then
+		command_mkntfs_ref='mkntfs'
+	else
+		printf_with_color red\
+			'%s\n%s\n'\
+			"${FUNCNAME[0]}: Error: mkntfs command not found!"\
+			"${FUNCNAME[0]}: Error: Please make sure that ntfs-3g is properly installed!"
+		result="failed"
+	fi
+
 	if command -v 'grub-install' &> /dev/null; then
 		command_grubinstall_ref='grub-install'
 		name_grub_prefix_ref="grub"
@@ -645,11 +714,14 @@ check_runtime_dependencies(){
 }; declare -fr check_runtime_dependencies
 
 check_permission(){
+	util_check_function_parameters_quantity 1 $#
+	local -r application_name="$1"
+
 	if [ ! "$(id --user)" = 0 ]; then
 		printf_with_color\
 			yellow\
 			'%s\n%s\n'\
-			"Warning: You are not running ${APPLICATION_NAME} as root!"\
+			"Warning: You are not running ${application_name} as root!"\
 			"Warning: This might be the reason of the following failure." >&2
 	fi
 	return 0
@@ -810,11 +882,12 @@ workaround_make_system_realize_partition_table_changed(){
 }; declare -fr workaround_make_system_realize_partition_table_changed
 
 create_target_partition(){
-	util_check_function_parameters_quantity 4 $#
+	util_check_function_parameters_quantity 5 $#
 	local -r target_partition="$1"; shift
 	local -r filesystem_type="$1"; shift
 	local -r filesystem_label="$1"; shift
-	local -r command_mkdosfs="$1"
+	local -r command_mkdosfs="$1"; shift
+	local -r command_mkntfs="$1"
 
 	# Refer: GNU Parted's (info) manual: Using Parted » Command explanations » mkpart
 	# Refer: sudo parted --script /dev/sda help mkpart
@@ -825,8 +898,6 @@ create_target_partition(){
 			;;
 		NTFS|ntfs)
 			parted_mkpart_fs_type="ntfs"
-			echo_with_color red "${FUNCNAME[0]}: Error: Currently NTFS filesystem is not supported."
-			return 2
 			;;
 		*)
 			echo_with_color red "${FUNCNAME[0]}: Error: Filesystem not supported"
@@ -838,25 +909,55 @@ create_target_partition(){
 		'%s\n'\
 		'Creating target partition...'
 
-	# Create partition
+	# Create target partition
 	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	parted --script\
-		"${target_device}"\
-		mkpart\
-		primary\
-		"${parted_mkpart_fs_type}"\
-		4MiB\
-		-- -1s # last sector of the disk
+	# If NTFS filesystem is used we leave a 256KiB partition at the end for installing UEFI:NTFS partition for NTFS support
+	case "${parted_mkpart_fs_type}" in
+		fat32)
+			parted --script\
+				"${target_device}"\
+				mkpart\
+				primary\
+				"${parted_mkpart_fs_type}"\
+				4MiB\
+				-- -1s # last sector of the disk
+			;;
+		ntfs)
+			# Major partition for storing user files
+			# NOTE: Microsoft Windows has a bug that only recognize the first partition for removable storage devices, that's why this partition should always be the first one
+			parted --script\
+				"${target_device}"\
+				mkpart\
+				primary\
+				"${parted_mkpart_fs_type}"\
+				4MiB\
+				-- -513s # Leave 256KiB==512sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 256KiB and is intentionally let-it-be.
+				# FIXME: Leave exact 256KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
+			;;
+		*)
+			printf_with_color\
+				red\
+				'%s\n'\
+				"${FUNCNAME[0]}: FATAL: Illegal parted_mkpart_fs_type, please report bug."
+			;;
+	esac
+	unset parted_mkpart_fs_type
 
 	workaround_make_system_realize_partition_table_changed\
 		"${target_device}"
 
-	# Create filesystem on partition
+	# Format target partition's filesystem
 	case "${filesystem_type}" in
 		FAT|vfat)
 			"${command_mkdosfs}"\
 				-F 32\
 				-n "${filesystem_label}" \
+				"${target_partition}"
+			;;
+		NTFS|ntfs)
+			"${command_mkntfs}"\
+				--quick\
+				--label "${filesystem_label}"\
 				"${target_partition}"
 			;;
 		*)
@@ -865,6 +966,63 @@ create_target_partition(){
 			;;
 	esac
 }; declare -fr create_target_partition
+
+## Create UEFI:NTFS partition to support booting UEFI bootloader in NTFS filesystem where some UEFI firmwares are not able to do so
+## https://github.com/pbatard/uefi-ntfs
+## This routine assumes that there's only one partition on the disk, and the trailing 256KiB space is not partitioned
+## This routine should be run after create_target_partition and only on target partition's filesystem is NTFS
+## target_device: The target device's entire deice file
+create_uefi_ntfs_support_partition(){
+	util_check_function_parameters_quantity 1 $#
+
+	local -r target_device="$1"
+
+	# FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
+	# NOTE: The --align is set to none because this partition is indeed misaligned, but ignored due to it's small size
+	parted\
+		--align none\
+		--script\
+		"${target_device}"\
+		mkpart\
+		primary\
+		fat16\
+		-- \
+		-512s\
+		-1s
+
+	return "$?"
+}; declare -fr create_uefi_ntfs_support_partition
+
+## Install UEFI:NTFS partition by writing the partition image into the created partition
+## FIXME: Currently this requires internet access to download the image from GitHub directly, it should be replaced by including the image in our datadir
+## uefi_ntfs_partition: The previously allocated partition for installing UEFI:NTFS, requires at least 256KiB
+## download_directory: The temporary directory for downloading UEFI:NTFS image from GitHub
+## target_device: For workaround_make_system_realize_partition_table_changed
+install_uefi_ntfs_support_partition(){
+	util_check_function_parameters_quantity 3 $#
+
+	local -r uefi_ntfs_partition="$1"; shift
+	local -r download_directory="$1"; shift
+	local -r target_device="$1"
+
+	if ! wget\
+		--directory-prefix="${download_directory}"\
+		https://github.com/pbatard/rufus/raw/master/res/uefi/uefi-ntfs.img; then
+		printf_with_color yellow\
+			'%s: %s\n'\
+			"${FUNCNAME[0]}"\
+			"Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem."
+		return 0
+	fi
+	
+	# Write partition image to partition
+	dd\
+		if="${download_directory}/uefi-ntfs.img"\
+		of="${uefi_ntfs_partition}"
+
+	workaround_make_system_realize_partition_table_changed\
+		"${target_device}"
+}; declare -fr install_uefi_ntfs_support_partition
 
 ## Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
 workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
@@ -895,12 +1053,47 @@ check_target_filesystem(){
 			"${target_partition}"
 	)"
 
-	if [ "${target_filesystem}" != "vfat" ]; then
-		echo_with_color red "${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT"
-		return 1
-	fi
+	case "${target_filesystem}" in
+		vfat|ntfs)
+			: # supported
+			;;
+		*)
+			printf_with_color red\
+				'%s\n'\
+				"${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT, NTFS."
+			return 1
+			;;
+	esac
 	return 0
 }; declare -fr check_target_filesystem
+
+## Check if the UEFI:NTFS support partition exists
+## Currently it depends on the fact that this partition has a label of "UEFI_NTFS"
+## target_device: The UEFI:NTFS partition residing entier device file
+check_uefi_ntfs_support_partition(){
+	util_check_function_parameters_quantity 1 $#
+
+	local -r target_device="$1"
+
+	if\
+		!\
+		lsblk\
+			--output LABEL\
+			--noheadings\
+			"${target_device}"\
+		| grep\
+			--silent\
+			"UEFI_NTFS"; then
+		printf_with_color yello\
+			'%s: %s\n'\
+			"${FUNCNAME[0]}"\
+			"Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!"
+		printf --\
+			'%s: %s\n'\
+			"${FUNCNAME[0]}"\
+			"Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method"
+	fi
+}; declare -fr check_uefi_ntfs_support_partition
 
 mount_source_filesystem(){
 	util_check_function_parameters_quantity 2 $#
@@ -1452,6 +1645,10 @@ trap_exit(){
 			echo_with_color green "You may now safely detach the target device"
 		fi
 	fi
+
+	rm\
+		--recursive\
+		"${temp_directory}"
 
 	if [ "${current_state}" = "finished" ]; then
 		echo_with_color green "Done :)"

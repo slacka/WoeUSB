@@ -22,17 +22,13 @@ to
 It also supports UEFI bootstrap scheme, however in this case Windows UEFI bootloader is used instead.
 .PP
 
-Currently
-.B woeusb
-only support FAT32 filesystem, thus the generated filesystem has a 4GiB single file size limit.  NTFS may be supported in the future.
-
 .SH COMMAND\-LINE OPTIONS
 .SS CREATION METHOD
 .TP
 \fB--device\fR / \fB-d\fR \fIsource_media\fR \fItarget_device\fR
 Drop
 .I target_device
-\'s partition table(if there's any), create a new PC/Legacy/MBR partition table, create a FAT32 partition spanning (almost) the entire disk, then setup bootable Windows on it.
+\'s partition table(if there's any), create a new PC/Legacy/MBR partition table, create a FAT32/NTFS partition spanning (almost) the entire disk, then setup bootable Windows on it.
 
 WARNING: ALL PREVIOUS DATA ON \fItarget_device\fR WILL BE DROPPED!
 
@@ -84,8 +80,13 @@ Note that the label is not verified for validity and may be illegal for the file
 .B --workaround-bios-boot-flag
 Apply workaround for buggy BIOSes that doesn't consider a device bootable if none of its partition's boot flag is toggled.
 .TP
-\fB--debugging-internal-function-call\fR\fIfunction_name (function_parameters...)\fR
+\fB--debugging-internal-function-call\fR \fIfunction_name (function_parameters...)\fR
 Development option for developers to test certain function without running the entire build
+.TP
+\fB--target-filesystem\fR / \fB--tgt-fs\fR \fIfilesystem_name\fR
+Specify the filesystem to use as the target partition's filesystem.
+Currently supported: FAT(default)/NTFS
+
 .SH EXAMPLES
 We love examples!
 
