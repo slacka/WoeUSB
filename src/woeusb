@@ -419,7 +419,7 @@ process_commandline_parameters(){
 		set -o xtrace
 	fi
 	return 0
-}; declare -fr process_commandline_parameters;
+}; declare -fr process_commandline_parameters
 
 check_runtime_dependencies(){
 	util_check_function_parameters_quantity 3 $#
