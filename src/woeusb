@@ -1086,7 +1086,7 @@ check_uefi_ntfs_support_partition(){
 		| grep\
 			--silent\
 			"UEFI_NTFS"; then
-		printf_with_color yello\
+		printf_with_color yellow\
 			'%s: %s\n'\
 			"${FUNCNAME[0]}"\
 			"Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!"
