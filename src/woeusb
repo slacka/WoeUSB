@@ -586,6 +586,14 @@ process_commandline_parameters(){
 		return 1
 	fi
 
+	## --target-filesystem option is no use with --partition creation method
+	if \
+		[ "${enable_target_filesystem}" == Y ] \
+		&& [ "${enable_partition}" == Y ]; then
+		echo_with_color red "${FUNCNAME[0]}: Error: --target-filesystem option only can be used with --device creation method"
+		return 1
+	fi
+
 	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
 
