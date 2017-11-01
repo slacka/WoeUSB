@@ -34,7 +34,7 @@ if [ -n "$libPath" ]; then
 
 	cp "$libPath/libgcc_s_dw2-1.dll" "$prefix"
 else
-	echo "Error: libPath not found !" >&2
+	echo "Error: libPath not found!" >&2
 	exit 1
 fi
 

@@ -35,19 +35,19 @@
 #define MY_CATCH_LUA_CERR()                                                                   \
 catch(luabind::error &e)                                                                      \
 {                                                                                             \
-    cerr << "Failed to run lua function !" << endl;                                           \
+    cerr << "Failed to run lua function!" << endl;                                           \
     cerr << "LUA error (error) :\n" << lua_tostring(Global::GetLuaState(), -1) << endl;       \
     cerr << "What: " << e.what() << endl;                                                     \
 }                                                                                             \
 catch(luabind::cast_failed &e)                                                                \
 {                                                                                             \
-    cerr << "Failed to run lua function !" << endl;                                           \
+    cerr << "Failed to run lua function!" << endl;                                           \
     cerr << "LUA error (cast_failed) :\n" << lua_tostring(Global::GetLuaState(), -1) << endl; \
     cerr << "What: " << e.what() << endl;                                                     \
 }                                                                                             \
 catch(std::exception &e)                                                                      \
 {                                                                                             \
-    cerr << "Failed to run lua function (std::exception) !" << endl;                          \
+    cerr << "Failed to run lua function (std::exception)!" << endl;                          \
     cerr << "What: " << e.what() << endl;                                                     \
 }
 //------------------------------------------------------------------------------

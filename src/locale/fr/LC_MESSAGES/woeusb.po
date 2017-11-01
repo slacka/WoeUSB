@@ -42,8 +42,8 @@ msgid "Error..."
 msgstr "Erreur..."
 
 #: ../../../App.cpp:117
-msgid "Unknown error as occurred !"
-msgstr "Une erreur inconnue s'est produite !"
+msgid "Unknown error as occurred!"
+msgstr "Une erreur inconnue s'est produite!"
 
 #: ../../../App.cpp:124
 msgid "Fatal error : "
@@ -111,8 +111,8 @@ msgstr "Veuillez patienter..."
 
 #: ../../../MainPanel.cpp:270
 #: ../../../MainPanel.cpp:289
-msgid "Are you sure you want to cancel the insatallation ?"
-msgstr "Êtes-vous sûr de vouloir annuler l'installation ?"
+msgid "Are you sure you want to cancel the installation?"
+msgstr "Êtes-vous sûr de vouloir annuler l'installation?"
 
 #: ../../../MainPanel.cpp:270
 #: ../../../MainPanel.cpp:289
@@ -120,8 +120,8 @@ msgid "Cancel"
 msgstr "Annuler"
 
 #: ../../../MainPanel.cpp:312
-msgid "Installation succeeded !"
-msgstr "Installation réussie !"
+msgid "Installation succeeded!"
+msgstr "Installation réussie!"
 
 #: ../../../MainPanel.cpp:312
 #: ../../../MainPanel.cpp:316
@@ -129,8 +129,8 @@ msgid "Installation"
 msgstr "Installation"
 
 #: ../../../MainPanel.cpp:316
-msgid "Installation failed !"
-msgstr "Erreur lors de l'installation !"
+msgid "Installation failed!"
+msgstr "Erreur lors de l'installation!"
 
 #: ../../../findFile.cpp:54
 msgid "File not Found : "

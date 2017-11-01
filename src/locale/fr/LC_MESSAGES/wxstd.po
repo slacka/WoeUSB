@@ -2336,7 +2336,7 @@ msgstr "Effacer la sélection"
 #: ../src/richtext/richtextstyledlg.cpp:734
 #, c-format
 msgid "Delete style %s?"
-msgstr "Supprimer le style %s ?"
+msgstr "Supprimer le style %s?"
 
 #: ../src/unix/snglinst.cpp:296
 #, c-format
@@ -3344,7 +3344,7 @@ msgstr "Fichiers HTML (*.html;*.htm)|*.html;*.htm|"
 #: ../src/html/htmprint.cpp:379
 #, fuzzy
 msgid "HTML pagination algorithm generated more than the allowed maximum number of pages and it can't continue any longer!"
-msgstr "L'algorithme de mise en page a généré plus de pages que le nombre maximum admissible et il ne peut poursuivre !"
+msgstr "L'algorithme de mise en page a généré plus de pages que le nombre maximum admissible et il ne peut poursuivre!"
 
 #: ../src/common/fmapbase.cpp:113
 msgid "Hebrew (ISO-8859-8)"
@@ -5596,7 +5596,7 @@ msgstr "À :"
 
 #: ../src/richtext/richtextbuffer.cpp:5608
 msgid "Too many EndStyle calls!"
-msgstr "Trop d'appels à EndStyle !"
+msgstr "Trop d'appels à EndStyle!"
 
 #: ../src/common/imagpng.cpp:294
 msgid "Too many colours in PNG, the image may be slightly blurred."
@@ -6058,18 +6058,18 @@ msgstr "XPM : définition de couleur incorrecte à la ligne %d"
 
 #: ../src/common/xpmdecod.cpp:682
 msgid "XPM: incorrect header format!"
-msgstr "XPM: format de l'entête incorrecte !"
+msgstr "XPM: format de l'entête incorrecte!"
 
 #: ../src/common/xpmdecod.cpp:720
 #: ../src/common/xpmdecod.cpp:729
 #, c-format
 msgid "XPM: malformed colour definition '%s' at line %d!"
-msgstr "XPM : définition de couleur « %s » malformée à la ligne %d !"
+msgstr "XPM : définition de couleur « %s » malformée à la ligne %d!"
 
 #: ../src/common/xpmdecod.cpp:781
 #, c-format
 msgid "XPM: truncated image data at line %d!"
-msgstr "XPM: les données de l'image sont tronquées à la ligne %d !"
+msgstr "XPM: les données de l'image sont tronquées à la ligne %d!"
 
 #: ../src/xrc/xmlres.cpp:606
 #, c-format
@@ -6915,9 +6915,9 @@ msgstr "~"
 #~ msgid "Preparing help window..."
 #~ msgstr "Préparation de la fenêtre d'aide..."
 #~ msgid "Search!"
-#~ msgstr "Chercher !"
+#~ msgstr "Chercher!"
 #~ msgid "wxSearchEngine::LookFor must be called before scanning!"
-#~ msgstr "wxSearchEngine::LookFor doit être appelé avant de scanner !"
+#~ msgstr "wxSearchEngine::LookFor doit être appelé avant de scanner!"
 #~ msgid "."
 #~ msgstr "."
 #~ msgid ".."

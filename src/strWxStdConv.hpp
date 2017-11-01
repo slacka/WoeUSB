@@ -32,7 +32,7 @@
 //------------------------------------------------------------------------------
 
 #if not defined PACKAGE
-    #error "This program should be built with its package !"// #define PACKAGE devismaker
+    #error "This program should be built with its package!"// #define PACKAGE devismaker
 #endif
 
 #include <sstream>

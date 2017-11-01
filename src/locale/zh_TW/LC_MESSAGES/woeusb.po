@@ -41,7 +41,7 @@ msgid "Error..."
 msgstr "錯誤……"
 
 #: ../../../App.cpp:117
-msgid "Unknown error as occurred !"
+msgid "Unknown error as occurred!"
 msgstr "發生了未知的錯誤！"
 
 #: ../../../App.cpp:124
@@ -109,7 +109,7 @@ msgid "Please wait..."
 msgstr "請稍候……"
 
 #: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
-msgid "Are you sure you want to cancel the insatallation ?"
+msgid "Are you sure you want to cancel the installation?"
 msgstr "請問您確定要取消安裝程序嗎？"
 
 #: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
@@ -117,7 +117,7 @@ msgid "Cancel"
 msgstr "取消"
 
 #: ../../../MainPanel.cpp:312
-msgid "Installation succeeded !"
+msgid "Installation succeeded!"
 msgstr "安裝成功！"
 
 #: ../../../MainPanel.cpp:312 ../../../MainPanel.cpp:316
@@ -125,7 +125,7 @@ msgid "Installation"
 msgstr "安裝程序"
 
 #: ../../../MainPanel.cpp:316
-msgid "Installation failed !"
+msgid "Installation failed!"
 msgstr "安裝失敗！"
 
 #: ../../../findFile.cpp:54

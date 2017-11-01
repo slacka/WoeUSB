@@ -61,7 +61,7 @@ bool App::OnInit()
     #if USE_LIBNOTIFY == 1
     if(!notify_init(StrWxToStd(PROG_FULL_NAME_GETTEXT).c_str()))
     {
-        std::cerr << "Lib notify not initialised !" << std::endl;
+        std::cerr << "Lib notify not initialised!" << std::endl;
         return false;
     }
     #endif
@@ -104,7 +104,7 @@ int App::OnRun()
     }
     catch(int errCode)
     {
-        msg << _T("Error \"") << errCode << _T("\" has occurred !");
+        msg << _T("Error \"") << errCode << _T("\" has occurred!");
         isException = true;
     }
     catch(wxString info)
@@ -114,7 +114,7 @@ int App::OnRun()
     }
     catch(...)
     {
-        msg = _("Unknown error as occurred !");
+        msg = _("Unknown error as occurred!");
         isException = true;
     }
 

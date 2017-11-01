@@ -28,7 +28,7 @@ PipeManager::PipeManager(const std::string &command)
 
     if(m_pipe == NULL)
     {
-        MY_THROW("Can't open pipe for command '" << command << "' !");
+        MY_THROW("Can't open pipe for command '" << command << "'!");
     }
 }
 //------------------------------------------------------------------------------
@@ -50,7 +50,7 @@ int PipeManager::Close()
     }
     else
     {
-        MY_THROW("Pipe not open !");
+        MY_THROW("Pipe not open!");
     }
 }
 //------------------------------------------------------------------------------

@@ -267,7 +267,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
                     // User clicks the close window button
                     if(!dialog->Update(progress))
                     {
-                        if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
+                        if(wxMessageBox(_("Are you sure you want to cancel the installation?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
                         {
                             dialog->Resume();
                         }
@@ -287,7 +287,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
                     // User clicks the close window button
                     if(!dialog->Pulse(StrStdToWx(tmp)))
                     {
-                        if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
+                        if(wxMessageBox(_("Are you sure you want to cancel the installation?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
                         {
                             dialog->Resume();
                         }
@@ -310,11 +310,11 @@ void MainPanel::OnInstall(wxCommandEvent& event)
         int exitCode = pipe.Close();
         if(exitCode == 0)
         {
-            wxMessageBox(_("Installation succeeded !"), _("Installation"), wxOK | wxICON_INFORMATION, this);
+            wxMessageBox(_("Installation succeeded!"), _("Installation"), wxOK | wxICON_INFORMATION, this);
         }
         else
         {
-            wxMessageBox(wxString(_("Installation failed !")) + _T("\nExit code: ") + wxNbToStr(exitCode) + _T("\nLog:\n") + log, _("Installation"), wxOK | wxICON_ERROR, this);
+            wxMessageBox(wxString(_("Installation failed!")) + _T("\nExit code: ") + wxNbToStr(exitCode) + _T("\nLog:\n") + log, _("Installation"), wxOK | wxICON_ERROR, this);
         }
     }
 }
