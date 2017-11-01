@@ -1022,8 +1022,6 @@ install_uefi_ntfs_support_partition(){
 		if="${download_directory}/uefi-ntfs.img"\
 		of="${uefi_ntfs_partition}"
 
-	workaround_make_system_realize_partition_table_changed\
-		"${target_device}"
 }; declare -fr install_uefi_ntfs_support_partition
 
 ## Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
