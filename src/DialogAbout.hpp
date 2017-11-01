@@ -65,7 +65,7 @@ public:
 class DialogAbout : public wxDialog
 {
 public:
-	DialogAbout( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 475,340 ), long style = wxDEFAULT_DIALOG_STYLE );
+	DialogAbout( wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& title = _("About"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize( 570,590 ), long style = wxDEFAULT_DIALOG_STYLE );
 
 protected:
     wxStaticBitmap* m_bitmapIcone;
