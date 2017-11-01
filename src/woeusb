@@ -432,8 +432,8 @@ process_commandline_parameters(){
 
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
-			"--help"\
-			|"-h")
+			--help\
+			|-h)
 				flag_print_help_ref=Y
 				return 0
 				;;
@@ -447,7 +447,7 @@ process_commandline_parameters(){
 				flag_print_about_ref=Y
 				return 0
 				;;
-			"--debug")
+			--debug)
 				enable_debug="Y"
 				;;
 			--partition\
@@ -483,17 +483,17 @@ process_commandline_parameters(){
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
 				;;
-			'--verbose'|'-v')
+			--verbose|-v)
 				verbose='1'
 				;;
-			'--for-gui')
+			--for-gui)
 				no_color='1'
 				only_for_gui='1'
 				;;
-			'--no-color')
+			--no-color)
 				no_color='1'
 				;;
-			'--label'|'-l')
+			--label|-l)
 				enable_label=Y
 				shift_array parameters
 				if [ ${#parameters[@]} -lt 1 ]; then
@@ -506,11 +506,11 @@ process_commandline_parameters(){
 				fi
 				new_file_system_label_ref="${parameters[0]}"
 				;;
-			'--workaround-bios-boot-flag')
+			--workaround-bios-boot-flag)
 				enable_workaround_bios_boot_flag=Y
 				workaround_bios_boot_flag_ref="Y"
 				;;
-			'--debugging-internal-function-call')
+			--debugging-internal-function-call)
 				enable_debugging_internal_function_call=Y
 				shift_array parameters
 
