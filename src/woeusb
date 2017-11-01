@@ -1618,6 +1618,7 @@ trigger_wxGenericProgressDialog_pulse(){
 				echo 'pulse'
 			done &
 			pulse_current_pid="$!"
+			disown
 			;;
 		off)
 			# Don't do anything if it is already turned off
