@@ -205,8 +205,8 @@ init(){
 		exit 1
 	fi
 
-	# FIXME: Why `pulse on` here?
-	pulse on
+	# FIXME: Why `trigger_wxGenericProgressDialog_pulse on` here?
+	trigger_wxGenericProgressDialog_pulse on
 
 	determine_target_parameters\
 		"${install_mode}"\
@@ -301,7 +301,7 @@ init(){
 
 	current_state="finished"
 
-	pulse off
+	trigger_wxGenericProgressDialog_pulse off
 
 	exit 0
 }; declare -fr init
@@ -1245,8 +1245,8 @@ copy_filesystem_files(){
 		| awk '{print $1}'
 	)
 
-	# FIXME: Why do we `pulse off` and on here?
-	pulse off
+	# FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
+	trigger_wxGenericProgressDialog_pulse off
 
 	echo_with_color green "Copying files from source media..."
 
@@ -1296,7 +1296,7 @@ copy_filesystem_files(){
 
 	popd >/dev/null
 
-	pulse on
+	trigger_wxGenericProgressDialog_pulse on
 
 	return 0
 }; declare -fr copy_filesystem_files
@@ -1551,8 +1551,8 @@ cleanup_mountpoints(){
 
 	local clean_result="unknown"
 
-	# FIXME: Why `pulse off` here?
-	pulse off
+	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
+	trigger_wxGenericProgressDialog_pulse off
 
 	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
 	popd &>/dev/null\
@@ -1593,25 +1593,48 @@ cleanup_mountpoints(){
 	fi
 }; declare -fr cleanup_mountpoints
 
-## FIXME: What is this function's purpose?
-pulse(){
+## This function continuously moves the GUI creation dialog's progressing bar bit by bit, by running `echo pulse` every 0.05 seconds until the next call chooses to turn off
+## Refer src/MainPanel.cpp MainPanel::OnInstall(wxCommandEvent& event) method for more info
+## http://docs.wxwidgets.org/trunk/classwx_generic_progress_dialog.html#ab5ecf227eebaa1aadb5f5c553e4a4ee5
+## switch: To enable or not enable this function(on/off)
+trigger_wxGenericProgressDialog_pulse(){
 	util_check_function_parameters_quantity 1 $#
-	if [ "$only_for_gui" -eq 1 ]; then
-		if [ ! "$pulse_current_pid" -eq 0 ]; then
-			kill "$pulse_current_pid" >/dev/null
-			#wait "$pulse_current_pid"
-			pulse_current_pid=0
-		fi
 
-		if [ "$1" = 'on' ]; then
-			cd /; while true; do sleep 0.05; echo 'pulse'; done &
-			pulse_current_pid="$!"
-		elif [ "$1" != 'off' ]; then
-			echo "${FUNCNAME[0]}: FATAL: Illegal function parameter" >&2
-			exit 1
-		fi
+	local switch="$1"
+
+	if [ "$only_for_gui" -ne 1 ]; then
+		return 0
 	fi
-}; declare -fr pulse
+
+	case "$1" in
+		on)
+			# Don't do anything if it is already turned on
+			if [ "${pulse_current_pid}" -ne 0 ]; then
+				return 0
+			fi
+
+			while true; do
+				sleep 0.05
+				echo 'pulse'
+			done &
+			pulse_current_pid="$!"
+			;;
+		off)
+			# Don't do anything if it is already turned off
+			if [ "${pulse_current_pid}" -eq 0 ]; then
+				return 0
+			fi
+
+			kill "${pulse_current_pid}"
+			wait "${pulse_current_pid}" 2>/dev/null || true
+			pulse_current_pid=0
+			;;
+		*)
+			echo "${FUNCNAME[0]}: FATAL: Illegal parameter \"$1\"" >&2
+			exit 1
+	esac
+	return 0
+}; declare -fr trigger_wxGenericProgressDialog_pulse
 
 ## Traps: Functions that are triggered when certain condition occurred
 ## Shell Builtin Commands » Bourne Shell Builtins » trap
