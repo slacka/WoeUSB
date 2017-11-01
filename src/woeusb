@@ -452,15 +452,9 @@ process_commandline_parameters(){
 			"--debug")
 				enable_debug="Y"
 				;;
-			'--install'\
-			|--partition\
+			--partition\
 			|-p)
 				enable_partition=Y
-				if [ "${parameters[0]}" = --install ]; then
-					echo_with_color\
-						yellow\
-						"WARNING: The deprecated --install option is still available but will be dropped in ${application_name} v3.0!"
-				fi
 				install_mode_ref='partition'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
@@ -473,15 +467,9 @@ process_commandline_parameters(){
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
 				;;
-			'--format'\
-			|--device\
+			--device\
 			|-d)
 				enable_device=Y
-				if [ "${parameters[0]}" = --format ]; then
-					echo_with_color\
-						yellow\
-						"WARNING: The deprecated --format option is still available but will be dropped in ${application_name} v3.0!"
-				fi
 				# Limitation of ShellCheck to detect usage of indirection variables
 				# https://github.com/koalaman/shellcheck/wiki/SC2034
 				# shellcheck disable=SC2034
