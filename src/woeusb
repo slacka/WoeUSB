@@ -185,6 +185,11 @@ init(){
 		"${application_copyright_notice}"\
 		"${runtime_executable_name}"
 
+	printf --\
+		'%s\n%s\n'\
+		"${application_name} v${application_version}"\
+		'=============================='
+
 	check_permission\
 		"${application_name}"
 
