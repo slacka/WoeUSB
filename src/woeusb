@@ -244,12 +244,10 @@ init(){
 	fi
 
 	if [ "${install_mode}" = 'partition' ]; then
-		check_target_filesystem "${target_partition}"
-
-		if [ "${target_filesystem_type}" == "NTFS" ]; then
-			check_uefi_ntfs_support_partition\
-				"${target_device}"
-		fi
+		check_target_partition\
+			"${target_partition}"\
+			"${install_mode}"\
+			"${target_device}"
 	fi
 
 	current_state="start-mounting"
@@ -1043,9 +1041,15 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 	return $?
 }; declare -fr workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled
 
-check_target_filesystem(){
-	util_check_function_parameters_quantity 1 $#
-	local target_partition="${1}"
+## Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
+## target_partition: The target partition to check
+## install_mode: The usb storage creation method to be used
+## target_device: The parent device of the target partition, this is passed in to check UEFI:NTFS filesystem's existence on check_uefi_ntfs_support_partition
+check_target_partition(){
+	util_check_function_parameters_quantity 3 $#
+	local target_partition="${1}"; shift
+	local install_mode="${1}"; shift
+	local target_device="${1}"
 
 	local target_filesystem
 	target_filesystem="$(
@@ -1056,8 +1060,12 @@ check_target_filesystem(){
 	)"
 
 	case "${target_filesystem}" in
-		vfat|ntfs)
+		vfat)
 			: # supported
+			;;
+		ntfs)
+			check_uefi_ntfs_support_partition\
+				"${target_device}"
 			;;
 		*)
 			printf_with_color red\
@@ -1067,7 +1075,7 @@ check_target_filesystem(){
 			;;
 	esac
 	return 0
-}; declare -fr check_target_filesystem
+}; declare -fr check_target_partition
 
 ## Check if the UEFI:NTFS support partition exists
 ## Currently it depends on the fact that this partition has a label of "UEFI_NTFS"
