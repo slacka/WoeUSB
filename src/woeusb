@@ -424,7 +424,8 @@ process_commandline_parameters(){
 		enable_partition=N\
 		enable_label=N\
 		enable_workaround_bios_boot_flag=N\
-		enable_debugging_internal_function_call=N
+		enable_debugging_internal_function_call=N\
+		enable_target_filesystem=N
 
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
@@ -504,7 +505,7 @@ process_commandline_parameters(){
 			'--label'|'-l')
 				enable_label=Y
 				shift_array parameters
-				if [ ${#parameters[@]} -eq 0 ]; then
+				if [ ${#parameters[@]} -lt 1 ]; then
 					printf_with_color\
 						red\
 						'%s: %s\n'\
@@ -522,7 +523,7 @@ process_commandline_parameters(){
 				enable_debugging_internal_function_call=Y
 				shift_array parameters
 
-				if [ ${#parameters[@]} -eq 0 ]; then
+				if [ ${#parameters[@]} -lt 1 ]; then
 					printf_with_color\
 						red\
 						'%s: %s\n'\
@@ -535,9 +536,10 @@ process_commandline_parameters(){
 				;;
 			--target-filesystem\
 			|--tgt-fs)
-				shift_array parmameters
+				enable_target_filesystem=Y
 
-				if [ ${#parameters[@]} -eq 0 ]; then
+				shift_array parameters
+				if [ ${#parameters[@]} -lt 1 ]; then
 					printf_with_color\
 						red\
 						'%s: %s\n'\
