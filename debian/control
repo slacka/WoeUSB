@@ -11,7 +11,7 @@ Standards-Version: 3.8.1
 
 Package: woeusb
 Architecture: any
-Depends: bash (>4.4),
+Depends: bash (>4.3),
          grub-common,
          grub-pc-bin,
          ntfsprogs | ntfs-3g (>= 1:2011),
