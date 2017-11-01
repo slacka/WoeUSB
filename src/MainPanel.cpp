@@ -250,6 +250,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
             std::string tmp = pipe.GetLine();
             if(!tmp.empty())
             {
+                // The message is progress percentages
                 if(*(tmp.end() - 1) == '%')
                 {
                     long progress;
@@ -263,6 +264,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
                         progress = 99;
                     }
 
+                    // User clicks the close window button
                     if(!dialog->Update(progress))
                     {
                         if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
@@ -282,6 +284,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
                         tmp = "";
                     }
 
+                    // User clicks the close window button
                     if(!dialog->Pulse(StrStdToWx(tmp)))
                     {
                         if(wxMessageBox(_("Are you sure you want to cancel the installation ?"), _("Cancel"), wxYES_NO | wxICON_QUESTION, this) == wxNO)
