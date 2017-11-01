@@ -870,14 +870,15 @@ workaround_make_system_realize_partition_table_changed(){
 	util_check_function_parameters_quantity 1 $#
 	local -r target_device="$1"
 
-	# Reload the new partition table
-	# FIXME: Is `blockdev` and `partprobe` both required?
+	printf_with_color\
+		green\
+		'%s\n'\
+		"Making system realize that partition table has changed..."
+
 	blockdev\
 		--rereadpt\
 		"${target_device}"\
 		|| true
-	partprobe\
-		"${target_device}"
 	echo "Wait 3 seconds for block device nodes to populate..."
 	sleep 3
 
