@@ -52,10 +52,9 @@ DialogAbout::DialogAbout( wxWindow* parent, wxWindowID id, const wxString& title
 
 	m_NotebookAutorLicence = new wxNotebook( this, wxID_ANY);
 
-	// FIXME: Unable to make this page default
 	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("slacka et al."), _T("data/woeusb-logo.png"), _T("github.com/slacka/WoeUSB")), _("Authors"), true);
 	
-	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("Colin GILLE / Congelli501"), _T("data/c501-logo.png"), _T("www.congelli.eu")), _("Original WinUSB Developer"), true);
+	m_NotebookAutorLicence->AddPage(new PanelNoteBookAutors(m_NotebookAutorLicence, wxID_ANY, _T("Colin GILLE / Congelli501"), _T("data/c501-logo.png"), _T("www.congelli.eu")), _("Original WinUSB Developer"), false);
 
 	wxString licenceStr = wxString::Format(_(
     "%s is free software: you can redistribute it and/or modify"
