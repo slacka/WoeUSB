@@ -65,10 +65,16 @@ declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 ## Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
 ## Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 ## TODO: Global parameter cleanup
-declare -i\
-	verbose='0'\
-	only_for_gui='0'\
-	no_color='0'
+## TODO: Use Y/N or true/false instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
+### Doing GUI-specific stuff when set to 1, set by --only-for-gui
+### Requires to be set to global due to indirectly referenced by trap
+declare -i global_only_for_gui=0
+
+### Increase verboseness, provide more information when required
+declare -i verbose=0
+
+### Disable message coloring when set to 1, set by --no-color
+declare -i no_color=0
 
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
@@ -102,8 +108,9 @@ declare temp_directory; temp_directory=$(
 
 ## Entry point of the main code
 init(){
-	util_check_function_parameters_quantity 1 $#
+	util_check_function_parameters_quantity 2 $#
 	local -r runtime_executable_name="$1"; shift
+	local -n only_for_gui="$1"
 
 	declare -r application_name="WoeUSB"
 	declare -r application_version="@@WOEUSB_VERSION@@"
@@ -168,7 +175,8 @@ init(){
 			target_media\
 			new_file_system_label\
 			workaround_bios_boot_flag\
-			target_filesystem_type; then
+			target_filesystem_type\
+			only_for_gui; then
 		print_help\
 			"${application_name}"\
 			"${application_version}"\
@@ -209,7 +217,9 @@ init(){
 	fi
 
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse on` here?
-	trigger_wxGenericProgressDialog_pulse on
+	trigger_wxGenericProgressDialog_pulse\
+		on\
+		"${only_for_gui}"
 
 	determine_target_parameters\
 		"${install_mode}"\
@@ -282,7 +292,8 @@ init(){
 
 	copy_filesystem_files\
 		"${source_fs_mountpoint}"\
-		"${target_fs_mountpoint}"
+		"${target_fs_mountpoint}"\
+		"${only_for_gui}"
 
 	workaround_support_windows_7_uefi_boot\
 		"${source_fs_mountpoint}"\
@@ -304,7 +315,9 @@ init(){
 
 	current_state="finished"
 
-	trigger_wxGenericProgressDialog_pulse off
+	trigger_wxGenericProgressDialog_pulse\
+		off\
+		"${only_for_gui}"
 
 	exit 0
 }; declare -fr init
@@ -406,7 +419,7 @@ print_application_info(){
 }; declare -fr print_application_info
 
 process_commandline_parameters(){
-	util_check_function_parameters_quantity 10 "${#}"
+	util_check_function_parameters_quantity 11 "${#}"
 	local -r application_name="${1}"; shift
 	local -n flag_print_help_ref="${1}"; shift
 	local -n flag_print_version_ref="${1}"; shift
@@ -416,7 +429,8 @@ process_commandline_parameters(){
 	local -n target_media_ref="${1}"; shift
 	local -n new_file_system_label_ref="${1}"; shift
 	local -n workaround_bios_boot_flag_ref="${1}"; shift
-	local -n target_filesystem_type_ref="${1}"
+	local -n target_filesystem_type_ref="${1}"; shift
+	local -n only_for_gui="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		flag_print_help_ref=Y
@@ -1235,9 +1249,10 @@ check_target_filesystem_free_space(){
 
 ## Copying all files from one filesystem to another, with progress reporting
 copy_filesystem_files(){
-	util_check_function_parameters_quantity 2 "${#}"
+	util_check_function_parameters_quantity 3 "${#}"
 	local source_fs_mountpoint="${1}"; shift
-	local target_fs_mountpoint="${1}"
+	local target_fs_mountpoint="${1}"; shift
+	local -ir only_for_gui="${1}"
 
 	local -i total_size
 	total_size=$(
@@ -1249,7 +1264,9 @@ copy_filesystem_files(){
 	)
 
 	# FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
-	trigger_wxGenericProgressDialog_pulse off
+	trigger_wxGenericProgressDialog_pulse\
+		off\
+		"${only_for_gui}"
 
 	echo_with_color green "Copying files from source media..."
 
@@ -1299,7 +1316,9 @@ copy_filesystem_files(){
 
 	popd >/dev/null
 
-	trigger_wxGenericProgressDialog_pulse on
+	trigger_wxGenericProgressDialog_pulse\
+		on\
+		"${only_for_gui}"
 
 	return 0
 }; declare -fr copy_filesystem_files
@@ -1548,14 +1567,17 @@ install_legacy_pc_bootloader_grub_config(){
 ##     unclean(2): Not fully clean, target device can be safely detach from host
 ##     unsafe(3): Target device cannot be safely detach from host
 cleanup_mountpoints(){
-	util_check_function_parameters_quantity 2 "${#}"
+	util_check_function_parameters_quantity 3 "${#}"
 	local -r source_fs_mountpoint="${1}"; shift
-	local -r target_fs_mountpoint="${1}"
+	local -r target_fs_mountpoint="${1}"; shift
+	local -ir only_for_gui="${1}"
 
 	local clean_result="unknown"
 
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
-	trigger_wxGenericProgressDialog_pulse off
+	trigger_wxGenericProgressDialog_pulse\
+		off\
+		"${only_for_gui}"
 
 	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
 	popd &>/dev/null\
@@ -1601,11 +1623,12 @@ cleanup_mountpoints(){
 ## http://docs.wxwidgets.org/trunk/classwx_generic_progress_dialog.html#ab5ecf227eebaa1aadb5f5c553e4a4ee5
 ## switch: To enable or not enable this function(on/off)
 trigger_wxGenericProgressDialog_pulse(){
-	util_check_function_parameters_quantity 1 $#
+	util_check_function_parameters_quantity 2 $#
 
-	local switch="$1"
+	local switch="$1"; shift
+	local -ir only_for_gui="$1"
 
-	if [ "$only_for_gui" -ne 1 ]; then
+	if [ "${only_for_gui}" -eq 0 ]; then
 		return 0
 	fi
 
@@ -1663,7 +1686,8 @@ trap_exit(){
 			target_fs_mountpoint; then
 		if cleanup_mountpoints\
 			"${source_fs_mountpoint}"\
-			"${target_fs_mountpoint}"; then
+			"${target_fs_mountpoint}"\
+			"${global_only_for_gui}"; then
 			:
 		elif [ "${?}" == "2" ]; then
 			echo_with_color yellow "Some mountpoints are not unmount/cleaned successfully and must be done manually"
@@ -1950,4 +1974,5 @@ trap trap_errexit ERR
 trap trap_interrupt INT
 
 init\
-	"${RUNTIME_EXECUTABLE_NAME}"
+	"${RUNTIME_EXECUTABLE_NAME}"\
+	global_only_for_gui
