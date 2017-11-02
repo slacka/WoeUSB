@@ -573,7 +573,8 @@ process_commandline_parameters(){
 		# intentionally don't mention about the internal function call option
 		echo_with_color\
 			red\
-			"${FUNCNAME[0]}: Error: No install method specified!" >&2
+			"${FUNCNAME[0]}: Error: No creation method specified!" >&2
+		return 1
 	elif\
 		[ "${enable_device}" == Y ] \
 		&& [ "${enable_partition}" == Y ]; then
