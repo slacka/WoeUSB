@@ -1632,7 +1632,7 @@ trigger_wxGenericProgressDialog_pulse(){
 		return 0
 	fi
 
-	case "$1" in
+	case "${switch}" in
 		on)
 			# Don't do anything if it is already turned on
 			if [ "${pulse_current_pid}" -ne 0 ]; then
