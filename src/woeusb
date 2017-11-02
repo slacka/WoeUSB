@@ -61,6 +61,9 @@ if [ -v "BASH_SOURCE[0]" ]; then
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 
+## Global Parameters
+## Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
+## Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 ## TODO: Global parameter cleanup
 declare -i\
 	verbose='0'\
