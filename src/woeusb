@@ -110,7 +110,7 @@ declare temp_directory; temp_directory=$(
 init(){
 	util_check_function_parameters_quantity 2 $#
 	local -r runtime_executable_name="$1"; shift
-	local -n only_for_gui="$1"
+	local -n only_for_gui_ref="$1"
 
 	declare -r application_name="WoeUSB"
 	declare -r application_version="@@WOEUSB_VERSION@@"
@@ -176,7 +176,7 @@ init(){
 			new_file_system_label\
 			workaround_bios_boot_flag\
 			target_filesystem_type\
-			only_for_gui; then
+			only_for_gui_ref; then
 		print_help\
 			"${application_name}"\
 			"${application_version}"\
@@ -219,7 +219,7 @@ init(){
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse on` here?
 	trigger_wxGenericProgressDialog_pulse\
 		on\
-		"${only_for_gui}"
+		"${only_for_gui_ref}"
 
 	determine_target_parameters\
 		"${install_mode}"\
@@ -293,7 +293,7 @@ init(){
 	copy_filesystem_files\
 		"${source_fs_mountpoint}"\
 		"${target_fs_mountpoint}"\
-		"${only_for_gui}"
+		"${only_for_gui_ref}"
 
 	workaround_support_windows_7_uefi_boot\
 		"${source_fs_mountpoint}"\
@@ -317,7 +317,7 @@ init(){
 
 	trigger_wxGenericProgressDialog_pulse\
 		off\
-		"${only_for_gui}"
+		"${only_for_gui_ref}"
 
 	exit 0
 }; declare -fr init
@@ -430,7 +430,7 @@ process_commandline_parameters(){
 	local -n new_file_system_label_ref="${1}"; shift
 	local -n workaround_bios_boot_flag_ref="${1}"; shift
 	local -n target_filesystem_type_ref="${1}"; shift
-	local -n only_for_gui="${1}"
+	local -n only_for_gui_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
 		flag_print_help_ref=Y
@@ -505,7 +505,7 @@ process_commandline_parameters(){
 				;;
 			--for-gui)
 				no_color='1'
-				only_for_gui='1'
+				only_for_gui_ref='1'
 				;;
 			--no-color)
 				no_color='1'
