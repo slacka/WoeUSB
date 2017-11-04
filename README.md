@@ -3,7 +3,7 @@
 [![WoeUSB License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WoeUSB/blob/master/COPYING)
 [![Build Status](https://travis-ci.org/slacka/WoeUSB.svg?branch=master)](https://travis-ci.org/slacka/WoeUSB)
 
-<img src="src/data/woeusb-logo.png" align="right" /><img src="src/data/woeusbgui-screenshot.png" align="right" />
+![brand](src/data/woeusb-logo.png)[![thumbnail of GUI implementation](dev/woeusbgui-screenshot.thumbnail.png)](dev/woeusbgui-screenshot.png)
 
 _A Linux program to create a Windows USB stick installer from a real Windows DVD or image._
 
