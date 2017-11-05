@@ -845,7 +845,41 @@ wipe_existing_partition_table_and_filesystem_signatures(){
 
 	echo_with_color green "Wiping all existing partition table and filesystem signatures in ${target_device}..."
 	wipefs --all "${target_device}"
+
+	check_if_the_drive_is_really_wiped\
+		"${target_device}"
+
+	return $?
 }; declare -fr wipe_existing_partition_table_and_filesystem_signatures
+
+## Some broken locked-down flash drive will appears to be successfully wiped but actually nothing is written into it and will shown previous partition scheme afterwards.  This is the detection of the case and will bail out if such things happened
+## target_device: The target device file to be checked
+check_if_the_drive_is_really_wiped(){
+	util_check_function_parameters_quantity 1 $#
+	local -r target_device="$1"
+
+	printf_with_color\
+		green\
+		'Ensure that %s is really wiped...\n'\
+		"${target_device}"
+
+	if [ \
+		"$(lsblk\
+		--pairs\
+		--output NAME,TYPE\
+		"${target_device}"\
+		| grep\
+			--count\
+			' TYPE="part"')" -ne 0 ]; then
+		printf_with_color\
+			red\
+			'Error: %s: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.\n'\
+			"${FUNCNAME[0]}"
+		return 1
+	else
+		return 0
+	fi
+}; declare check_if_the_drive_is_really_wiped
 
 create_target_partition_table(){
 	util_check_function_parameters_quantity 2 $#
