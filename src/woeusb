@@ -36,7 +36,7 @@ shopt -s expand_aliases
 
 for critical_command in realpath basename dirname mktemp; do
 	if ! command -v "${critical_command}" &> /dev/null; then
-		echo "Fatal: This program requires GNU Coreutils in the executable search path"
+		echo 'Fatal: This program requires GNU Coreutils in the executable search path'
 		exit 1
 	fi
 done
@@ -89,7 +89,7 @@ declare -i pulse_current_pid=0
 
 ## Execution state for cleanup functions to determine if clean up is required
 ## NOTE: Need to pass to traps, so need to be global
-declare current_state="pre-init"
+declare current_state='pre-init'
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias\
@@ -112,12 +112,12 @@ init(){
 	local -r runtime_executable_name="$1"; shift
 	local -n only_for_gui_ref="$1"
 
-	declare -r application_name="WoeUSB"
-	declare -r application_version="@@WOEUSB_VERSION@@"
+	declare -r application_name='WoeUSB'
+	declare -r application_version='@@WOEUSB_VERSION@@'
 
-	declare -r DEFAULT_NEW_FS_LABEL="Windows USB"
+	declare -r DEFAULT_NEW_FS_LABEL='Windows USB'
 
-	current_state="enter-init"
+	current_state='enter-init'
 
 	local\
 		flag_print_help=N\
@@ -125,7 +125,7 @@ init(){
 		flag_print_about=N\
 
 	local -r \
-		application_site_url="https://github.com/slacka/WoeUSB"\
+		application_site_url='https://github.com/slacka/WoeUSB'\
 		application_copyright_declaration="Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"\
 		application_copyright_notice="${application_name} is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
 	local install_mode
@@ -138,9 +138,9 @@ init(){
 
 	local target_partition
 
-	local workaround_bios_boot_flag="N"
+	local workaround_bios_boot_flag='N'
 
-	local target_filesystem_type="FAT"
+	local target_filesystem_type='FAT'
 
 	source_fs_mountpoint="/media/woeusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/woeusb_target_$(date +%s)_$$"
@@ -238,7 +238,7 @@ init(){
 			"${target_device}"
 		create_target_partition_table\
 			"${target_device}"\
-			"legacy"
+			'legacy'
 		create_target_partition\
 			"${target_partition}"\
 			"${target_filesystem_type}"\
@@ -246,7 +246,7 @@ init(){
 			"${command_mkdosfs}"\
 			"${command_mkntfs}"
 
-		if [ "${target_filesystem_type}" == "NTFS" ]; then
+		if [ "${target_filesystem_type}" == 'NTFS' ]; then
 			create_uefi_ntfs_support_partition\
 				"${target_device}"
 			install_uefi_ntfs_support_partition\
@@ -263,12 +263,12 @@ init(){
 			"${target_device}"
 	fi
 
-	current_state="start-mounting"
+	current_state='start-mounting'
 
 	if ! mount_source_filesystem\
 		"${source_media}"\
 		"${source_fs_mountpoint}"; then
-		echo_with_color red "Error: Unable to mount source filesystem"
+		echo_with_color red 'Error: Unable to mount source filesystem'
 		exit 1
 	fi
 
@@ -276,7 +276,7 @@ init(){
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
 		vfat; then
-		echo_with_color red "Error: Unable to mount target filesystem"
+		echo_with_color red 'Error: Unable to mount target filesystem'
 		exit 1
 	fi
 
@@ -285,7 +285,7 @@ init(){
 		"${source_fs_mountpoint}"\
 		|| exit 1
 
-	current_state="copying-filesystem"
+	current_state='copying-filesystem'
 
 	workaround_linux_make_writeback_buffering_not_suck\
 		apply
@@ -308,12 +308,12 @@ init(){
 		"${target_fs_mountpoint}"\
 		"${name_grub_prefix}"
 
-	if [ "${workaround_bios_boot_flag}" == "Y" ]; then
+	if [ "${workaround_bios_boot_flag}" == 'Y' ]; then
 		workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled\
 			"${target_device}"
 	fi
 
-	current_state="finished"
+	current_state='finished'
 
 	trigger_wxGenericProgressDialog_pulse\
 		off\
@@ -334,60 +334,60 @@ print_help(){
 	echo -e "======================================"
 	echo -e "${application_name} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
 	echo -e 
-	echo -e "Currently two creation methods are supported:"
+	echo -e 'Currently two creation methods are supported:'
 	echo -e
 	echo -e '	--device, -d'
 	echo -e
-	echo -e '		'"Completely WIPE the entire USB storage device, then build a bootable Windows USB device from scratch."
-	echo -e '		'"WARNING: All previous data on the device will be gone!"
+	echo -e '		''Completely WIPE the entire USB storage device, then build a bootable Windows USB device from scratch.'
+	echo -e '		''WARNING: All previous data on the device will be gone!'
 	echo -e
 	echo -e '		'"${runtime_executable_name} --device <source media path> <device>"
-	echo -e '		'"Examples:"
+	echo -e '		''Examples:'
 	echo -e '		'"- ${runtime_executable_name} --device Windows7_x64.iso /dev/sdX"
 	echo -e '		'"- ${runtime_executable_name} --device /dev/sr0 /dev/sdX"
 	echo -e
 	echo -e '	--partition, -p'
 	echo -e
-	echo -e '		'"Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists."
-	echo -e '		'"WARNING: All files that has the same name will be overwritten!"
+	echo -e '		''Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists.'
+	echo -e '		''WARNING: All files that has the same name will be overwritten!'
 	echo -e
 	echo -e '		'"${runtime_executable_name} --partition <source media path> <partition>"
-	echo -e '		'"Examples:"
+	echo -e '		''Examples:'
 	echo -e '		'"- ${runtime_executable_name} --partition Windows7_x64.iso /dev/sdX1"
 	echo -e '		'"- ${runtime_executable_name} --partition /dev/sr0 /dev/sdX1"
 	echo -e
-	echo -e '## '"Command-line Options"' ##'
+	echo -e '## ''Command-line Options'' ##'
 	echo -e '	--verbose, -v'
-	echo -e '		'"Verbose mode"
+	echo -e '		''Verbose mode'
 	echo -e
 	echo -e '	--help, -h'
-	echo -e '		'"Show this help message and exit"
+	echo -e '		''Show this help message and exit'
 	echo -e
 	echo -e '	--version, -V'
-	echo -e '		'"Print application version"
+	echo -e '		''Print application version'
 	echo -e
 	echo -e '	--about, -ab'
-	echo -e '		'"Show info about this application"
+	echo -e '		''Show info about this application'
 	echo -e
 	echo -e '	--no-color'
-	echo -e '		'"Disable message coloring"
+	echo -e '		''Disable message coloring'
 	echo -e
 	echo -e '	--debug'
-	echo -e '		'"Enable script debugging"
+	echo -e '		''Enable script debugging'
 	echo -e
 	echo -e '	--label, -l <filesystem_label>'
-	echo -e '		'"Specify label for the newly created file system in --device creation method"
-	echo -e '		'"Note that the label is not verified for validity and may be illegal for the filesystem"
+	echo -e '		''Specify label for the newly created file system in --device creation method'
+	echo -e '		''Note that the label is not verified for validity and may be illegal for the filesystem'
 	echo -e
 	echo -e '	--workaround-bios-boot-flag'
 	echo -e '		'"Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled"
 	echo -e 
 	echo -e '	--debugging-internal-function-call <function name> (function_argument)...'
-	echo -e '		'"Development option for developers to test certain function without running the entire build"
+	echo -e '		''Development option for developers to test certain function without running the entire build'
 	echo -e
 	echo -e '	--target-filesystem, --tgt-fs <filesystem name>'
 	echo -e '		'"Specify the filesystem to use as the target partition's filesystem."
-	echo -e '		'"Currently supported: FAT(default)/NTFS"
+	echo -e '		''Currently supported: FAT(default)/NTFS'
 	echo -e
 }; declare -fr print_help
 
@@ -474,7 +474,7 @@ process_commandline_parameters(){
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
 					echo_with_color\
-						"red"\
+						'red'\
 						"${FUNCNAME[0]}: Error: --partition option requires 2 arguments!"
 					return 1
 				fi
@@ -492,7 +492,7 @@ process_commandline_parameters(){
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
 					echo_with_color\
-						"red"\
+						'red'\
 						"${FUNCNAME[0]}: Error: --device option requires 2 arguments!"
 					return 1
 				fi
@@ -518,14 +518,14 @@ process_commandline_parameters(){
 						red\
 						'%s: %s\n'\
 						"${FUNCNAME[0]}"\
-						"ERROR: --label option requires at least 1 argument."
+						'ERROR: --label option requires at least 1 argument.'
 					return 1
 				fi
 				new_file_system_label_ref="${parameters[0]}"
 				;;
 			--workaround-bios-boot-flag)
 				enable_workaround_bios_boot_flag=Y
-				workaround_bios_boot_flag_ref="Y"
+				workaround_bios_boot_flag_ref='Y'
 				;;
 			--debugging-internal-function-call)
 				enable_debugging_internal_function_call=Y
@@ -536,7 +536,7 @@ process_commandline_parameters(){
 						red\
 						'%s: %s\n'\
 						"${FUNCNAME[0]}"\
-						"ERROR: --debugging-internal-function-call option requires at least 1 argument."
+						'ERROR: --debugging-internal-function-call option requires at least 1 argument.'
 					return 1
 				fi
 				"${parameters[@]}"
@@ -552,7 +552,7 @@ process_commandline_parameters(){
 						red\
 						'%s: %s\n'\
 						"${FUNCNAME[0]}"\
-						"ERROR: --target-filesystem option requires at least 1 argument."
+						'ERROR: --target-filesystem option requires at least 1 argument.'
 					return 1
 				fi
 				target_filesystem_type_ref="${parameters[0]}"
@@ -598,7 +598,7 @@ process_commandline_parameters(){
 		return 1
 	fi
 
-	if [ "${verbose}" = "1" ] && [ "${enable_debug}" != "Y" ]; then
+	if [ "${verbose}" = '1' ] && [ "${enable_debug}" != 'Y' ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
 
 		# Disabled due to FIXME
@@ -606,7 +606,7 @@ process_commandline_parameters(){
 	fi
 
 	# Always be the last condition so that less debug message from this function will be printed
-	if [ "${enable_debug}" = "Y" ]; then
+	if [ "${enable_debug}" = 'Y' ]; then
 		set -o xtrace
 	fi
 	return 0
@@ -658,7 +658,7 @@ check_runtime_dependencies(){
 	local -n command_grubinstall_ref="$1"; shift
 	local -n name_grub_prefix_ref="$1"
 
-	local result="unknown"
+	local result='unknown'
 
 	for required_command in\
 		awk\
@@ -700,7 +700,7 @@ check_runtime_dependencies(){
 			"${FUNCNAME[0]}: Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!" >&2
 		echo_with_color red\
 			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
-		result="failed"
+		result='failed'
 	fi
 
 	if command -v 'mkntfs' &>/dev/null; then
@@ -710,22 +710,22 @@ check_runtime_dependencies(){
 			'%s\n%s\n'\
 			"${FUNCNAME[0]}: Error: mkntfs command not found!"\
 			"${FUNCNAME[0]}: Error: Please make sure that ntfs-3g is properly installed!"
-		result="failed"
+		result='failed'
 	fi
 
 	if command -v 'grub-install' &> /dev/null; then
 		command_grubinstall_ref='grub-install'
-		name_grub_prefix_ref="grub"
+		name_grub_prefix_ref='grub'
 	elif command -v 'grub2-install' &> /dev/null; then
 		command_grubinstall_ref='grub2-install'
-		name_grub_prefix_ref="grub2"
+		name_grub_prefix_ref='grub2'
 	else
 		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
 		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result="failed"
+		result='failed'
 	fi
 
-	if [ "${result}" == "failed" ]; then
+	if [ "${result}" == 'failed' ]; then
 		return 1
 	else
 		return 0
@@ -741,7 +741,7 @@ check_permission(){
 			yellow\
 			'%s\n%s\n'\
 			"Warning: You are not running ${application_name} as root!"\
-			"Warning: This might be the reason of the following failure." >&2
+			'Warning: This might be the reason of the following failure.' >&2
 	fi
 	return 0
 }; declare -fr check_permission
@@ -892,10 +892,10 @@ create_target_partition_table(){
 
 	case "${partition_table_type}" in
 		legacy|msdos|mbr|pc)
-			parted_partiton_table_argument="msdos"
+			parted_partiton_table_argument='msdos'
 			;;
 		gpt|guid)
-			parted_partiton_table_argument="gpt"
+			parted_partiton_table_argument='gpt'
 			echo_with_color\
 				red\
 				"${FUNCNAME[0]}: Error: Currently GUID partition table is not supported."
@@ -924,13 +924,13 @@ workaround_make_system_realize_partition_table_changed(){
 	printf_with_color\
 		green\
 		'%s\n'\
-		"Making system realize that partition table has changed..."
+		'Making system realize that partition table has changed...'
 
 	blockdev\
 		--rereadpt\
 		"${target_device}"\
 		|| true
-	echo "Wait 3 seconds for block device nodes to populate..."
+	echo 'Wait 3 seconds for block device nodes to populate...'
 	sleep 3
 
 }; declare -fr workaround_make_system_realize_partition_table_changed
@@ -948,10 +948,10 @@ create_target_partition(){
 	local parted_mkpart_fs_type
 	case "${filesystem_type}" in
 		FAT|vfat)
-			parted_mkpart_fs_type="fat32"
+			parted_mkpart_fs_type='fat32'
 			;;
 		NTFS|ntfs)
-			parted_mkpart_fs_type="ntfs"
+			parted_mkpart_fs_type='ntfs'
 			;;
 		*)
 			echo_with_color red "${FUNCNAME[0]}: Error: Filesystem not supported"
@@ -1145,7 +1145,7 @@ check_uefi_ntfs_support_partition(){
 			"${target_device}"\
 		| grep\
 			--silent\
-			"UEFI_NTFS"; then
+			'UEFI_NTFS'; then
 		printf_with_color yellow\
 			'%s: %s\n'\
 			"${FUNCNAME[0]}"\
@@ -1153,7 +1153,7 @@ check_uefi_ntfs_support_partition(){
 		printf --\
 			'%s: %s\n'\
 			"${FUNCNAME[0]}"\
-			"Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method"
+			'Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method'
 	fi
 }; declare -fr check_uefi_ntfs_support_partition
 
@@ -1162,7 +1162,7 @@ mount_source_filesystem(){
 	local source_media="$1"; shift
 	local source_fs_mountpoint="$1"
 
-	echo_with_color green "Mounting source filesystem..."
+	echo_with_color green 'Mounting source filesystem...'
 
 	mkdir\
 		--parents\
@@ -1203,9 +1203,9 @@ mount_target_filesystem(){
 	local target_fs_mountpoint="$1"; shift
 	local target_fs_type="$1"
 
-	local mount_options="defaults"
+	local mount_options='defaults'
 
-	echo_with_color green "Mounting target filesystem..."
+	echo_with_color green 'Mounting target filesystem...'
 
 	mkdir\
 		--parents\
@@ -1276,7 +1276,7 @@ check_target_filesystem_free_space(){
 	((needed_space = needed_space + additional_space_required_for_grub_installation))
 
 	if [ "${needed_space}" -gt "${free_space}" ]; then
-		echo "Error: Not enough free space on target partition!" >&2
+		echo 'Error: Not enough free space on target partition!' >&2
 		echo "Error: We required ${needed_space_human_readable}(${needed_space} bytes) but '${target_partition}' only has ${free_space_human_readable}(${free_space} bytes)." >&2
 		return 1
 	fi
@@ -1303,7 +1303,7 @@ copy_filesystem_files(){
 		off\
 		"${only_for_gui}"
 
-	echo_with_color green "Copying files from source media..."
+	echo_with_color green 'Copying files from source media...'
 
 	pushd "${source_fs_mountpoint}" >/dev/null
 
@@ -1426,8 +1426,8 @@ workaround_support_windows_7_uefi_boot(){
 		return 0
 	fi
 
-	echo_with_color yellow "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting"
-	if ! command -v "7z" >/dev/null 2>&1; then
+	echo_with_color yellow 'Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting'
+	if ! command -v '7z' >/dev/null 2>&1; then
 		echo_with_color yellow "Warning: '7z' utility not found, workaround is not applied." >&2
 		return 0
 	fi
@@ -1443,7 +1443,7 @@ workaround_support_windows_7_uefi_boot(){
 	)"
 	if [ -z "${test_efi_directory}" ]; then
 		efi_directory="${target_fs_mountpoint}/efi"
-		if [ "${verbose}" = "1" ]; then
+		if [ "${verbose}" = '1' ]; then
 			printf --\
 				"%s: DEBUG: Can't find efi directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
@@ -1451,7 +1451,7 @@ workaround_support_windows_7_uefi_boot(){
 		fi
 	else # efi directory(case don't care) exists
 		efi_directory="${test_efi_directory}"
-		if [ "${verbose}" = "1" ]; then
+		if [ "${verbose}" = '1' ]; then
 			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
@@ -1470,7 +1470,7 @@ workaround_support_windows_7_uefi_boot(){
 	)"
 	if [ -z "${test_efi_boot_directory}" ]; then
 		efi_boot_directory="${efi_directory}/boot"
-		if [ "${verbose}" = "1" ]; then
+		if [ "${verbose}" = '1' ]; then
 			printf --\
 				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
@@ -1478,7 +1478,7 @@ workaround_support_windows_7_uefi_boot(){
 		fi
 	else # boot directory(case don't care) exists
 		efi_boot_directory="${test_efi_boot_directory}"
-		if [ "${verbose}" = "1" ]; then
+		if [ "${verbose}" = '1' ]; then
 			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
@@ -1556,7 +1556,7 @@ install_legacy_pc_bootloader_grub(){
 	local -r target_device="${1}"; shift 1
 	local -r command_grubinstall="${1}"
 
-	echo_with_color green "Installing GRUB bootloader for legacy PC booting support..."
+	echo_with_color green 'Installing GRUB bootloader for legacy PC booting support...'
 	"${command_grubinstall}"\
 		--target=i386-pc\
 		--boot-directory="${target_fs_mountpoint}"\
@@ -1574,7 +1574,7 @@ install_legacy_pc_bootloader_grub_config(){
 	local -r target_fs_mountpoint="$1"; shift
 	local -r name_grub_prefix="$1"
 
-	echo_with_color green "Installing custom GRUB config for legacy PC booting..."
+	echo_with_color green 'Installing custom GRUB config for legacy PC booting...'
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
 	local target_fs_uuid; target_fs_uuid=$(
 		lsblk\
@@ -1607,7 +1607,7 @@ cleanup_mountpoints(){
 	local -r target_fs_mountpoint="${1}"; shift
 	local -ir only_for_gui="${1}"
 
-	local clean_result="unknown"
+	local clean_result='unknown'
 
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
 	trigger_wxGenericProgressDialog_pulse\
@@ -1623,11 +1623,11 @@ cleanup_mountpoints(){
 		if umount "${source_fs_mountpoint}"; then
 			if ! rmdir "${source_fs_mountpoint}"; then
 				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove source mountpoint"
-				clean_result="unclean"
+				clean_result='unclean'
 			fi
 		else
 			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount source filesystem."
-			clean_result="unclean"
+			clean_result='unclean'
 		fi
 	fi
 
@@ -1636,17 +1636,17 @@ cleanup_mountpoints(){
 		if umount "${target_fs_mountpoint}"; then
 			if ! rmdir "${target_fs_mountpoint}"; then
 				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove target mountpoint"
-				clean_result="unclean"
+				clean_result='unclean'
 			fi
 		else
 			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount target filesystem."
-			clean_result="unsafe"
+			clean_result='unsafe'
 		fi
 	fi
 
-	if [ "${clean_result}" == "unclean" ]; then
+	if [ "${clean_result}" == 'unclean' ]; then
 		return 2
-	elif [ "${clean_result}" == "unsafe" ]; then
+	elif [ "${clean_result}" == 'unsafe' ]; then
 		return 3
 	else
 		return 0
@@ -1724,11 +1724,11 @@ trap_exit(){
 			"${target_fs_mountpoint}"\
 			"${global_only_for_gui}"; then
 			:
-		elif [ "${?}" == "2" ]; then
-			echo_with_color yellow "Some mountpoints are not unmount/cleaned successfully and must be done manually"
+		elif [ "${?}" == '2' ]; then
+			echo_with_color yellow 'Some mountpoints are not unmount/cleaned successfully and must be done manually'
 		else # $? == 3, target filesystem not unmounted
-			echo_with_color yellow "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption"
-			echo_with_color yellow "Some mountpoints are not unmount/cleaned successfully and must be done manually"
+			echo_with_color yellow 'We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption'
+			echo_with_color yellow 'Some mountpoints are not unmount/cleaned successfully and must be done manually'
 		fi
 	fi
 
@@ -1736,9 +1736,9 @@ trap_exit(){
 		util_is_parameter_set_and_not_empty\
 			target_device; then
 		if is_target_busy "${target_device}"; then
-			echo_with_color yellow "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it."
+			echo_with_color yellow 'Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.'
 		else
-			echo_with_color green "You may now safely detach the target device"
+			echo_with_color green 'You may now safely detach the target device'
 		fi
 	fi
 
@@ -1746,9 +1746,9 @@ trap_exit(){
 		--recursive\
 		"${temp_directory}"
 
-	if [ "${current_state}" = "finished" ]; then
-		echo_with_color green "Done :)"
-		echo_with_color green "The target device should be bootable now"
+	if [ "${current_state}" = 'finished' ]; then
+		echo_with_color green 'Done :)'
+		echo_with_color green 'The target device should be bootable now'
 	fi
 
 	return 0
@@ -1756,7 +1756,7 @@ trap_exit(){
 
 trap_interrupt(){
 	printf '\n' # Separate message with previous output
-	echo_with_color yellow "Recieved SIGINT, program is interrupted." 1>&2
+	echo_with_color yellow 'Recieved SIGINT, program is interrupted.' 1>&2
 	return 1
 }; declare -fr trap_interrupt
 
@@ -1792,10 +1792,10 @@ trap_debug(){
 	done
 
 	case "$(type -t "${command_base}")" in
-		"file")
+		'file')
 			echo_with_color green "${FUNCNAME[0]}: INFO: Executing ${command_to_be_executed}"
 			;;
-		"function")
+		'function')
 			echo_with_color green "${FUNCNAME[0]}: INFO: Calling ${command_base}"
 			;;
 		*)
@@ -1814,7 +1814,7 @@ util_call_external_command(){
 	local command_output
 	local -i command_exit_status
 	if command_output="$( "${command[@]}" 2>&1 )"; then
-		command_exit_status="0"
+		command_exit_status='0'
 	else
 		command_exit_status="$?"
 	fi
@@ -1823,24 +1823,24 @@ util_call_external_command(){
 		echo_with_color red "Error occurred while running command \"${command[*]}\" (exit status: ${command_exit_status})!" >&2
 
 		local -r read_prompt="Read command output (Y/n)?"
-		printf "%s" "${read_prompt}"
+		printf '%s' "${read_prompt}"
 
 		local answer='y'
 
 		while true; do
 			read -r answer
 
-			if [ "${answer}" == "y" ] || [ "${answer}" == "Y" ]; then
+			if [ "${answer}" == 'y' ] || [ "${answer}" == 'Y' ]; then
 				echo "${command_output}"
 				break
-			elif [ "${answer}" == "n" ] || [ "${answer}" == "N" ]; then
+			elif [ "${answer}" == 'n' ] || [ "${answer}" == 'N' ]; then
 				break
 			else
-				printf "%s" "${read_prompt}"
+				printf '%s' "${read_prompt}"
 			fi
 		done
 
-		echo_with_color red "Press ENTER to continue" >&2
+		echo_with_color red 'Press ENTER to continue' >&2
 		read -r # catch enter key
 	fi
 
@@ -1908,7 +1908,7 @@ util_printf_with_color(){
 			switch_terminal_text_color red
 		fi
 		printf --\
-			"Fatal: %s: Parameter quantity illegal, please report bug.\\n"\
+			'Fatal: %s: Parameter quantity illegal, please report bug.\n'\
 			"${FUNCNAME[0]}"
 		if [ "${no_color}" == 0 ]; then
 			switch_terminal_text_color none
@@ -1944,7 +1944,7 @@ util_shift_array(){
 	fi
 
 	# Unset the 1st element
-	unset "array_ref[0]"
+	unset 'array_ref[0]'
 
 	# Repack array if element still available in array
 	if [ "${#array_ref[@]}" -ne 0 ]; then
