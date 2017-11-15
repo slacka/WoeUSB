@@ -11,7 +11,7 @@ Standards-Version: 3.8.1
 
 Package: woeusb
 Architecture: any
-Depends: bash (>4.3),
+Depends: bash (>=4.3),
          dosfstools,
          findutils,
          grep,
