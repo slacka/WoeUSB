@@ -7,7 +7,7 @@ Build-Depends: debhelper (>= 10),
                git-core,
                libwxgtk2.8-dev (>= 2.8.4) | libwxgtk3.0-dev,
                realpath | coreutils (>= 8.23)
-Standards-Version: 3.8.1
+Standards-Version: 4.1.1
 
 Package: woeusb
 Architecture: any
