@@ -22,7 +22,7 @@ Depends: bash (>=4.3),
          parted,
          policykit-1,
          realpath | coreutils (>= 8.23),
-         util-linux, 
+         util-linux,
          wget,
          ${misc:Depends},
          ${shlibs:Depends}
