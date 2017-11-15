@@ -1,7 +1,7 @@
 Source: woeusb
 Homepage: https://github.com/slacka/WoeUSB
 Section: utils
-Priority: extra
+Priority: optional
 Maintainer: 林博仁 (Buo-Ren, Lin) <Buo.Ren.Lin@gmail.com>
 Build-Depends: debhelper (>= 10),
                git-core,
