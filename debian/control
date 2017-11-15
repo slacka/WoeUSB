@@ -8,6 +8,8 @@ Build-Depends: debhelper (>= 10),
                libwxgtk2.8-dev | libwxgtk3.0-dev,
                realpath | coreutils (>= 8.23)
 Standards-Version: 4.1.1
+Vcs-Browser: https://github.com/slacka/WoeUSB/
+Vcs-Git: https://github.com/slacka/WoeUSB.git
 
 Package: woeusb
 Architecture: any
