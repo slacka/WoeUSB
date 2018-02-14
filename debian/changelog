@@ -3,5 +3,5 @@ woeusb (@@WOEUSB_VERSION@@) unstable; urgency=low
   * This is a fake changelog for packaging purpose, for the actual changelog pl-
     ease refer Commits · slacka/WoeUSB
     <https://github.com/slacka/WoeUSB/commits>
-	
- -- 林博仁 (Buo-Ren, Lin) <Buo.Ren.Lin@gmail.com>  Mon, 12 Jun 2017 09:04:00 +0100
+
+ -- 林博仁 (Buo-Ren, Lin) <Buo.Ren.Lin@gmail.com>  Wed, 15 Nov 2017 09:04:00 +0100
