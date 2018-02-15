@@ -16,7 +16,7 @@ Architecture: any
 Depends: bash (>=4.3),
          dosfstools,
          gettext,
-         grub-common,
+         grub2-common,
          grub-pc-bin,
          ntfsprogs | ntfs-3g,
          p7zip-full,
