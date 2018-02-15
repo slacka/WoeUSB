@@ -15,6 +15,7 @@ Package: woeusb
 Architecture: any
 Depends: bash (>=4.3),
          dosfstools,
+         gettext,
          grub-common,
          grub-pc-bin,
          ntfsprogs | ntfs-3g,
