@@ -4,6 +4,7 @@ Section: utils
 Priority: optional
 Maintainer: 林博仁 (Buo-Ren, Lin) <Buo.Ren.Lin@gmail.com>
 Build-Depends: debhelper (>= 10),
+               dh-autoreconf,
                git-core,
                libwxgtk2.8-dev | libwxgtk3.0-dev,
                realpath | coreutils (>= 8.23)
