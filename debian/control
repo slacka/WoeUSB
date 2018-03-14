@@ -3,7 +3,7 @@ Homepage: https://github.com/slacka/WoeUSB
 Section: utils
 Priority: optional
 Maintainer: 林博仁 (Buo-Ren, Lin) <Buo.Ren.Lin@gmail.com>
-Build-Depends: debhelper (>= 10),
+Build-Depends: debhelper (>= 9),
                dh-autoreconf,
                git-core,
                libwxgtk2.8-dev | libwxgtk3.0-dev,
