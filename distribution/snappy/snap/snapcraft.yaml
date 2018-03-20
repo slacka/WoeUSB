@@ -1,0 +1,72 @@
+%YAML 1.2
+---
+# The snapcraft.yaml file is the main entry point to create a snap through Snapcraft.
+# Documentation: The snapcraft syntax - Snaps are universal Linux packages <https://docs.snapcraft.io/build-snaps/syntax>
+## Top-level metadata
+## The following keys are consumed by the store to present your package to users and inform snapd about your snap.
+## https://docs.snapcraft.io/build-snaps/syntax#top-level-metadata
+name: WoeUSB
+version: @@WOEUSB_VERSION@@
+summary: WoeUSB can create bootable USB storage devices from Windows disc (images).
+description: |
+  This package contains two programs:
+
+  * woeusb: A command-line utility that enables you to create your own bootable Windows installation USB storage device from an existing Windows Installation disc or disk image
+  * woeusbgui: A GUI wrapper of woeusb based on WxWidgets
+
+  Supported images:
+
+  Windows Vista, Windows 7, Window 8.x, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
+
+  Supported bootmodes:
+
+  * Legacy/MBR-style/IBM PC compatible bootmode
+  * Native UEFI booting is supported for Windows 7 and later images (limited to the FAT filesystem as the target)
+
+  This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/prog_info_winusb.html).
+type: app
+confinement: classic
+#icon: FIXME
+grade: devel
+#assumes: FIXME
+epoch: 0
+architectures: amd64
+
+## Top-level YAML subsections
+### Apps and daemons
+### The “apps” YAML subsection exposes apps and daemons from your package to the host system, declares their permissions and run conditions.
+### https://docs.snapcraft.io/build-snaps/syntax#apps-and-daemons
+apps:
+  woeusb:
+    command: bin/woeusb
+    # plugs not possible due to calling commands as root
+  woeusbgui:
+    command: bin/woeusbgui
+    # plugs not possible due to calling commands as root
+    desktop: share/desktop/woeusbgui.desktop
+
+### Parts declarations
+### The “parts” YAML subsection declares individual pieces of code to be imported – and possibly built or modified – in your snap at packaging time.
+### https://docs.snapcraft.io/build-snaps/syntax#parts-declarations
+parts:
+  woeusb:
+    plugin: autotools
+    source: https://github.com/slacka/WoeUSB.github
+    source-type: git
+    source-depth: 30
+    source-tag: @@WOEUSB_VERSION@@
+    prepare: |
+      ./setup-development-environment.bash
+    filesets:
+      executables: [ bin/* ]
+      manpages: [ share/man ]
+      documentation: [ share/woeusb/* ]
+    stage:
+      - $executables
+      - $manpages
+      - $documentation
+    prime:
+      - $executables
+      - $manpages
+      - $documentation
+    build-attributes: [debug]

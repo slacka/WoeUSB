@@ -3,3 +3,4 @@ debian/changelog filter=version
 src/woeusb filter=version
 src/woeusb.1 filter=version
 src/woeusbgui.1 filter=version
+/distribution/snappy/snap/snapcraft.yaml filter=version
