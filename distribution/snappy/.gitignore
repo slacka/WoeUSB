@@ -1,0 +1,8 @@
+# Version Tracking Ignore Rules for Git VCS
+# https://git-scm.com/docs/gitignore
+
+## Don't track build artifacts and products
+/parts/
+/prime/
+/stage/
+/snap/.snapcraft/
