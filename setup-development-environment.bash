@@ -62,7 +62,7 @@ init(){
 	git config include.path ../.gitconfig\
 		&& printf "done\n"
 
-	printf "Activate Git smudge filter...\n"
+	printf "Activating Git smudge filter...\n"
 	# git - How do I programmatically determine if there are uncommitted changes? - Stack Overflow
 	# https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
 	# DOC: git-diff-index(1) manpage: OPTIONS: --quiet, --exit-code
