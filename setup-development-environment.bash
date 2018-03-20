@@ -8,7 +8,7 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
-for required_command in\
+for required_command in \
 	realpath\
 	basename\
 	dirname\
@@ -17,7 +17,8 @@ for required_command in\
 	do
 	if ! command -v "${required_command}" >/dev/null; then
 		printf\
-			"Error: This program requires \"${required_command}\" command in your \$PATH.\n"\
+			"Error: This program requires \"%s\" command in your \$PATH.\n"\
+			"${required_command}"\
 			1>&2
 		exit 1
 	fi
