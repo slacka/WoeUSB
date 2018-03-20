@@ -62,10 +62,21 @@ init(){
 		&& printf "done\n"
 
 	printf "Activate Git smudge filter...\n"
-	git stash save &>/dev/null || true
+	# git - How do I programmatically determine if there are uncommitted changes? - Stack Overflow
+	# https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
+	# DOC: git-diff-index(1) manpage: OPTIONS: --quiet, --exit-code
+	local stash_is_needed=false
+	if ! git diff-index --quiet HEAD --; then
+		stash_is_needed=true
+	fi
+	if test "${stash_is_needed}" = 'true'; then
+		git stash save &>/dev/null
+	fi
 	rm .git/index
 	git checkout HEAD -- "$(git rev-parse --show-toplevel)" >/dev/null
-	git stash pop &>/dev/null || true
+	if test "${stash_is_needed}" = 'true'; then
+		git stash pop &>/dev/null
+	fi; unset stash_is_needed
 	printf "done.\n"
 
 	exit 0
