@@ -54,7 +54,6 @@ parts:
     source: https://github.com/slacka/WoeUSB.git
     source-type: git
     source-depth: 30
-    source-tag: @@WOEUSB_VERSION@@
     prepare: |
       ./setup-development-environment.bash
     filesets:
