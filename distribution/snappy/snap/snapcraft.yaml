@@ -51,7 +51,7 @@ apps:
 parts:
   woeusb:
     plugin: autotools
-    source: https://github.com/slacka/WoeUSB.github
+    source: https://github.com/slacka/WoeUSB.git
     source-type: git
     source-depth: 30
     source-tag: @@WOEUSB_VERSION@@
