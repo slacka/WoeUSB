@@ -8,7 +8,7 @@ set -o errtrace
 set -o nounset
 set -o pipefail
 
-for required_command in\
+for required_command in \
 	realpath\
 	basename\
 	dirname\
@@ -17,7 +17,8 @@ for required_command in\
 	do
 	if ! command -v "${required_command}" >/dev/null; then
 		printf\
-			"Error: This program requires \"${required_command}\" command in your \$PATH.\n"\
+			"Error: This program requires \"%s\" command in your \$PATH.\n"\
+			"${required_command}"\
 			1>&2
 		exit 1
 	fi
@@ -61,11 +62,22 @@ init(){
 	git config include.path ../.gitconfig\
 		&& printf "done\n"
 
-	printf "Activate Git smudge filter...\n"
-	git stash save &>/dev/null || true
+	printf "Activating Git smudge filter...\n"
+	# git - How do I programmatically determine if there are uncommitted changes? - Stack Overflow
+	# https://stackoverflow.com/questions/3878624/how-do-i-programmatically-determine-if-there-are-uncommitted-changes
+	# DOC: git-diff-index(1) manpage: OPTIONS: --quiet, --exit-code
+	local stash_is_needed=false
+	if ! git diff-index --quiet HEAD --; then
+		stash_is_needed=true
+	fi
+	if test "${stash_is_needed}" = 'true'; then
+		git stash save &>/dev/null
+	fi
 	rm .git/index
 	git checkout HEAD -- "$(git rev-parse --show-toplevel)" >/dev/null
-	git stash pop &>/dev/null || true
+	if test "${stash_is_needed}" = 'true'; then
+		git stash pop &>/dev/null
+	fi; unset stash_is_needed
 	printf "done.\n"
 
 	exit 0
