@@ -5,7 +5,7 @@
 ## Top-level metadata
 ## The following keys are consumed by the store to present your package to users and inform snapd about your snap.
 ## https://docs.snapcraft.io/build-snaps/syntax#top-level-metadata
-name: WoeUSB
+name: woeusb
 version: @@WOEUSB_VERSION@@
 summary: WoeUSB can create bootable USB storage devices from Windows disc (images).
 description: |
