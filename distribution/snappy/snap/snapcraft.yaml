@@ -54,6 +54,9 @@ parts:
     source: https://github.com/slacka/WoeUSB.git
     source-type: git
     source-depth: 30
+    build-packages:
+      #- libwxgtk2.8-dev
+      - libwxgtk3.0-dev
     prepare: |
       ./setup-development-environment.bash
     filesets:
@@ -64,6 +67,16 @@ parts:
       - $executables
       - $manpages
       - $documentation
+    stage-packages:
+      - bash
+      - dosfstools
+      - grub2-common
+      - grub-pc-bin
+      - ntfs-3g
+      - p7zip-full
+      - parted
+      - policykit-1
+      - wget
     prime:
       - $executables
       - $manpages
