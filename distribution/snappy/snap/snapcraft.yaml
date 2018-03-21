@@ -30,7 +30,7 @@ confinement: classic
 grade: devel
 #assumes: FIXME
 epoch: 0
-architectures: amd64
+#architectures: We support all architectures if possible
 
 ## Top-level YAML subsections
 ### Apps and daemons
