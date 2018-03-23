@@ -61,6 +61,7 @@ parts:
       ./setup-development-environment.bash
     filesets:
       executables: [bin/*]
+      freedesktop-desktop-entry: [share/applications/woeusbgui.desktop]
       manpages: [share/man]
       miscellaneous-files: [share/woeusb/*]
     stage:
