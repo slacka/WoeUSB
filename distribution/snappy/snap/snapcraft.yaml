@@ -43,7 +43,7 @@ apps:
   woeusbgui:
     command: bin/woeusbgui
     # plugs not possible due to calling commands as root
-    desktop: share/desktop/woeusbgui.desktop
+    desktop: share/applications/woeusbgui.desktop
 
 ### Parts declarations
 ### The “parts” YAML subsection declares individual pieces of code to be imported – and possibly built or modified – in your snap at packaging time.
