@@ -60,9 +60,9 @@ parts:
     prepare: |
       ./setup-development-environment.bash
     filesets:
-      documentation: [share/woeusb/*]
       executables: [bin/*]
       manpages: [share/man]
+      miscellaneous-files: [share/woeusb/*]
     stage:
       - $executables
       - $manpages
