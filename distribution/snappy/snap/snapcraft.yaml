@@ -67,7 +67,7 @@ parts:
     stage:
       - $executables
       - $manpages
-      - $documentation
+      - $miscellaneous-files
     stage-packages:
       - bash
       - dosfstools
@@ -81,5 +81,5 @@ parts:
     prime:
       - $executables
       - $manpages
-      - $documentation
+      - $miscellaneous-files
     build-attributes: [debug]
