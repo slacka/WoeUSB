@@ -66,6 +66,7 @@ parts:
       miscellaneous-files: [share/woeusb/*]
     stage:
       - $executables
+      - $freedesktop-desktop-entry
       - $manpages
       - $miscellaneous-files
     stage-packages:
@@ -80,6 +81,7 @@ parts:
       - wget
     prime:
       - $executables
+      - $freedesktop-desktop-entry
       - $manpages
       - $miscellaneous-files
     build-attributes: [debug]
