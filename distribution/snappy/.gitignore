@@ -6,3 +6,4 @@
 /prime/
 /stage/
 /snap/.snapcraft/
+*.snap
