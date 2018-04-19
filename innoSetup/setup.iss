@@ -42,6 +42,33 @@ SolidCompression=yes
 
 [Languages]
 Name: french; MessagesFile: compiler:Languages\French.isl
+Name: english; MessagesFile: compiler:Default.isl
+Name: czech; MessagesFile: compiler:Languages\Czech.isl
+Name: danish; MessagesFile: compiler:Languages\Danish.isl
+Name: dutch; MessagesFile: compiler:Languages\Dutch.isl
+Name: finnish; MessagesFile: compiler:Languages\Finnish.isl
+Name: german; MessagesFile: compiler:Languages\German.isl
+Name: hungarian; MessagesFile: compiler:Languages\Hungarian.isl
+Name: italian; MessagesFile: compiler:Languages\Italian.isl
+Name: norwegian; MessagesFile: compiler:Languages\Norwegian.isl
+Name: polish; MessagesFile: compiler:Languages\Polish.isl
+Name: russian; MessagesFile: compiler:Languages\Russian.isl
+Name: spanish; MessagesFile: compiler:Languages\Spanish.isl
+Name: armenian; MessagesFile: compiler:Languages\Armenian.isl
+Name: greek; MessagesFile: compiler:Languages\Greek.isl
+Name: scottishGaelic; MessagesFile: compiler:Languages\ScottishGaelic.isl
+Name: hebrew; MessagesFile: compiler:Languages\Hebrew.isl
+Name: serbianCyrillic; MessagesFile: compiler:Languages\SerbianCyrillic.isl
+Name: catalan; MessagesFile: compiler:Languages\Catalan.isl
+Name: serbianLatin; MessagesFile: compiler:Languages\SerbianLatin.isl
+Name: corsican; MessagesFile: compiler:Languages\Corsican.isl
+Name: slovenian; MessagesFile: compiler:Languages\Slovenian.isl
+Name: japanese; MessagesFile: compiler:Languages\Japanese.isl
+Name: nepaliu; MessagesFile: compiler:Languages\Nepaliu.isl
+Name: turkish; MessagesFile: compiler:Languages\Turkish.isl
+Name: ukrainian; MessagesFile: compiler:Languages\Ukrainian.isl
+Name: portuguese; MessagesFile: compiler:Languages\Portuguese.isl
+Name: brazilianPortuguese; MessagesFile: compiler:Languages\BrazilianPortuguese.isl
 
 [Files]
 Source: winPack/*; DestDir: {app}; Flags: ignoreversion recursesubdirs
