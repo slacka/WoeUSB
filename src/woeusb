@@ -965,7 +965,7 @@ create_target_partition(){
 
 	# Create target partition
 	# We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
-	# If NTFS filesystem is used we leave a 256KiB partition at the end for installing UEFI:NTFS partition for NTFS support
+	# If NTFS filesystem is used we leave a 512KiB partition at the end for installing UEFI:NTFS partition for NTFS support
 	case "${parted_mkpart_fs_type}" in
 		fat32)
 			parted --script\
@@ -985,8 +985,8 @@ create_target_partition(){
 				primary\
 				"${parted_mkpart_fs_type}"\
 				4MiB\
-				-- -513s # Leave 256KiB==512sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 256KiB and is intentionally let-it-be.
-				# FIXME: Leave exact 256KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
+				-- -1025s # Leave 512KiB==1024sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 512KiB and is intentionally let-it-be.
+				# FIXME: Leave exact 512KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
 			;;
 		*)
 			printf_with_color\
@@ -1023,7 +1023,7 @@ create_target_partition(){
 
 ## Create UEFI:NTFS partition to support booting UEFI bootloader in NTFS filesystem where some UEFI firmwares are not able to do so
 ## https://github.com/pbatard/uefi-ntfs
-## This routine assumes that there's only one partition on the disk, and the trailing 256KiB space is not partitioned
+## This routine assumes that there's only one partition on the disk, and the trailing 512KiB space is not partitioned
 ## This routine should be run after create_target_partition and only on target partition's filesystem is NTFS
 ## target_device: The target device's entire deice file
 create_uefi_ntfs_support_partition(){
@@ -1041,7 +1041,7 @@ create_uefi_ntfs_support_partition(){
 		primary\
 		fat16\
 		-- \
-		-512s\
+		-1024s\
 		-1s
 
 	return "$?"
@@ -1049,7 +1049,7 @@ create_uefi_ntfs_support_partition(){
 
 ## Install UEFI:NTFS partition by writing the partition image into the created partition
 ## FIXME: Currently this requires internet access to download the image from GitHub directly, it should be replaced by including the image in our datadir
-## uefi_ntfs_partition: The previously allocated partition for installing UEFI:NTFS, requires at least 256KiB
+## uefi_ntfs_partition: The previously allocated partition for installing UEFI:NTFS, requires at least 512KiB
 ## download_directory: The temporary directory for downloading UEFI:NTFS image from GitHub
 ## target_device: For workaround_make_system_realize_partition_table_changed
 install_uefi_ntfs_support_partition(){
