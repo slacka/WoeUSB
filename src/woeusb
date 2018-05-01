@@ -272,6 +272,11 @@ init(){
 		exit 1
 	fi
 
+	if [ "${target_filesystem_type}" == 'FAT' ]; then
+		check_for_big_files\
+		"${source_fs_mountpoint}"
+	fi
+
 	if ! mount_target_filesystem\
 		"${target_partition}"\
 		"${target_fs_mountpoint}"\
@@ -2003,6 +2008,19 @@ util_check_function_parameters_quantity(){
 	fi
 	return 0
 }; declare -fr util_check_function_parameters_quantity
+
+##Check every file in source directory for files bigger than max fat32 file size (~4GB)
+check_for_big_files(){
+	local source_fs_mountpoint="${1}"
+
+	for i in $(find ${source_fs_mountpoint}/ -type f); do
+		if (( $(du $i | cut -f -1) > 4194303 )); then
+			echo_with_color red "Error: File $i is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS)."
+			exit 1
+		fi
+	done
+	return 0
+}; declare -fr check_for_big_files
 
 trap trap_exit EXIT
 trap trap_errexit ERR
