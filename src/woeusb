@@ -2014,14 +2014,19 @@ util_check_function_parameters_quantity(){
 ## Check every file in source directory for files bigger than max fat32 file size (~4GB)
 check_for_big_files(){
 	local -r source_fs_mountpoint="${1}"
+	local IFS_backup=$IFS
 
 	IFS=$'\n'
 	for file in ` find "${source_fs_mountpoint}" -type f `; do
 		if (( $(stat -c "%s" $file) > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
 			echo_with_color red "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS)."
+			IFS=$IFS_backup
+			unset IFS_backup
 			return 1
 		fi
 	done
+	IFS=$IFS_backup
+	unset IFS_backup
 	return 0
 }; declare -fr check_for_big_files
 
