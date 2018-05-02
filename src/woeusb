@@ -2014,7 +2014,7 @@ check_for_big_files(){
 	local source_fs_mountpoint="${1}"
 
 	for i in $(find ${source_fs_mountpoint}/ -type f); do
-		if (( $(du $i | cut -f -1) > 4194303 )); then
+		if (( $(stat -c "%s" $i) > 4294967295 )); then
 			echo_with_color red "Error: File $i is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS)."
 			exit 1
 		fi
