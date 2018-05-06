@@ -46,7 +46,7 @@ source_fs_mountpoint = "/media/woeusb_source_" + str(
 target_fs_mountpoint = "/media/woeusb_target_" + str(
     round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
 
-target_device = "/dev/sdb"
+target_device = ""
 
 # FIXME: No documentation for this non-trivial parameter
 pulse_current_pid = 0
@@ -63,6 +63,7 @@ def init(runtime_executable_name, only_for_gui_ref):
     global current_state
     global verbose
     global no_color
+    global target_device
 
     parser = setup_arguments()
     args = parser.parse_args()
@@ -91,18 +92,16 @@ def init(runtime_executable_name, only_for_gui_ref):
     source_media = args.source
     target_media = args.target
 
-    target_partition = ""
-
     workaround_bios_boot_flag = args.workaround_bios_boot_flag
 
     target_filesystem_type = args.target_filesystem
 
     # Parameters that needs to be determined in runtime
     # due to different names in distributions
-    command_mkdosfs = ""
-    command_mkntfs = ""
-    command_grubinstall = ""
-    name_grub_prefix = ""
+    command_mkdosfs = "mkfs.fat"
+    command_mkntfs = "mkfs.ntfs"
+    command_grubinstall = "grub-install"
+    name_grub_prefix = "grub"
 
     new_file_system_label = args.label
 
@@ -117,8 +116,8 @@ def init(runtime_executable_name, only_for_gui_ref):
     cprint("==============================")
 
     if os.getuid() != 0:
-        cprint("Warning: You are not running ${application_name} as root!")
-        cprint("Warning: This might be the reason of the following failure.")
+        cprint("Warning: You are not running ${application_name} as root!", "yellow")
+        cprint("Warning: This might be the reason of the following failure.", "yellow")
 
     if check_runtime_parameters(install_mode, source_media, target_media):
         parser.print_help()
@@ -126,7 +125,7 @@ def init(runtime_executable_name, only_for_gui_ref):
 
     trigger_wxGenericProgressDialog_pulse("on", only_for_gui_ref)
 
-    determine_target_parameters(install_mode, target_media)
+    target_device, target_partition = determine_target_parameters(install_mode, target_media)
 
     if check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
         return 1
@@ -146,19 +145,19 @@ def init(runtime_executable_name, only_for_gui_ref):
 
     current_state = "start-mounting"
 
-    if not mount_source_filesystem(source_media, source_fs_mountpoint):
+    if mount_source_filesystem(source_media, source_fs_mountpoint):
         cprint("Error: Unable to mount source filesystem", "red")
         return 1
 
     if target_filesystem_type == "FAT":
-        if not check_for_big_files(source_fs_mountpoint):
+        if check_for_big_files(source_fs_mountpoint):
             return 1
 
-    if not mount_target_filesystem(target_partition, target_fs_mountpoint, "vfat"):
+    if mount_target_filesystem(target_partition, target_fs_mountpoint, "vfat"):
         cprint("Error: Unable to mount target filesystem", "red")
         return 1
 
-    if not check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint):
+    if check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
         return 1
 
     current_state = "copying-filesystem"
@@ -171,7 +170,7 @@ def init(runtime_executable_name, only_for_gui_ref):
 
     install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall)
 
-    install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall)
+    install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix)
 
     if workaround_bios_boot_flag == "Y":
         workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
@@ -363,7 +362,7 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
 
     # Format target partition's filesystem
     if filesystem_type in ["FAT", "vfat"]:
-        subprocess.run([command_mkdosfs, "-F", "32", "-m", filesystem_label, target_partition])
+        subprocess.run([command_mkdosfs, "-F", "32", target_partition])
     elif filesystem_type in ["NTFS", "ntfs"]:
         subprocess.run([command_mkntfs, "--quick", "--label", filesystem_label, target_partition])
     else:
@@ -394,15 +393,15 @@ def create_uefi_ntfs_support_partition(target_device):
 
 def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory):
     try:
-        file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")
+        file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")[0]
     except urllib.request.ContentTooShortError:
         cprint(
             "Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem.")
         return 1
 
-    shutil.move(file, download_directory + "/" + file)  # move file to download_directory
+    shutil.move(file, download_directory.decode("utf-8").strip()  + "/" + file)  # move file to download_directory
 
-    shutil.copy2(download_directory + "/uefi-ntfs.img", uefi_ntfs_partition)
+    shutil.copy2(download_directory.decode("utf-8").strip()  + "/uefi-ntfs.img", uefi_ntfs_partition)
     # subprocess.run(["dd", "if=" + download_directory + "/uefi-ntfs.img", "of=" + uefi_ntfs_partition])
 
 
@@ -518,7 +517,6 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
         cprint("Fatal: Unsupported target_fs_type, please report bug.", "red")
 
     if subprocess.run(["mount",
-                       "--options", mount_options,
                        target_partition,
                        target_fs_mountpoint]).returncode != 0:
         cprint("Error: Unable to mount target media", "red")
@@ -530,11 +528,13 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
     df = subprocess.run(["df",
                          "--block-size=1",
                          target_fs_mountpoint], stdout=subprocess.PIPE).stdout
-    free_space = df.strip().split()[4]
-    '''
-    awk = subprocess.Popen(["akw", "{cprint $4}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    #free_space = int(df.strip().split()[4])
+
+    awk = subprocess.Popen(["awk", "{print $4}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     free_space = awk.communicate(input=df)[0]
-    '''
+    free_space = str(free_space).replace("Available","")
+    free_space = int(free_space[4:-3])
+
 
     needed_space = 0
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
@@ -548,7 +548,7 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
                          "--bytes",
                          source_fs_mountpoint], stdout=subprocess.PIPE).stdout
 
-    awk = subprocess.Popen(["akw", "{cprint $1}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    awk = subprocess.Popen(["awk", "{print $1}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     needed_space = awk.communicate(input=du)[0]
     '''
 
@@ -591,7 +591,10 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_g
     for item in os.listdir(source_fs_mountpoint):
         source = os.path.join(source_fs_mountpoint, item)
         target = os.path.join(target_fs_mountpoint, item)
-        if os.path.isdir(source):
+
+        if os.path.islink(source):
+            continue
+        elif os.path.isdir(source):
             shutil.copytree(source, target)
         else:
             shutil.copy2(source, target)
@@ -610,7 +613,7 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 
     subprocess.run([command_grubinstall,
                     "--target=i386-pc",
-                    "--boot-direcotry=" + target_fs_mountpoint,
+                    "--boot-directory=" + target_fs_mountpoint,
                     "--force", target_device])
 
 
@@ -619,15 +622,18 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 # name_grub_prefix: May be different between distributions, so need to be specified (grub/grub2)
 
 
-def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall):
-    global name_grub_prefix
+def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix):
 
     cprint("Installing custom GRUB config for legacy PC booting...", "green")
 
     grub_cfg = target_fs_mountpoint + "/" + name_grub_prefix + "/grub.cfg"
 
+    os.makedirs(target_fs_mountpoint + "/" + name_grub_prefix, exist_ok=True)
 
-# TODO: finish this
+    cfg = open(grub_cfg, "w")
+    cfg.write("ntldr /bootmgr\n")
+    cfg.write("boot")
+    cfg.close()
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # exit status:
@@ -707,12 +713,22 @@ def trap_debug():
 
 
 def check_for_big_files(source_fs_mountpoint):
+    for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
+        for file in filenames:
+            path = os.path.join(dirpath, file)
+            if os.path.getsize(path) > (2 ** 32) - 1:  # Max fat32 file size
+                cprint(
+                    "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS).",
+                    "red")
+                return 1
+    '''
     for file in os.listdir(source_fs_mountpoint):
         if os.path.getsize(file) > (2 ** 32) - 1:  # Max fat32 file size
             cprint(
                 "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS).",
                 "red")
             return 1
+    '''
     return 0
 
 
@@ -764,4 +780,9 @@ def call(func):
     method()
 
 
-init(RUNTIME_EXECUTABLE_NAME, global_only_for_gui)
+try:
+    init(RUNTIME_EXECUTABLE_NAME, global_only_for_gui)
+except KeyboardInterrupt:
+    pass
+except RuntimeError:
+    pass
