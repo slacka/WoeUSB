@@ -1,5 +1,25 @@
 #!/usr/bin/python3
 
+# A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
+# Copyright © 2013 Colin GILLE / congelli501
+# Copyright © 2017 slacka et. al.
+# Python port - WaxyMocha
+#
+# This file is part of WoeUSB.
+#
+# WoeUSB is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# WoeUSB is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import sys
 import argparse
@@ -9,6 +29,7 @@ import time
 import urllib.request
 import shutil
 import re
+import traceback
 from datetime import datetime
 
 # External tools
@@ -40,6 +61,8 @@ verbose = False
 # Disable message coloring when set to 1, set by --no-color
 no_color = False
 
+debug = False
+
 # NOTE: Need to pass to traps, so need to be global
 source_fs_mountpoint = "/media/woeusb_source_" + str(
     round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
@@ -64,12 +87,17 @@ def main(only_for_gui_ref):
     global verbose
     global no_color
     global target_device
+    global debug
 
     parser = setup_arguments()
     args = parser.parse_args()
 
     if args.debugging_internal_function_call != "":
         call(args.debugging_internal_function_call)
+        return 0
+
+    if args.about:
+        print_application_info()
         return 0
 
     current_state = 'enter-init'
@@ -79,7 +107,7 @@ def main(only_for_gui_ref):
     elif args.partition:
         install_mode = "partition"
     else:
-        cprint("You need to specify instalation type (--device or --partition")
+        echo_with_color("You need to specify instalation type (--device or --partition")
         return 1
 
     # source_media may be a optical disk drive or a disk image
@@ -103,16 +131,18 @@ def main(only_for_gui_ref):
     verbose = args.verbose
     no_color = args.no_color
 
+    debug = args.debug
+
     if check_runtime_dependencies(application_name, command_mkdosfs, command_mkntfs, command_grubinstall,
                                   name_grub_prefix):
         return 1
 
-    cprint(application_name + " v" + application_version)
-    cprint("==============================")
+    echo_with_color(application_name + " v" + application_version)
+    echo_with_color("==============================")
 
     if os.getuid() != 0:
-        cprint("Warning: You are not running ${application_name} as root!", "yellow")
-        cprint("Warning: This might be the reason of the following failure.", "yellow")
+        echo_with_color("Warning: You are not running ${application_name} as root!", "yellow")
+        echo_with_color("Warning: This might be the reason of the following failure.", "yellow")
 
     if check_runtime_parameters(install_mode, source_media, target_media):
         parser.print_help()
@@ -141,7 +171,7 @@ def main(only_for_gui_ref):
     current_state = "start-mounting"
 
     if mount_source_filesystem(source_media, source_fs_mountpoint):
-        cprint("Error: Unable to mount source filesystem", "red")
+        echo_with_color("Error: Unable to mount source filesystem", "red")
         return 1
 
     if target_filesystem_type == "FAT":
@@ -149,7 +179,7 @@ def main(only_for_gui_ref):
             return 1
 
     if mount_target_filesystem(target_partition, target_fs_mountpoint, "vfat"):
-        cprint("Error: Unable to mount target filesystem", "red")
+        echo_with_color("Error: Unable to mount target filesystem", "red")
         return 1
 
     if check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
@@ -177,15 +207,11 @@ def main(only_for_gui_ref):
     return 0
 
 
-def print_version():
-    cprint(application_version)
-
-
 def print_application_info():
-    cprint(application_name + " " + application_version)
-    cprint(application_site_url)
-    cprint(application_copyright_declaration)
-    cprint(application_copyright_notice)
+    print(application_name + " " + application_version)
+    print(application_site_url)
+    print(application_copyright_declaration)
+    print(application_copyright_notice)
 
 
 def check_runtime_dependencies(application_name, command_mkdosfs, command_mkntfs, command_grubinstall,
@@ -195,20 +221,20 @@ def check_runtime_dependencies(application_name, command_mkdosfs, command_mkntfs
 
 def check_runtime_parameters(install_mode, source_media, target_media):
     if not os.path.isfile(source_media) and not pathlib.Path(source_media).is_block_device():
-        cprint("Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
+        echo_with_color("Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
                "red")
         return 1
 
     if not pathlib.Path(target_media).is_block_device():
-        cprint("Error: Target media \"" + target_media + "\" is not a block device file!", "red")
+        echo_with_color("Error: Target media \"" + target_media + "\" is not a block device file!", "red")
         return 1
 
     if install_mode == "device" and target_media[-1].isdigit():
-        cprint("Error: Target media \"" + target_media + "\" is not an entire storage device!", "red")
+        echo_with_color("Error: Target media \"" + target_media + "\" is not an entire storage device!", "red")
         return 1
 
     if install_mode == "partition" and not target_media[-1].isdigit():
-        cprint("Error: Target media \"" + target_media + "\" is not an partition!", "red")
+        echo_with_color("Error: Target media \"" + target_media + "\" is not an partition!", "red")
         return 1
     return 0
 
@@ -225,8 +251,8 @@ def determine_target_parameters(install_mode, target_media):
         target_partition = target_media + str(1)
 
     if verbose:
-        cprint("Info: Target device is " + target_device)
-        cprint("Info: Target partition is " + target_partition)
+        echo_with_color("Info: Target device is " + target_device)
+        echo_with_color("Info: Target partition is " + target_partition)
 
     return [target_device, target_partition]
 
@@ -235,33 +261,28 @@ def check_is_target_device_busy(device):
     mount = subprocess.run("mount", stdout=subprocess.PIPE).stdout
     if re.findall(device, str(mount)) != []:
         return 1
-    '''
-    grep = subprocess.Popen(["grep", device], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    if grep.communicate(input=mount.stdout)[0] != "":
-        return 1
-    '''
     return 0
 
 
 def check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
     if check_is_target_device_busy(source_media):
-        cprint("Error: Source media is currently mounted, unmount the partition then try again", "red")
+        echo_with_color("Error: Source media is currently mounted, unmount the partition then try again", "red")
         return 1
 
     if install_mode == "partition":
         if check_is_target_device_busy(target_partition):
-            cprint("Error: Target partition is currently mounted, unmount the partition then try again", "red")
+            echo_with_color("Error: Target partition is currently mounted, unmount the partition then try again", "red")
             return 1
     else:
         if check_is_target_device_busy(target_device):
-            cprint(
+            echo_with_color(
                 "Error: Target device is currently busy, unmount all mounted partitions in target device then try again",
                 "red")
             return 1
 
 
 def wipe_existing_partition_table_and_filesystem_signatures(target_device):
-    cprint("Wiping all existing partition table and filesystem signatures in " + target_device, "green")
+    echo_with_color("Wiping all existing partition table and filesystem signatures in " + target_device, "green")
     subprocess.run(["wipefs", "--all", target_device])
     check_if_the_drive_is_really_wiped(target_device)
 
@@ -271,21 +292,21 @@ def wipe_existing_partition_table_and_filesystem_signatures(target_device):
 
 
 def check_if_the_drive_is_really_wiped(target_device):
-    cprint("Ensure that %s is really wiped...")
-    cprint(target_device)
+    echo_with_color("Ensure that %s is really wiped...")
+    echo_with_color(target_device)
 
     lsblk = subprocess.run(["lsblk", "--pairs", "--output", "NAME,TYPE", target_device], stdout=subprocess.PIPE).stdout
 
     grep = subprocess.Popen(["grep", "--count", "TYPE=\"part\""], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     if grep.communicate(input=lsblk)[0] != "":
-        cprint(
+        echo_with_color(
             "Error: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.")
         return 1
     return 0
 
 
 def create_target_partition_table(target_device, partition_table_type):
-    cprint("Creating new partition table on " + target_device + "...", "green")
+    echo_with_color("Creating new partition table on " + target_device + "...", "green")
 
     parted_partiton_table_argument = ""
 
@@ -293,10 +314,10 @@ def create_target_partition_table(target_device, partition_table_type):
         parted_partiton_table_argument = "msdos"
     elif partition_table_type in ["gpt", "guid"]:
         parted_partiton_table_argument = "gpt"
-        cprint("Error: Currently GUID partition table is not supported.", "red")
+        echo_with_color("Error: Currently GUID partition table is not supported.", "red")
         return 2
     else:
-        cprint("Error: Partition table not supported.", "red")
+        echo_with_color("Error: Partition table not supported.", "red")
         return 2
 
     # Create partition table(and overwrite the old one, whatever it was)
@@ -304,10 +325,10 @@ def create_target_partition_table(target_device, partition_table_type):
 
 
 def workaround_make_system_realize_partition_table_changed(target_device):
-    cprint("Making system realize that partition table has changed...")
+    echo_with_color("Making system realize that partition table has changed...")
 
     subprocess.run(["blockdev", "--rereadpt", target_device])
-    cprint("Wait 3 seconds for block device nodes to populate...")
+    echo_with_color("Wait 3 seconds for block device nodes to populate...")
 
     time.sleep(3)
 
@@ -320,10 +341,10 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
     elif filesystem_type in ["NTFS", "ntfs"]:
         parted_mkpart_fs_type = "ntfs"
     else:
-        cprint("Error: Filesystem not supported", "red")
+        echo_with_color("Error: Filesystem not supported", "red")
         return 2
 
-    cprint("Creating target partition...", "green")
+    echo_with_color("Creating target partition...", "green")
 
     # Create target partition
     # We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
@@ -351,7 +372,7 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
                         "-1025s"])  # Leave 512KiB==1024sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 512KiB and is intentionally let-it-be.
     # FIXME: Leave exact 512KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
     else:
-        cprint("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
+        echo_with_color("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
 
     workaround_make_system_realize_partition_table_changed(target_device)
 
@@ -361,7 +382,7 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
     elif filesystem_type in ["NTFS", "ntfs"]:
         subprocess.run([command_mkntfs, "--quick", "--label", filesystem_label, target_partition])
     else:
-        cprint("FATAL: Shouldn't be here")
+        echo_with_color("FATAL: Shouldn't be here")
         return 1
 
 
@@ -390,21 +411,20 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
     try:
         file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")[0]
     except urllib.request.ContentTooShortError:
-        cprint(
+        echo_with_color(
             "Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem.")
         return 1
 
-    shutil.move(file, download_directory.decode("utf-8").strip()  + "/" + file)  # move file to download_directory
+    shutil.move(file, download_directory.decode("utf-8").strip() + "/" + file)  # move file to download_directory
 
-    shutil.copy2(download_directory.decode("utf-8").strip()  + "/uefi-ntfs.img", uefi_ntfs_partition)
-    # subprocess.run(["dd", "if=" + download_directory + "/uefi-ntfs.img", "of=" + uefi_ntfs_partition])
+    shutil.copy2(download_directory.decode("utf-8").strip() + "/uefi-ntfs.img", uefi_ntfs_partition)
 
 
 # Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
 
 
 def workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device):
-    cprint(
+    echo_with_color(
         "Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled")
 
     subprocess.run(["parted", "--script",
@@ -422,14 +442,14 @@ def check_target_partition(target_partition, install_mode, target_device):
     target_filesystem = subprocess.run(["lsblk",
                                         "--output", "FSTYPE",
                                         "--noheadings",
-                                        target_partition], stdout=subprocess.PIPE).stdout
+                                        target_partition], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
 
     if target_filesystem == "vfat":
         pass  # supported
     elif target_filesystem == "ntfs":
         check_uefi_ntfs_support_partition(target_device)
     else:
-        cprint("Error: Target filesystem not supported, currently supported filesystem: FAT, NTFS.")
+        echo_with_color("Error: Target filesystem not supported, currently supported filesystem: FAT, NTFS.", "red")
         return 1
 
     return 0
@@ -444,31 +464,21 @@ def check_uefi_ntfs_support_partition(target_device):
     lsblk = subprocess.run(["lsblk",
                             "--output", "LABEL",
                             "--noheadings",
-                            target_device], stdout=subprocess.PIPE).stdout
+                            target_device], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
 
     if re.findall("UEFI_NTFS", lsblk) != []:
-        cprint(
+        echo_with_color(
             "Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!")
-        cprint("Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
-
-    '''
-    grep = subprocess.Popen(["grep",
-                             "--silent",
-                             "UEFI_NTFS"])
-    if grep.communicate(input=lsblk)[0] != "":
-        cprint(
-            "Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!")
-        cprint("Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
-    '''
+        echo_with_color("Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
-    cprint("Mounting source filesystem...", "green")
+    echo_with_color("Mounting source filesystem...", "green")
 
     # os.makedirs(source_fs_mountpoint, exist_ok=True)
 
     if subprocess.run(["mkdir", "--parents", source_fs_mountpoint]).returncode != 0:
-        cprint("Error: Unable to create " + source_fs_mountpoint + " mountpoint directory", "red")
+        echo_with_color("Error: Unable to create " + source_fs_mountpoint + " mountpoint directory", "red")
         return 1
 
     if os.path.isfile(source_media):
@@ -477,14 +487,14 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
                            "--types", "udf,iso9660",
                            source_media,
                            source_fs_mountpoint]).returncode != 0:
-            cprint("Error: Unable to mount source media", "red")
+            echo_with_color("Error: Unable to mount source media", "red")
             return 1
     else:
         if subprocess.run(["mount",
                            "--options", "ro",
                            source_media,
                            source_fs_mountpoint]).returncode != 0:
-            cprint("Error: Unable to mount source media", "red")
+            echo_with_color("Error: Unable to mount source media", "red")
             return 1
 
 
@@ -497,24 +507,24 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
 def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
     mount_options = "defaults"
 
-    cprint("Mounting target filesystem...", "green")
+    echo_with_color("Mounting target filesystem...", "green")
 
     # os.makedirs(target_fs_mountpoint, exist_ok=True)
 
     if subprocess.run(["mkdir", "--parents", target_fs_mountpoint]).returncode != 0:
-        cprint("Error: Unable to create " + target_fs_mountpoint + " mountpoint directory", "red")
+        echo_with_color("Error: Unable to create " + target_fs_mountpoint + " mountpoint directory", "red")
         return 1
 
     # Determine proper mount options according to filesystem type
     if target_fs_type == "vfat":
         mount_options = "utf8=1"
     else:
-        cprint("Fatal: Unsupported target_fs_type, please report bug.", "red")
+        echo_with_color("Fatal: Unsupported target_fs_type, please report bug.", "red")
 
     if subprocess.run(["mount",
                        target_partition,
                        target_fs_mountpoint]).returncode != 0:
-        cprint("Error: Unable to mount target media", "red")
+        echo_with_color("Error: Unable to mount target media", "red")
         return 1
 
 
@@ -523,13 +533,13 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
     df = subprocess.run(["df",
                          "--block-size=1",
                          target_fs_mountpoint], stdout=subprocess.PIPE).stdout
-    #free_space = int(df.strip().split()[4])
+    # free_space = int(df.strip().split()[4])
 
     awk = subprocess.Popen(["awk", "{print $4}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     free_space = awk.communicate(input=df)[0]
-    free_space = str(free_space).replace("Available","")
-    free_space = int(free_space[4:-3])
-
+    free_space = free_space.decode("utf-8").strip()
+    free_space = re.sub("[^0-9]", "", free_space)
+    free_space = int(free_space)
 
     needed_space = 0
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
@@ -537,23 +547,13 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
             path = os.path.join(dirpath, file)
             needed_space += os.path.getsize(path)
 
-    '''
-    du = subprocess.run(["du",
-                         "--summarize",
-                         "--bytes",
-                         source_fs_mountpoint], stdout=subprocess.PIPE).stdout
-
-    awk = subprocess.Popen(["awk", "{print $1}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    needed_space = awk.communicate(input=du)[0]
-    '''
-
     additional_space_required_for_grub_installation = 1000 * 1000 * 10  # 10MiB
 
     needed_space += additional_space_required_for_grub_installation
 
     if needed_space > free_space:
-        cprint("Error: Not enough free space on target partition!")
-        cprint(
+        echo_with_color("Error: Not enough free space on target partition!")
+        echo_with_color(
             "Error: We required ${needed_space_human_readable}(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
         return 1
 
@@ -568,30 +568,26 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_g
             path = os.path.join(dirpath, file)
             total_size += os.path.getsize(path)
 
-    '''
-    du = subprocess.run(["du",
-                         "--sumarize",
-                         "--bytes",
-                         source_fs_mountpoint], stdout=subprocess.PIPE).stdout
-
-    awk = subprocess.Popen(["awk", "{cprint $1}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    total_size = awk.communicate(input=du)[0]
-    '''
-
     # FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
     trigger_wxGenericProgressDialog_pulse("off", only_for_gui)
 
-    cprint("Copying files from source media...", "green")
+    echo_with_color("Copying files from source media...", "green")
 
     for item in os.listdir(source_fs_mountpoint):
         source = os.path.join(source_fs_mountpoint, item)
         target = os.path.join(target_fs_mountpoint, item)
 
-        if os.path.islink(source):
+        if os.path.islink(source):  # Do not copy links
             continue
         elif os.path.isdir(source):
+            if os.path.exists(target):  # if target dir exists, remove it
+                shutil.rmtree(target)
+
             shutil.copytree(source, target)
         else:
+            if os.path.exists(target):  # if target file exists, remove it
+                os.remove(target)
+
             shutil.copy2(source, target)
 
 
@@ -604,7 +600,7 @@ def workaround_linux_make_writeback_buffering_not_suck(mode):
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
-    cprint("Installing GRUB bootloader for legacy PC booting support...", "green")
+    echo_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
 
     subprocess.run([command_grubinstall,
                     "--target=i386-pc",
@@ -617,9 +613,9 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 # name_grub_prefix: May be different between distributions, so need to be specified (grub/grub2)
 
 
-def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix):
-
-    cprint("Installing custom GRUB config for legacy PC booting...", "green")
+def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall,
+                                             name_grub_prefix):
+    echo_with_color("Installing custom GRUB config for legacy PC booting...", "green")
 
     grub_cfg = target_fs_mountpoint + "/" + name_grub_prefix + "/grub.cfg"
 
@@ -629,6 +625,7 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
     cfg.write("ntldr /bootmgr\n")
     cfg.write("boot")
     cfg.close()
+
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # exit status:
@@ -642,37 +639,27 @@ def cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, only_for_gui
     trigger_wxGenericProgressDialog_pulse("off", only_for_gui)
 
     if os.path.ismount(source_fs_mountpoint):  # os.path.ismount() checks if path is a mount point
-        cprint("Unmounting and removing " + source_fs_mountpoint + "...", "green")
+        echo_with_color("Unmounting and removing " + source_fs_mountpoint + "...", "green")
         if not subprocess.run(["umount", source_fs_mountpoint]).returncode:
             try:
                 os.rmdir(source_fs_mountpoint)
             except OSError:
-                cprint("Warning: Unable to remove source mountpoint", "yellow")
+                echo_with_color("Warning: Unable to remove source mountpoint", "yellow")
                 clean_result = "unclean"
-            '''
-            if subprocess.run(["rmdir", source_fs_mountpoint]).returncode:
-                cprint("Warning: Unable to remove source mountpoint", "yellow")
-                clean_result = "unclean"
-            '''
         else:
-            cprint("Warning: Unable to unmount source filesystem.", "yellow")
+            echo_with_color("Warning: Unable to unmount source filesystem.", "yellow")
             clean_result = "unclean"
 
     if os.path.ismount(target_fs_mountpoint):  # os.path.ismount() checks if path is a mount point
-        cprint("Unmounting and removing " + target_fs_mountpoint + "...", "green")
+        echo_with_color("Unmounting and removing " + target_fs_mountpoint + "...", "green")
         if not subprocess.run(["umount", target_fs_mountpoint]).returncode:
             try:
                 os.rmdir(target_fs_mountpoint)
             except OSError:
-                cprint("Warning: Unable to remove target mountpoint", "yellow")
+                echo_with_color("Warning: Unable to remove target mountpoint", "yellow")
                 clean_result = "unclean"
-            '''
-            if subprocess.run(["rmdir", target_fs_mountpoint]).returncode:
-                cprint("Warning: Unable to remove target mountpoint", "yellow")
-                clean_result = "unclean"
-            '''
         else:
-            cprint("Warning: Unable to unmount target filesystem.", "yellow")
+            echo_with_color("Warning: Unable to unmount target filesystem.", "yellow")
             clean_result = "unsafe"
 
     if clean_result == "unclean":
@@ -692,18 +679,10 @@ def check_for_big_files(source_fs_mountpoint):
         for file in filenames:
             path = os.path.join(dirpath, file)
             if os.path.getsize(path) > (2 ** 32) - 1:  # Max fat32 file size
-                cprint(
+                echo_with_color(
                     "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS).",
                     "red")
                 return 1
-    '''
-    for file in os.listdir(source_fs_mountpoint):
-        if os.path.getsize(file) > (2 ** 32) - 1:  # Max fat32 file size
-            cprint(
-                "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS).",
-                "red")
-            return 1
-    '''
     return 0
 
 
@@ -718,7 +697,8 @@ def setup_arguments():
                         help="Copy Windows files to an existing partition of a USB storage device and make it bootable.  This allows files to coexist as long as no filename conflict exists.")
 
     parser.add_argument("--verbose", "-v", action="store_true", help="Verbose mode")
-    parser.add_argument("--version", "-V", action="store_true", help="Print application version")
+    parser.add_argument("--version", "-V", action="version", version=application_version,
+                        help="Print application version")
     parser.add_argument("--about", "-ab", action="store_true", help="Show info about this application")
     parser.add_argument("--no_color", action="store_true", help="Disable message coloring")
     parser.add_argument("--debug", action="store_true", help="Enable script debugging")
@@ -739,7 +719,7 @@ def setup_arguments():
 # Second parameter take color of text, default is no color
 
 
-def cprint(text, color=""):
+def echo_with_color(text, color=""):
     if no_color or color == "":
         sys.stdout.write(text + "\n")
     else:
@@ -755,5 +735,10 @@ def call(func):
     method()
 
 
-main(global_only_for_gui)
+try:
+    main(global_only_for_gui)
+except Exception as error:
+    echo_with_color(error, "red")
+    if debug:
+        traceback.print_exc()
 cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, global_only_for_gui)
