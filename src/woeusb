@@ -1100,6 +1100,25 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 	return $?
 }; declare -fr workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled
 
+## Check every file in source directory for files bigger than max fat32 file size (~4GB)
+check_for_big_files(){
+	local -r source_fs_mountpoint="${1}"
+	local IFS_backup=$IFS
+
+	IFS=$'\n'
+	for file in ` find "${source_fs_mountpoint}" -type f `; do
+		if (( $(stat -c "%s" $file) > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
+			echo_with_color red "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS)."
+			IFS=$IFS_backup
+			unset IFS_backup
+			return 1
+		fi
+	done
+	IFS=$IFS_backup
+	unset IFS_backup
+	return 0
+}; declare -fr check_for_big_files
+
 ## Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
 ## target_partition: The target partition to check
 ## install_mode: The usb storage creation method to be used
@@ -2010,25 +2029,6 @@ util_check_function_parameters_quantity(){
 	fi
 	return 0
 }; declare -fr util_check_function_parameters_quantity
-
-## Check every file in source directory for files bigger than max fat32 file size (~4GB)
-check_for_big_files(){
-	local -r source_fs_mountpoint="${1}"
-	local IFS_backup=$IFS
-
-	IFS=$'\n'
-	for file in ` find "${source_fs_mountpoint}" -type f `; do
-		if (( $(stat -c "%s" $file) > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
-			echo_with_color red "Error: File $file is larger than that supported by the fat32 filesystem. Use NTFS (--target-filesystem NTFS)."
-			IFS=$IFS_backup
-			unset IFS_backup
-			return 1
-		fi
-	done
-	IFS=$IFS_backup
-	unset IFS_backup
-	return 0
-}; declare -fr check_for_big_files
 
 trap trap_exit EXIT
 trap trap_errexit ERR
