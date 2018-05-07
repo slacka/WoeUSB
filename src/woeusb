@@ -176,7 +176,7 @@ init(){
 			new_file_system_label\
 			workaround_bios_boot_flag\
 			target_filesystem_type\
-			only_for_gui_ref; then
+			global_only_for_gui; then
 		print_help\
 			"${application_name}"\
 			"${application_version}"\
