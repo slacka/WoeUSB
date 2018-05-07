@@ -886,7 +886,7 @@ check_if_the_drive_is_really_wiped(){
 	else
 		return 0
 	fi
-}; declare check_if_the_drive_is_really_wiped
+}; declare -fr check_if_the_drive_is_really_wiped
 
 create_target_partition_table(){
 	util_check_function_parameters_quantity 2 $#
