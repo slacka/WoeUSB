@@ -13,13 +13,15 @@ from datetime import datetime
 
 # External tools
 import termcolor
-import parted
+# import parted  # Unused for now
 
-RUNTIME_EXECUTABLE_PATH = ""
-RUNTIME_EXECUTABLE_FILENAME = ""
-RUNTIME_EXECUTABLE_NAME = ""
-UNTIME_EXECUTABLE_DIRECTORY = ""
-RUNTIME_COMMANDLINE_BASECOMMAND = ""
+application_name = 'WoeUSB'
+application_version = '@@WOEUSB_VERSION@@'
+DEFAULT_NEW_FS_LABEL = 'Windows USB'
+
+application_site_url = 'https://github.com/slacka/WoeUSB'
+application_copyright_declaration = "Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"
+application_copyright_notice = application_name + " is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
 
 '''
 Global Parameters
@@ -37,8 +39,6 @@ verbose = False
 
 # Disable message coloring when set to 1, set by --no-color
 no_color = False
-
-DD_BLOCK_SIZE = 4 * 1024 * 1024  # 4MiB
 
 # NOTE: Need to pass to traps, so need to be global
 source_fs_mountpoint = "/media/woeusb_source_" + str(
@@ -59,7 +59,7 @@ temp_directory = subprocess.run(["mktemp", "--tmpdir", "--directory", " WoeUSB.X
                                 stdout=subprocess.PIPE).stdout
 
 
-def init(runtime_executable_name, only_for_gui_ref):
+def main(only_for_gui_ref):
     global current_state
     global verbose
     global no_color
@@ -72,20 +72,15 @@ def init(runtime_executable_name, only_for_gui_ref):
         call(args.debugging_internal_function_call)
         return 0
 
-    application_name = 'WoeUSB'
-    application_version = '@@WOEUSB_VERSION@@'
-    DEFAULT_NEW_FS_LABEL = 'Windows USB'
-
-    application_site_url = 'https://github.com/slacka/WoeUSB'
-    application_copyright_declaration = "Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"
-    application_copyright_notice = application_name + " is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
-
     current_state = 'enter-init'
 
     if args.device:
         install_mode = "device"
-    else:
+    elif args.partition:
         install_mode = "partition"
+    else:
+        cprint("You need to specify instalation type (--device or --partition")
+        return 1
 
     # source_media may be a optical disk drive or a disk image
     # target_media may be an entire usb storage device or just a partition
@@ -648,7 +643,7 @@ def cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, only_for_gui
 
     if os.path.ismount(source_fs_mountpoint):  # os.path.ismount() checks if path is a mount point
         cprint("Unmounting and removing " + source_fs_mountpoint + "...", "green")
-        if not subprocess.run(["mount", source_fs_mountpoint]).returncode:
+        if not subprocess.run(["umount", source_fs_mountpoint]).returncode:
             try:
                 os.rmdir(source_fs_mountpoint)
             except OSError:
@@ -665,7 +660,7 @@ def cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, only_for_gui
 
     if os.path.ismount(target_fs_mountpoint):  # os.path.ismount() checks if path is a mount point
         cprint("Unmounting and removing " + target_fs_mountpoint + "...", "green")
-        if not subprocess.run(["mount", target_fs_mountpoint]).returncode:
+        if not subprocess.run(["umount", target_fs_mountpoint]).returncode:
             try:
                 os.rmdir(target_fs_mountpoint)
             except OSError:
@@ -689,26 +684,6 @@ def cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, only_for_gui
 
 
 def trigger_wxGenericProgressDialog_pulse(swich, only_for_gui):
-    pass
-
-
-def trap_errexit():
-    pass
-
-
-def trap_exit():
-    pass
-
-
-def trap_interrupt():
-    pass
-
-
-def trap_return():
-    pass
-
-
-def trap_debug():
     pass
 
 
@@ -780,9 +755,5 @@ def call(func):
     method()
 
 
-try:
-    init(RUNTIME_EXECUTABLE_NAME, global_only_for_gui)
-except KeyboardInterrupt:
-    pass
-except RuntimeError:
-    pass
+main(global_only_for_gui)
+cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, global_only_for_gui)
