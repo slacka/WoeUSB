@@ -273,7 +273,7 @@ init(){
 	fi
 
 	if [ "${target_filesystem_type}" == 'FAT' ]; then
-		if ! check_for_big_files\
+		if ! check_fat32_filesize_limitation\
 				"${source_fs_mountpoint}"; then
 			exit 1
 		fi
@@ -1101,7 +1101,7 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 }; declare -fr workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled
 
 ## Check every file in source directory for files bigger than max fat32 file size (~4GB)
-check_for_big_files(){
+check_fat32_filesize_limitation(){
 	util_check_function_parameters_quantity 1 $#
 	local -r source_fs_mountpoint="${1}"
 	local IFS_backup=$IFS
@@ -1118,7 +1118,7 @@ check_for_big_files(){
 	IFS=$IFS_backup
 	unset IFS_backup
 	return 0
-}; declare -fr check_for_big_files
+}; declare -fr check_fat32_filesize_limitation
 
 ## Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
 ## target_partition: The target partition to check
