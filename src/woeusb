@@ -1102,6 +1102,7 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 
 ## Check every file in source directory for files bigger than max fat32 file size (~4GB)
 check_for_big_files(){
+	util_check_function_parameters_quantity 1 $#
 	local -r source_fs_mountpoint="${1}"
 	local IFS_backup=$IFS
 
