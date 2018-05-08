@@ -283,7 +283,7 @@ init(){
 
 	if ! mount_target_filesystem\
 		"${target_partition}"\
-		"${target_fs_mountpoint}"
+		"${target_fs_mountpoint}" \
 		"${target_filesystem_type}"; then
 		echo_with_color red 'Error: Unable to mount target filesystem'
 		exit 1
