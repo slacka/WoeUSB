@@ -176,7 +176,7 @@ init(){
 			new_file_system_label\
 			workaround_bios_boot_flag\
 			target_filesystem_type\
-			only_for_gui_ref; then
+			global_only_for_gui; then
 		print_help\
 			"${application_name}"\
 			"${application_version}"\
@@ -233,6 +233,22 @@ init(){
 		"${target_device}"\
 		"${target_partition}"
 
+	current_state=mount-source-filesystem
+
+	if ! mount_source_filesystem\
+		"${source_media}"\
+		"${source_fs_mountpoint}"; then
+		echo_with_color red 'Error: Unable to mount source filesystem'
+		exit 1
+	fi
+
+	if [ "${target_filesystem_type}" == 'FAT' ]; then
+		if ! check_fat32_filesize_limitation\
+				"${source_fs_mountpoint}"; then
+			exit 1
+		fi
+	fi
+
 	if [ "${install_mode}" = 'device' ]; then
 		wipe_existing_partition_table_and_filesystem_signatures\
 			"${target_device}"
@@ -263,14 +279,7 @@ init(){
 			"${target_device}"
 	fi
 
-	current_state='start-mounting'
-
-	if ! mount_source_filesystem\
-		"${source_media}"\
-		"${source_fs_mountpoint}"; then
-		echo_with_color red 'Error: Unable to mount source filesystem'
-		exit 1
-	fi
+	current_state=mount-target-filesystem
 
 	if [ "${target_filesystem_type}" == 'FAT' ]; then
 		if ! check_for_big_files\
@@ -281,8 +290,8 @@ init(){
 
 	if ! mount_target_filesystem\
 		"${target_partition}"\
-		"${target_fs_mountpoint}"\
-		vfat; then
+		"${target_fs_mountpoint}"
+		"${target_filesystem_type}"; then
 		echo_with_color red 'Error: Unable to mount target filesystem'
 		exit 1
 	fi
@@ -886,7 +895,7 @@ check_if_the_drive_is_really_wiped(){
 	else
 		return 0
 	fi
-}; declare check_if_the_drive_is_really_wiped
+}; declare -fr check_if_the_drive_is_really_wiped
 
 create_target_partition_table(){
 	util_check_function_parameters_quantity 2 $#
@@ -1100,6 +1109,26 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 	return $?
 }; declare -fr workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled
 
+## Check every file in source directory for files bigger than max fat32 file size (~4GB)
+check_fat32_filesize_limitation(){
+	util_check_function_parameters_quantity 1 $#
+	local -r source_fs_mountpoint="${1}"
+
+	while IFS= read -r -d '' file; do
+		if (( "$(stat -c '%s' "${file}")" > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
+			printf_with_color\
+				red\
+				'Error: File "%s" in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.\n'\
+				"${file}"
+			prntf_with_color\
+				red\
+				'Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.\n'
+			return 1
+		fi
+	done < <(find "${source_fs_mountpoint}" -type f)
+	return 0
+}; declare -fr check_fat32_filesize_limitation
+
 ## Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
 ## target_partition: The target partition to check
 ## install_mode: The usb storage creation method to be used
@@ -1203,7 +1232,7 @@ mount_source_filesystem(){
 # Mount target filesystem to existing path as mountpoint
 # target_partition: The partition device file target filesystem resides, for example /dev/sdX1
 # target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
-# target_fs_type: The filesystem of the target filesystem, this is same as the --types argument of mount(8), currently supports: vfat
+# target_fs_type: The filesystem of the target filesystem currently supports: FAT, NTFS
 mount_target_filesystem(){
 	util_check_function_parameters_quantity 3 $#
 	local target_partition="$1"; shift
@@ -1224,8 +1253,11 @@ mount_target_filesystem(){
 
 	# Determine proper mount options according to filesystem type
 	case "${target_fs_type}" in
-		vfat)
+		FAT)
 			mount_options='utf8=1'
+		;;
+		NTFS)
+			:
 		;;
 		*)
 			printf_with_color\
@@ -1604,61 +1636,43 @@ install_legacy_pc_bootloader_grub_config(){
 	} > "${grub_cfg}"; unset target_fs_uuid
 }; declare -fr install_legacy_pc_bootloader_grub_config
 
-## Unmount mounted filesystems and clean-up mountpoints before exiting program
-## exit status:
-##     unclean(2): Not fully clean, target device can be safely detach from host
-##     unsafe(3): Target device cannot be safely detach from host
-cleanup_mountpoints(){
-	util_check_function_parameters_quantity 3 "${#}"
-	local -r source_fs_mountpoint="${1}"; shift
-	local -r target_fs_mountpoint="${1}"; shift
-	local -ir only_for_gui="${1}"
-
-	local clean_result='unknown'
-
-	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
-	trigger_wxGenericProgressDialog_pulse\
-		off\
-		"${only_for_gui}"
+## Unmount mounted filesystem and clean-up mountpoint before exiting program
+## return_value: 1 - Failed to unmount / 2 - Failed to remove mountpoint
+cleanup_mountpoint(){
+	util_check_function_parameters_quantity 2 "${#}"
+	local -r fs_mountpoint="${1}"; shift
+	local -ir only_for_gui="${1}"; shift
 
 	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
 	popd &>/dev/null\
 		|| true
 
-	if [ -e "${source_fs_mountpoint}" ]; then
-		echo_with_color green "Unmounting and removing '${source_fs_mountpoint}'..."
-		if umount "${source_fs_mountpoint}"; then
-			if ! rmdir "${source_fs_mountpoint}"; then
-				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove source mountpoint"
-				clean_result='unclean'
-			fi
-		else
-			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount source filesystem."
-			clean_result='unclean'
+	if [ -e "${fs_mountpoint}" ]; then
+		printf_with_color \
+			green \
+			'Unmounting and removing "%s"...\n' \
+			"${fs_mountpoint}"
+		if ! umount "${fs_mountpoint}"; then
+			printf_with_color \
+				yellow \
+				'%s: Warning: Unable to unmount "%s".\n' \
+				"${FUNCNAME[0]}" \
+				"${fs_mountpoint}"
+			return 1
+		fi
+
+		if ! rmdir "${fs_mountpoint}"; then
+			printf_with_color \
+				yellow \
+				'%s: Warning: Unable to remove "%s".\n' \
+				"${FUNCNAME[0]}" \
+				"${fs_mountpoint}"
+			return 2
 		fi
 	fi
 
-	if [ -e "${target_fs_mountpoint}" ]; then
-	echo_with_color green "Unmounting and removing '${target_fs_mountpoint}'..."
-		if umount "${target_fs_mountpoint}"; then
-			if ! rmdir "${target_fs_mountpoint}"; then
-				echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to remove target mountpoint"
-				clean_result='unclean'
-			fi
-		else
-			echo_with_color yellow "${FUNCNAME[0]}: Warning: Unable to unmount target filesystem."
-			clean_result='unsafe'
-		fi
-	fi
-
-	if [ "${clean_result}" == 'unclean' ]; then
-		return 2
-	elif [ "${clean_result}" == 'unsafe' ]; then
-		return 3
-	else
-		return 0
-	fi
-}; declare -fr cleanup_mountpoints
+	return 0
+}; declare -fr cleanup_mountpoint
 
 ## This function continuously moves the GUI creation dialog's progressing bar bit by bit, by running `echo pulse` every 0.05 seconds until the next call chooses to turn off
 ## Refer src/MainPanel.cpp MainPanel::OnInstall(wxCommandEvent& event) method for more info
@@ -1714,6 +1728,17 @@ trap_errexit(){
 }; declare -fr trap_errexit
 
 trap_exit(){
+	# Mountpoints aren't successfully removed
+	local flag_unclean=false
+
+	# Target filesystem failed to unmount
+	local flag_unsafe=false
+
+	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
+	trigger_wxGenericProgressDialog_pulse\
+		off\
+		"${global_only_for_gui}"
+
 	case "${current_state}" in
 		copying-filesystem|finished)
 			workaround_linux_make_writeback_buffering_not_suck\
@@ -1721,23 +1746,45 @@ trap_exit(){
 		;;
 	esac
 
-	if \
-		util_is_parameter_set_and_not_empty\
-			source_fs_mountpoint\
-		&& util_is_parameter_set_and_not_empty\
-			target_fs_mountpoint; then
-		if cleanup_mountpoints\
-			"${source_fs_mountpoint}"\
-			"${target_fs_mountpoint}"\
+	if util_is_parameter_set_and_not_empty\
+		source_fs_mountpoint; then
+		if ! cleanup_mountpoint \
+			"${source_fs_mountpoint}" \
 			"${global_only_for_gui}"; then
-			:
-		elif [ "${?}" == '2' ]; then
-			echo_with_color yellow 'Some mountpoints are not unmount/cleaned successfully and must be done manually'
-		else # $? == 3, target filesystem not unmounted
-			echo_with_color yellow 'We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption'
-			echo_with_color yellow 'Some mountpoints are not unmount/cleaned successfully and must be done manually'
+			flag_unclean=true
 		fi
 	fi
+
+	if util_is_parameter_set_and_not_empty\
+		target_fs_mountpoint; then
+		if ! cleanup_mountpoint \
+			"${target_fs_mountpoint}" \
+			"${global_only_for_gui}"; then
+			local -i return_value="${?}"
+
+			flag_unclean=true
+
+			if [ "${return_value}" = 1 ]; then
+				flag_unsafe=true
+			fi
+		fi
+	fi
+
+	if [ "${flag_unclean}" = true ]; then
+		echo_with_color \
+			yellow \
+			'Some mountpoints are not unmount/cleaned successfully and must be done manually'
+	fi
+
+	if [ "${flag_unsafe}" = true ]; then
+		echo_with_color \
+			yellow \
+			'We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption'
+	fi
+
+	unset \
+		flag_unclean \
+		flag_unsafe
 
 	if \
 		util_is_parameter_set_and_not_empty\
