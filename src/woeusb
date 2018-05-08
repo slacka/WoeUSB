@@ -233,6 +233,22 @@ init(){
 		"${target_device}"\
 		"${target_partition}"
 
+	current_state=mount-source-filesystem
+
+	if ! mount_source_filesystem\
+		"${source_media}"\
+		"${source_fs_mountpoint}"; then
+		echo_with_color red 'Error: Unable to mount source filesystem'
+		exit 1
+	fi
+
+	if [ "${target_filesystem_type}" == 'FAT' ]; then
+		if ! check_fat32_filesize_limitation\
+				"${source_fs_mountpoint}"; then
+			exit 1
+		fi
+	fi
+
 	if [ "${install_mode}" = 'device' ]; then
 		wipe_existing_partition_table_and_filesystem_signatures\
 			"${target_device}"
@@ -263,21 +279,7 @@ init(){
 			"${target_device}"
 	fi
 
-	current_state='start-mounting'
-
-	if ! mount_source_filesystem\
-		"${source_media}"\
-		"${source_fs_mountpoint}"; then
-		echo_with_color red 'Error: Unable to mount source filesystem'
-		exit 1
-	fi
-
-	if [ "${target_filesystem_type}" == 'FAT' ]; then
-		if ! check_fat32_filesize_limitation\
-				"${source_fs_mountpoint}"; then
-			exit 1
-		fi
-	fi
+	current_state=mount-target-filesystem
 
 	if ! mount_target_filesystem\
 		"${target_partition}"\
