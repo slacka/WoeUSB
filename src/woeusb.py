@@ -300,8 +300,8 @@ def determine_target_parameters(install_mode, target_media):
 
 
 def check_is_target_device_busy(device):
-    mount = subprocess.run("mount", stdout=subprocess.PIPE).stdout
-    if re.findall(device, str(mount)) != []:
+    mount = subprocess.run("mount", stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
+    if re.findall(device, mount) != []:
         return 1
     return 0
 
@@ -632,6 +632,12 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_g
                 os.remove(target)
 
             shutil.copy2(source, target)
+
+
+# As Windows 7's installation media doesn't place the required EFI
+# bootloaders in the right location, we extract them from the
+# system image manually
+# TODO: Functionize Windows 7 checking
 
 
 def workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
