@@ -30,10 +30,19 @@ import urllib.request
 import shutil
 import re
 import traceback
+import tempfile
 from datetime import datetime
 
+# Disable message coloring when set to 1, set by --no-color
+no_color = False
+
 # External tools
-import termcolor
+try:
+    import termcolor
+except ImportError:
+    print("Module termcolor is not installed, text coloring disabled")
+    no_color = True
+
 # import parted  # Unused for now
 
 application_name = 'WoeUSB'
@@ -58,9 +67,6 @@ global_only_for_gui = False
 # Increase verboseness, provide more information when required
 verbose = False
 
-# Disable message coloring when set to 1, set by --no-color
-no_color = False
-
 debug = False
 
 # NOTE: Need to pass to traps, so need to be global
@@ -78,8 +84,7 @@ pulse_current_pid = 0
 # NOTE: Need to pass to traps, so need to be global
 current_state = 'pre-init'
 
-temp_directory = subprocess.run(["mktemp", "--tmpdir", "--directory", " WoeUSB.XXXXXX.tempdir"],
-                                stdout=subprocess.PIPE).stdout
+temp_directory = tempfile.mkdtemp(prefix="WoeUSB.")
 
 
 def main(only_for_gui_ref):
@@ -91,10 +96,6 @@ def main(only_for_gui_ref):
 
     parser = setup_arguments()
     args = parser.parse_args()
-
-    if args.debugging_internal_function_call != "":
-        call(args.debugging_internal_function_call)
-        return 0
 
     if args.about:
         print_application_info()
@@ -121,27 +122,27 @@ def main(only_for_gui_ref):
 
     # Parameters that needs to be determined in runtime
     # due to different names in distributions
-    command_mkdosfs = "mkfs.fat"
-    command_mkntfs = "mkfs.ntfs"
-    command_grubinstall = "grub-install"
-    name_grub_prefix = "grub"
 
     new_file_system_label = args.label
 
     verbose = args.verbose
-    no_color = args.no_color
+
+    if not no_color:
+        no_color = args.no_color
 
     debug = args.debug
 
-    if check_runtime_dependencies(application_name, command_mkdosfs, command_mkntfs, command_grubinstall,
-                                  name_grub_prefix):
-        return 1
+    command_mkdosfs, command_mkntfs, command_grubinstall = check_runtime_dependencies(application_name)
+    if command_grubinstall == "grub-install":
+        name_grub_prefix = "grub"
+    else:
+        name_grub_prefix = "grub2"
 
     print_with_color(application_name + " v" + application_version)
     print_with_color("==============================")
 
     if os.getuid() != 0:
-        print_with_color("Warning: You are not running ${application_name} as root!", "yellow")
+        print_with_color("Warning: You are not running " + application_name + " as root!", "yellow")
         print_with_color("Warning: This might be the reason of the following failure.", "yellow")
 
     if check_runtime_parameters(install_mode, source_media, target_media):
@@ -187,7 +188,7 @@ def main(only_for_gui_ref):
 
     current_state = "copying-filesystem"
 
-    workaround_linux_make_writeback_buffering_not_suck("apply")
+    workaround_linux_make_writeback_buffering_not_suck(True)
 
     copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_gui_ref)
 
@@ -214,15 +215,56 @@ def print_application_info():
     print(application_copyright_notice)
 
 
-def check_runtime_dependencies(application_name, command_mkdosfs, command_mkntfs, command_grubinstall,
-                               name_grub_prefix):
-    pass
+def check_runtime_dependencies(application_name):
+    result = "success"
+
+    system_commands = ["mount", "wipefs", "lsblk", "blockdev", "df", "parted"]
+    for command in system_commands:
+        if shutil.which(command) == "":
+            print_with_color(
+                "Error: " + application_name + " requires " + command + " command in the executable search path, but it is not found.",
+                "red")
+            result = "failed"
+
+    fat = ["mkdosfs", "mkfs.msdos", "mkfs.vfat", "mkfs.fat"]
+    for command in fat:
+        if shutil.which(command) != "":
+            fat = command
+            break
+
+    if isinstance(fat, list):
+        print_with_color("Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!", "red")
+        print_with_color("Error: Please make sure that dosfstools is properly installed!", "red")
+        result = "failed"
+
+    ntfs = "mkntfs"
+    if shutil.which("mkntfs") == "":
+        print_with_color("Error: mkntfs command not found!", "red")
+        print_with_color("Error: Please make sure that ntfs-3g is properly installed!", "red")
+        result = "failed"
+
+    grub = ["grub-install", "grub2-install"]
+    for command in grub:
+        if shutil.which(command) != "":
+            grub = command
+            break
+
+    if isinstance(grub, list):
+        print_with_color("Error: grub-install or grub2-install command not found!", "red")
+        print_with_color("Error: Please make sure that GNU GRUB is properly installed!", "red")
+        result = "failed"
+
+    if result != "success":
+        raise RuntimeError("Dependencies are not met")
+    else:
+        return [fat, ntfs, grub]
 
 
 def check_runtime_parameters(install_mode, source_media, target_media):
     if not os.path.isfile(source_media) and not pathlib.Path(source_media).is_block_device():
-        print_with_color("Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
-               "red")
+        print_with_color(
+            "Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
+            "red")
         return 1
 
     if not pathlib.Path(target_media).is_block_device():
@@ -271,7 +313,8 @@ def check_source_and_target_not_busy(install_mode, source_media, target_device, 
 
     if install_mode == "partition":
         if check_is_target_device_busy(target_partition):
-            print_with_color("Error: Target partition is currently mounted, unmount the partition then try again", "red")
+            print_with_color("Error: Target partition is currently mounted, unmount the partition then try again",
+                             "red")
             return 1
     else:
         if check_is_target_device_busy(target_device):
@@ -292,13 +335,12 @@ def wipe_existing_partition_table_and_filesystem_signatures(target_device):
 
 
 def check_if_the_drive_is_really_wiped(target_device):
-    print_with_color("Ensure that %s is really wiped...")
-    print_with_color(target_device)
+    print_with_color("Ensure that " + target_device + " is really wiped...")
 
     lsblk = subprocess.run(["lsblk", "--pairs", "--output", "NAME,TYPE", target_device], stdout=subprocess.PIPE).stdout
 
     grep = subprocess.Popen(["grep", "--count", "TYPE=\"part\""], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    if grep.communicate(input=lsblk)[0] != "":
+    if grep.communicate(input=lsblk)[0].decode("utf-8").strip() != "0":
         print_with_color(
             "Error: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.")
         return 1
@@ -469,7 +511,8 @@ def check_uefi_ntfs_support_partition(target_device):
     if re.findall("UEFI_NTFS", lsblk) != []:
         print_with_color(
             "Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!")
-        print_with_color("Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
+        print_with_color(
+            "Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
@@ -596,7 +639,33 @@ def workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mount
 
 
 def workaround_linux_make_writeback_buffering_not_suck(mode):
-    pass
+    VM_DIRTY_BACKGROUND_BYTES = str(16 * 1024 * 1024)  # 16MiB
+    VM_DIRTY_BYTES = str(48 * 1024 * 1024)  # 48MiB
+
+    if mode:
+        print_with_color(
+            "Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
+            "yellow")
+
+        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
+        dirty_background_bytes.write(VM_DIRTY_BACKGROUND_BYTES)
+        dirty_background_bytes.close()
+
+        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
+        dirty_bytes.write(VM_DIRTY_BYTES)
+        dirty_bytes.close()
+    else:
+        print_with_color(
+            "Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
+            "yellow")
+
+        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
+        dirty_background_bytes.write("0")
+        dirty_background_bytes.close()
+
+        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
+        dirty_bytes.write("0")
+        dirty_bytes.close()
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
@@ -726,19 +795,32 @@ def print_with_color(text, color=""):
         termcolor.cprint(text, color)
 
 
-def call(func):
-    possibles = globals().copy()
-    possibles.update(locals())
-    method = possibles.get(func)
-    if not method:
-        raise NotImplementedError("Method %s not implemented" % func)
-    method()
-
-
 try:
     main(global_only_for_gui)
+except KeyboardInterrupt:
+    pass
 except Exception as error:
     print_with_color(error, "red")
     if debug:
         traceback.print_exc()
-cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, global_only_for_gui)
+
+if current_state in ["copying-filesystem", "finished"]:
+    workaround_linux_make_writeback_buffering_not_suck(False)
+
+cleanup_result = cleanup_mountpoints(source_fs_mountpoint, target_fs_mountpoint, global_only_for_gui)
+if cleanup_result == 2:
+    print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually", "yellow")
+elif cleanup_result == 3:
+    print_with_color("We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption", "yellow")
+    print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually", "yellow")
+
+if check_is_target_device_busy(target_device):
+    print_with_color("Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.", "yellow")
+else:
+    print_with_color("You may now safely detach the target device", "green")
+
+shutil.rmtree(temp_directory)
+
+if current_state == "finished":
+    print_with_color("Done :)", "green")
+    print_with_color("The target device should be bootable now", "green")
