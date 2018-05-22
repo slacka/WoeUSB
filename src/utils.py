@@ -7,7 +7,7 @@ import shutil
 import pathlib
 import subprocess
 
-# Disable message coloring when set to 1, set by --no-color
+# Disable message coloring when set to True, set by --no-color
 no_color = False
 
 # External tools
@@ -17,8 +17,7 @@ except ImportError:
     print("Module termcolor is not installed, text coloring disabled")
     no_color = True
 
-from woeusb import verbose
-
+gui = None
 
 def check_runtime_dependencies(application_name):
     result = "success"
@@ -97,9 +96,9 @@ def determine_target_parameters(install_mode, target_media):
         target_device = target_media
         target_partition = target_media + str(1)
 
-    if verbose:
-        print_with_color("Info: Target device is " + target_device)
-        print_with_color("Info: Target partition is " + target_partition)
+#   if verbose:
+#       print_with_color("Info: Target device is " + target_device)
+#       print_with_color("Info: Target partition is " + target_partition)
 
     return [target_device, target_partition]
 
@@ -211,20 +210,24 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
     if needed_space > free_space:
         print_with_color("Error: Not enough free space on target partition!")
         print_with_color(
-            "Error: We required ${needed_space_human_readable}(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
+            "Error: We required " + get_size(needed_space) + "(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
         return 1
 
 
 # Print function
 # This function takes into account no_color flag
+# Also if used by gui, sends information to it, rather than putting it into standard output
 # Second parameter take color of text, default is no color
 
 
 def print_with_color(text, color=""):
-    if no_color or color == "":
-        sys.stdout.write(text + "\n")
+    if gui != None:
+        gui.state = text
     else:
-        termcolor.cprint(text, color)
+        if no_color or color == "":
+            sys.stdout.write(text + "\n")
+        else:
+            termcolor.cprint(text, color)
 
 
 def convert_to_human_readable_format(num, suffix='B'):

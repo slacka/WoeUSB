@@ -21,6 +21,7 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import time
 import lzma
 import shutil
@@ -47,7 +48,6 @@ Global Parameters
 Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
 Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 TODO: Global parameter cleanup
-TODO: Use Y/N or true/false instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
 Doing GUI-specific stuff when set to 1, set by --only-for-gui
 Requires to be set to global due to indirectly referenced by trap
 '''
@@ -58,22 +58,28 @@ verbose = False
 debug = False
 
 # NOTE: Need to pass to traps, so need to be global
-source_fs_mountpoint = ""
-target_fs_mountpoint = ""
+#source_fs_mountpoint = ""
+#target_fs_mountpoint = ""
+
+# source_media may be a optical disk drive or a disk image
+# target_media may be an entire usb storage device or just a partition
+#source_media = ""
+#target_media = ""
 
 target_device = ""
 
-Pulse_handle = threading.Thread()
 CopyFiles_handle = threading.Thread()
 
 # Execution state for cleanup functions to determine if clean up is required
 # NOTE: Need to pass to traps, so need to be global
 current_state = 'pre-init'
 
-temp_directory = b""
+#temp_directory = b""
+#install_mode = ""
+gui = None
 
 
-def init():
+def init(from_cli=True, install_mode=None, source_media=None, target_media=None, workaround_bios_boot_flag=False, target_filesystem_type="FAT", filesystem_label=DEFAULT_NEW_FS_LABEL):
     source_fs_mountpoint = "/media/woeusb_source_" + str(
         round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
     target_fs_mountpoint = "/media/woeusb_target_" + str(
@@ -81,59 +87,65 @@ def init():
 
     temp_directory = tempfile.mkdtemp(prefix="WoeUSB.")
 
-    parser = utils.setup_arguments()
-    args = parser.parse_args()
+    verbose = False
 
-    if args.about:
-        print_application_info()
-        return 0
+    no_color = True
 
-    if args.device:
-        install_mode = "device"
-    elif args.partition:
-        install_mode = "partition"
-    else:
-        utils.print_with_color("You need to specify instalation type (--device or --partition")
-        return 1
+    debug = False
 
-    # source_media may be a optical disk drive or a disk image
-    # target_media may be an entire usb storage device or just a partition
-    source_media = args.source
-    target_media = args.target
+    parser = None
 
-    workaround_bios_boot_flag = args.workaround_bios_boot_flag
+    if from_cli:
+        parser = setup_arguments()
+        args = parser.parse_args()
 
-    target_filesystem_type = args.target_filesystem
+        if args.about:
+            print_application_info()
+            return 0
 
-    # Parameters that needs to be determined in runtime
-    # due to different names in distributions
+        if args.device:
+            install_mode = "device"
+        elif args.partition:
+            install_mode = "partition"
+        else:
+            utils.print_with_color("You need to specify instalation type (--device or --partition")
+            return 1
 
-    new_file_system_label = args.label
+        # source_media may be a optical disk drive or a disk image
+        # target_media may be an entire usb storage device or just a partition
+        source_media = args.source
+        target_media = args.target
 
-    verbose = args.verbose
+        workaround_bios_boot_flag = args.workaround_bios_boot_flag
 
-    if not no_color:
+        target_filesystem_type = args.target_filesystem
+
+        # Parameters that needs to be determined in runtime
+        # due to different names in distributions
+
+        filesystem_label = args.label
+
+        verbose = args.verbose
+
         no_color = args.no_color
 
-    debug = args.debug
+        debug = args.debug
+
+    utils.no_color = no_color
+    utils.gui = gui
+
+    return [source_fs_mountpoint, target_fs_mountpoint, temp_directory, install_mode, source_media, target_media,
+            workaround_bios_boot_flag, target_filesystem_type, filesystem_label, verbose, debug, parser]
 
 
-    return [source_fs_mountpoint, target_fs_mountpoint, temp_directory]
-
-
-def main():
+def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory, target_filesystem_type, workaround_bios_boot_flag):
     global debug
     global verbose
     global no_color
-    global target_device
     global current_state
-    global global_only_for_gui
-
-
+    global target_device
 
     current_state = 'enter-init'
-
-
 
     command_mkdosfs, command_mkntfs, command_grubinstall = utils.check_runtime_dependencies(application_name)
     if command_grubinstall == "grub-install":
@@ -152,8 +164,6 @@ def main():
         parser.print_help()
         return 1
 
-    trigger_wxGenericProgressDialog_pulse(True)
-
     target_device, target_partition = utils.determine_target_parameters(install_mode, target_media)
 
     if utils.check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
@@ -162,7 +172,7 @@ def main():
     if install_mode == "device":
         wipe_existing_partition_table_and_filesystem_signatures(target_device)
         create_target_partition_table(target_device, "legacy")
-        create_target_partition(target_partition, target_filesystem_type, new_file_system_label, command_mkdosfs,
+        create_target_partition(target_device, target_partition, target_filesystem_type, target_filesystem_type, command_mkdosfs,
                                 command_mkntfs)
 
         if target_filesystem_type == "NTFS":
@@ -201,12 +211,10 @@ def main():
 
     install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix)
 
-    if workaround_bios_boot_flag == "Y":
+    if workaround_bios_boot_flag:
         workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
 
     current_state = "finished"
-
-    trigger_wxGenericProgressDialog_pulse(False)
 
     return 0
 
@@ -269,7 +277,7 @@ def workaround_make_system_realize_partition_table_changed(target_device):
     time.sleep(3)
 
 
-def create_target_partition(target_partition, filesystem_type, filesystem_label, command_mkdosfs, command_mkntfs):
+def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs, command_mkntfs):
     parted_mkpart_fs_type = ""
 
     if filesystem_type in ["FAT", "vfat"]:
@@ -438,9 +446,6 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
             path = os.path.join(dirpath, file)
             total_size += os.path.getsize(path)
 
-    # FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
-    trigger_wxGenericProgressDialog_pulse(False, )
-
     utils.print_with_color("Copying files from source media...", "green")
 
     CopyFiles_handle = CopyFiles(source_fs_mountpoint, target_fs_mountpoint)
@@ -454,7 +459,7 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
             CopyFiles_handle.file = path
             shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
 
-    CopyFiles_handle.kill()
+    CopyFiles_handle.stop = True
 
 
 # As Windows 7's installation media doesn't place the required EFI
@@ -577,7 +582,6 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
     cfg.write("boot")
     cfg.close()
 
-
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # exit status:
 #     unclean(2): Not fully clean, target device can be safely detach from host
@@ -585,8 +589,6 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
 
 
 def cleanup_mountpoint(fs_mountpoint):
-    trigger_wxGenericProgressDialog_pulse(False, )
-
     if os.path.ismount(fs_mountpoint):  # os.path.ismount() checks if path is a mount point
         utils.print_with_color("Unmounting and removing " + fs_mountpoint + "...", "green")
         if subprocess.run(["umount", fs_mountpoint]).returncode:
@@ -602,25 +604,11 @@ def cleanup_mountpoint(fs_mountpoint):
     return 0
 
 
-def trigger_wxGenericProgressDialog_pulse(swich):
-    global Pulse_handle
-    return 0
+# Called by gui, used to safely exit woeusb runtime
+# TODO: Put here more descriptive error
 
-    if swich:
-        # Don't do anything if it is already turned on
-        if Pulse_handle.is_alive():
-            return 0
-
-        Pulse_handle = Pulse()
-        Pulse_handle.start()
-    else:
-        if not Pulse_handle.is_alive():
-            return 0
-
-        Pulse_handle.kill()
-        Pulse_handle.join()
-        Pulse_handle = threading.Thread()
-
+def interrupt():
+    raise KeyboardInterrupt # "safely"
 
 def setup_arguments():
     parser = argparse.ArgumentParser(
@@ -654,22 +642,6 @@ def setup_arguments():
 # Classes for threading module
 
 
-class Pulse(threading.Thread):
-    stop = False
-
-    def __init__(self):
-        threading.Thread.__init__(self)
-
-    def run(self):
-        while True and not self.stop:
-            time.sleep(0.05)
-            print("pulse")
-        return 0
-
-    def kill(self):
-        self.stop = True
-
-
 class CopyFiles(threading.Thread):
     file = ""
     stop = False
@@ -687,7 +659,7 @@ class CopyFiles(threading.Thread):
         while not self.stop:
             target_size = utils.get_size(self.target)
 
-            if len_ != 0:
+            if len_ != 0 and __name__ == "__main__":
                 print('\033[3A')
                 print(" " * len_)
                 print(" " * 4)
@@ -696,37 +668,28 @@ class CopyFiles(threading.Thread):
             # Prevent printing same filenames
             if self.file != file_old:
                 file_old = self.file
-                print(self.file.replace(self.source, ""))
+                utils.print_with_color(self.file.replace(self.source, ""))
 
             string = "Copied " + utils.convert_to_human_readable_format(
                 target_size) + " from a total of " + utils.convert_to_human_readable_format(source_size)
             len_ = len(string)
             percentage = (target_size * 100) // source_size
 
-            print(string)
-            print(str(percentage) + "%")
+            if __name__ != "__main__":
+                gui.state = string
+                gui.progress = percentage
+            else:
+                print(string)
+                print(str(percentage) + "%")
 
             time.sleep(0.05)
 
         return 0
 
-    def kill(self):
-        self.stop = True
-
-
-if __name__ == "__main__":
-    source_fs_mountpoint, target_fs_mountpoint, temp_directory = utils.init()
-    try:
-        main(global_)
-    except KeyboardInterrupt:
-        pass
-    except Exception as error:
-        utils.print_with_color(error, "red")
-        if debug:
-            traceback.print_exc()
+def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
 
     if CopyFiles_handle.is_alive():
-        CopyFiles_handle.kill()
+        CopyFiles_handle.stop = True
 
     if current_state in ["copying-filesystem", "finished"]:
         workaround_linux_make_writeback_buffering_not_suck(False)
@@ -769,3 +732,20 @@ if __name__ == "__main__":
     if current_state == "finished":
         utils.print_with_color("Done :)", "green")
         utils.print_with_color("The target device should be bootable now", "green")
+
+
+if __name__ == "__main__":
+    source_fs_mountpoint, target_fs_mountpoint, temp_directory, \
+        install_mode, source_media, target_media, \
+        workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
+        verbose, debug, parser = init()
+    try:
+        main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory, target_filesystem_type, workaround_bios_boot_flag)
+    except KeyboardInterrupt:
+        pass
+    except Exception as error:
+        utils.print_with_color(error, "red")
+        if debug:
+            traceback.print_exc()
+
+    cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)

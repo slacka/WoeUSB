@@ -1,9 +1,11 @@
 #!/usr/bin/python3
 
 import os
+import psutil
 
 import wx
 import wx.adv
+import time
 import threading
 import subprocess
 
@@ -235,17 +237,29 @@ class MainPanel(wx.Panel):
             #                "\"" + device + "\"", "2>&1'"], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
 
             woe = Communication(iso, device)
+            woe.start()
 
             dialog = wx.ProgressDialog("Installing", "Please wait...", 100, self.GetParent(),
                                        wx.PD_APP_MODAL | wx.PD_SMOOTH | wx.PD_CAN_ABORT)
-            while woe.progress >= 100:
-                if not dialog.Update(woe.progress):
+
+            while woe.progress < 100 and woe.is_alive():
+                status = True
+
+                if woe.progress == 0 or woe.progress >= 99:
+
+                    status = dialog.Pulse(woe.state)[0]
+                    time.sleep(0.06)
+                elif woe.progress != 0:
+                    status = dialog.Update(woe.progress, woe.state)[0]
+
+                if not status:
                     if wx.MessageBox("Are you sure you want to cancel the installation?", "Cancel",
                                      wx.YES_NO | wx.ICON_QUESTION, self) == wx.NO:
                         dialog.Resume()
                     else:
-                        exit(1)
-
+                        woe.stop()
+                        break
+            dialog.Destroy()
             wx.MessageBox("Installation succeeded!", "Installation", wx.OK | wx.ICON_INFORMATION, self)
 
     def on_show_all_drive(self, _):
@@ -358,13 +372,20 @@ class Communication(threading.Thread):
 
     def __init__(self, source, target):
         threading.Thread.__init__(self)
-        #woeusb.source_media = source
-        #woeusb.target_media = target
-        #woeusb.install_mode = "device"
-        woeusb.gui = self
 
-        source_fs_mountpoint, target_fs_mountpoint, temp_directory = woeusb.init(from_cli=False, install_mode="device", source_media=source, target_media=target)[:3]
-        woeusb.main(source_fs_mountpoint, target_fs_mountpoint, source, target, "device", temp_directory, "FAT", False)
+        woeusb.gui = self
+        self.source = source
+        self.target = target
+
+    def run(self):
+        self.source_fs_mountpoint, self.target_fs_mountpoint, self.temp_directory = woeusb.init(from_cli=False, install_mode="device", source_media=self.source, target_media=self.target)[:3]
+        woeusb.main(self.source_fs_mountpoint, self.target_fs_mountpoint, self.source, self.target, "device", self.temp_directory, "FAT", False)
+
+    def stop(self):
+        subprocess.run(["kill", str()])
+
+        woeusb.cleanup(self.source_fs_mountpoint, self.target_fs_mountpoint, self.temp_directory)
+
 
 
 frameTitle = "app"
