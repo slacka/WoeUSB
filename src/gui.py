@@ -4,6 +4,7 @@ import os
 
 import wx
 import wx.adv
+import threading
 import subprocess
 
 import woeusb
@@ -350,19 +351,20 @@ class PanelNoteBookAutors(wx.Panel):
         self.SetSizer(sizer_note_book_autors)
 
 
-class Communication:
+class Communication(threading.Thread):
     progress = 0
     state = ""
     error = ""
 
     def __init__(self, source, target):
+        threading.Thread.__init__(self)
         #woeusb.source_media = source
         #woeusb.target_media = target
         #woeusb.install_mode = "device"
         woeusb.gui = self
 
-        source_fs_mountpoint, target_fs_mountpoint, temp_directory = woeusb.init(from_cli=False, install_mode="device", source_media=source, target_media=target)[:4]
-        woeusb.main(source_fs_mountpoint, target_fs_mountpoint, source, target, "device", temp_directory, False)
+        source_fs_mountpoint, target_fs_mountpoint, temp_directory = woeusb.init(from_cli=False, install_mode="device", source_media=source, target_media=target)[:3]
+        woeusb.main(source_fs_mountpoint, target_fs_mountpoint, source, target, "device", temp_directory, "FAT", False)
 
 
 frameTitle = "app"
