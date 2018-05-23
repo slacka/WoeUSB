@@ -21,7 +21,6 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import time
 import lzma
 import shutil
@@ -58,13 +57,13 @@ verbose = False
 debug = False
 
 # NOTE: Need to pass to traps, so need to be global
-#source_fs_mountpoint = ""
-#target_fs_mountpoint = ""
+# source_fs_mountpoint = ""
+# target_fs_mountpoint = ""
 
 # source_media may be a optical disk drive or a disk image
 # target_media may be an entire usb storage device or just a partition
-#source_media = ""
-#target_media = ""
+# source_media = ""
+# target_media = ""
 
 target_device = ""
 
@@ -74,12 +73,13 @@ CopyFiles_handle = threading.Thread()
 # NOTE: Need to pass to traps, so need to be global
 current_state = 'pre-init'
 
-#temp_directory = b""
-#install_mode = ""
+# temp_directory = b""
+# install_mode = ""
 gui = None
 
 
-def init(from_cli=True, install_mode=None, source_media=None, target_media=None, workaround_bios_boot_flag=False, target_filesystem_type="FAT", filesystem_label=DEFAULT_NEW_FS_LABEL):
+def init(from_cli=True, install_mode=None, source_media=None, target_media=None, workaround_bios_boot_flag=False,
+         target_filesystem_type="FAT", filesystem_label=DEFAULT_NEW_FS_LABEL):
     source_fs_mountpoint = "/media/woeusb_source_" + str(
         round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
     target_fs_mountpoint = "/media/woeusb_target_" + str(
@@ -138,7 +138,8 @@ def init(from_cli=True, install_mode=None, source_media=None, target_media=None,
             workaround_bios_boot_flag, target_filesystem_type, filesystem_label, verbose, debug, parser]
 
 
-def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory, target_filesystem_type, workaround_bios_boot_flag):
+def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
+         target_filesystem_type, workaround_bios_boot_flag):
     global debug
     global verbose
     global no_color
@@ -172,7 +173,8 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
     if install_mode == "device":
         wipe_existing_partition_table_and_filesystem_signatures(target_device)
         create_target_partition_table(target_device, "legacy")
-        create_target_partition(target_device, target_partition, target_filesystem_type, target_filesystem_type, command_mkdosfs,
+        create_target_partition(target_device, target_partition, target_filesystem_type, target_filesystem_type,
+                                command_mkdosfs,
                                 command_mkntfs)
 
         if target_filesystem_type == "NTFS":
@@ -237,6 +239,8 @@ def wipe_existing_partition_table_and_filesystem_signatures(target_device):
 
 
 def check_if_the_drive_is_really_wiped(target_device):
+    check_kill_signal()
+
     utils.print_with_color("Ensure that " + target_device + " is really wiped...")
 
     lsblk = subprocess.run(["lsblk", "--pairs", "--output", "NAME,TYPE", target_device], stdout=subprocess.PIPE).stdout
@@ -250,6 +254,8 @@ def check_if_the_drive_is_really_wiped(target_device):
 
 
 def create_target_partition_table(target_device, partition_table_type):
+    check_kill_signal()
+
     utils.print_with_color("Creating new partition table on " + target_device + "...", "green")
 
     parted_partiton_table_argument = ""
@@ -275,10 +281,12 @@ def workaround_make_system_realize_partition_table_changed(target_device):
     utils.print_with_color("Wait 3 seconds for block device nodes to populate...")
 
     time.sleep(3)
+    check_kill_signal()
 
 
-def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs, command_mkntfs):
-    parted_mkpart_fs_type = ""
+def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
+                            command_mkntfs):
+    check_kill_signal()
 
     if filesystem_type in ["FAT", "vfat"]:
         parted_mkpart_fs_type = "fat32"
@@ -318,6 +326,8 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
     else:
         utils.print_with_color("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
 
+    check_kill_signal()
+
     workaround_make_system_realize_partition_table_changed(target_device)
 
     # Format target partition's filesystem
@@ -331,6 +341,8 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
 
 
 def create_uefi_ntfs_support_partition(target_device):
+    check_kill_signal()
+
     # FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
     # NOTE: The --align is set to none because this partition is indeed misaligned, but ignored due to it's small size
 
@@ -352,6 +364,8 @@ def create_uefi_ntfs_support_partition(target_device):
 
 
 def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory):
+    check_kill_signal()
+
     try:
         file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")[0]
     except urllib.request.ContentTooShortError:
@@ -368,6 +382,8 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
 
 
 def workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device):
+    check_kill_signal()
+
     utils.print_with_color(
         "Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled")
 
@@ -377,6 +393,8 @@ def workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(ta
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
+    check_kill_signal()
+
     utils.print_with_color("Mounting source filesystem...", "green")
 
     # os.makedirs(source_fs_mountpoint, exist_ok=True)
@@ -409,7 +427,7 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
 
 
 def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
-    mount_options = "defaults"
+    check_kill_signal()
 
     utils.print_with_color("Mounting target filesystem...", "green")
 
@@ -440,6 +458,8 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
 def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     global CopyFiles_handle
 
+    check_kill_signal()
+
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
         for file in filenames:
@@ -452,6 +472,7 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     CopyFiles_handle.start()
 
     for dirpath, _, filenames in os.walk(source_fs_mountpoint):
+        check_kill_signal()
         if not os.path.isdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, "")):
             os.mkdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, ""))
         for file in filenames:
@@ -470,6 +491,8 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
 
 def workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
     global verbose
+
+    check_kill_signal()
 
     grep = subprocess.run(["grep", "--extended-regexp", "--quiet", "^MinServer=7[0-9]{3}\.[0-9]",
                            source_fs_mountpoint + "/sources/cversion.ini"],
@@ -556,6 +579,8 @@ def workaround_linux_make_writeback_buffering_not_suck(mode):
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
+    check_kill_signal()
+
     utils.print_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
 
     subprocess.run([command_grubinstall,
@@ -571,6 +596,8 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 
 def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall,
                                              name_grub_prefix):
+    check_kill_signal()
+
     utils.print_with_color("Installing custom GRUB config for legacy PC booting...", "green")
 
     grub_cfg = target_fs_mountpoint + "/" + name_grub_prefix + "/grub.cfg"
@@ -581,6 +608,7 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
     cfg.write("ntldr /bootmgr\n")
     cfg.write("boot")
     cfg.close()
+
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
 # exit status:
@@ -604,11 +632,66 @@ def cleanup_mountpoint(fs_mountpoint):
     return 0
 
 
-# Called by gui, used to safely exit woeusb runtime
+def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
+    if CopyFiles_handle.is_alive():
+        CopyFiles_handle.stop = True
+
+    if current_state in ["copying-filesystem", "finished"]:
+        workaround_linux_make_writeback_buffering_not_suck(False)
+
+    flag_unclean = False
+    flag_unsafe = False
+
+    cleanup_result = cleanup_mountpoint(source_fs_mountpoint)
+
+    if cleanup_result == 2:
+        flag_unclean = True
+
+    cleanup_result = cleanup_mountpoint(target_fs_mountpoint)
+
+    if cleanup_result == 1:
+        flag_unsafe = True
+    elif cleanup_result == 2:
+        flag_unclean = True
+
+    if flag_unclean:
+        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
+                               "yellow")
+
+    if flag_unsafe:
+        utils.print_with_color(
+            "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption",
+            "yellow")
+        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
+                               "yellow")
+
+    if utils.check_is_target_device_busy(target_device):
+        utils.print_with_color(
+            "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.",
+            "yellow")
+    else:
+        utils.print_with_color("You may now safely detach the target device", "green")
+
+    shutil.rmtree(temp_directory)
+
+    if current_state == "finished":
+        utils.print_with_color("Done :)", "green")
+        utils.print_with_color("The target device should be bootable now", "green")
+
+
+# Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
+# In python you can't just stop or kill thread, it must end its execution,
+# or recognize moment where you want it to stop and politely perform euthanasia on itself.
+# So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
+# simultaneously ending whatever script was doing meantime!
+# Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
 # TODO: Put here more descriptive error
 
-def interrupt():
-    raise KeyboardInterrupt # "safely"
+def check_kill_signal():
+    if gui is not None:
+        if gui.kill:
+            raise KeyboardInterrupt
+
 
 def setup_arguments():
     parser = argparse.ArgumentParser(
@@ -686,53 +769,6 @@ class CopyFiles(threading.Thread):
 
         return 0
 
-def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
-
-    if CopyFiles_handle.is_alive():
-        CopyFiles_handle.stop = True
-
-    if current_state in ["copying-filesystem", "finished"]:
-        workaround_linux_make_writeback_buffering_not_suck(False)
-
-    flag_unclean = False
-    flag_unsafe = False
-
-    cleanup_result = cleanup_mountpoint(source_fs_mountpoint)
-
-    if cleanup_result == 2:
-        flag_unclean = True
-
-    cleanup_result = cleanup_mountpoint(target_fs_mountpoint)
-
-    if cleanup_result == 1:
-        flag_unsafe = True
-    elif cleanup_result == 2:
-        flag_unclean = True
-
-    if flag_unclean:
-        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
-                               "yellow")
-
-    if flag_unsafe:
-        utils.print_with_color(
-            "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption",
-            "yellow")
-        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
-                               "yellow")
-
-    if utils.check_is_target_device_busy(target_device):
-        utils.print_with_color(
-            "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.",
-            "yellow")
-    else:
-        utils.print_with_color("You may now safely detach the target device", "green")
-
-    shutil.rmtree(temp_directory)
-
-    if current_state == "finished":
-        utils.print_with_color("Done :)", "green")
-        utils.print_with_color("The target device should be bootable now", "green")
-
 
 if __name__ == "__main__":
     source_fs_mountpoint, target_fs_mountpoint, temp_directory, \
@@ -740,7 +776,8 @@ if __name__ == "__main__":
         workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
         verbose, debug, parser = init()
     try:
-        main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory, target_filesystem_type, workaround_bios_boot_flag)
+        main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
+             target_filesystem_type, workaround_bios_boot_flag)
     except KeyboardInterrupt:
         pass
     except Exception as error:

@@ -141,7 +141,7 @@ class MainPanel(wx.Panel):
         # Finalization
         self.SetSizer(main_sizer)
 
-        self.Bind(wx.EVT_LISTBOX, self.on_list_or_file_modified,  self.__usbStickList)
+        self.Bind(wx.EVT_LISTBOX, self.on_list_or_file_modified, self.__usbStickList)
         self.Bind(wx.EVT_LISTBOX, self.on_list_or_file_modified, self.__dvdDriveList)
         self.Bind(wx.EVT_FILEPICKER_CHANGED, self.on_list_or_file_modified, self.__isoFile)
 
@@ -205,7 +205,8 @@ class MainPanel(wx.Panel):
     def is_install_ok(self):
         print("is_install_ok")
         is_iso = self.__isoChoice.GetValue()
-        return ((is_iso and os.path.isfile(self.__isoFile.GetPath())) or (not is_iso and self.__dvdDriveList.GetSelection() != wx.NOT_FOUND)) and self.__usbStickList.GetSelection() != wx.NOT_FOUND
+        return ((is_iso and os.path.isfile(self.__isoFile.GetPath())) or (
+                not is_iso and self.__dvdDriveList.GetSelection() != wx.NOT_FOUND)) and self.__usbStickList.GetSelection() != wx.NOT_FOUND
 
     def on_list_or_file_modified(self, event):
         print("on_list_or_file_modified")
@@ -239,13 +240,15 @@ class MainPanel(wx.Panel):
             woe = Communication(iso, device)
             woe.start()
 
-            dialog = wx.ProgressDialog("Installing", "Please wait...", 100, self.GetParent(),
+            dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
                                        wx.PD_APP_MODAL | wx.PD_SMOOTH | wx.PD_CAN_ABORT)
 
-            while woe.progress < 100 and woe.is_alive():
+            while woe.is_alive():
                 status = True
 
                 if woe.progress == 0 or woe.progress >= 99:
+                    if dialog.GetValue() != 0:
+                        dialog.Update(0)
 
                     status = dialog.Pulse(woe.state)[0]
                     time.sleep(0.06)
@@ -257,7 +260,7 @@ class MainPanel(wx.Panel):
                                      wx.YES_NO | wx.ICON_QUESTION, self) == wx.NO:
                         dialog.Resume()
                     else:
-                        woe.stop()
+                        woe.kys = True
                         break
             dialog.Destroy()
             wx.MessageBox("Installation succeeded!", "Installation", wx.OK | wx.ICON_INFORMATION, self)
@@ -369,6 +372,7 @@ class Communication(threading.Thread):
     progress = 0
     state = ""
     error = ""
+    kill = False
 
     def __init__(self, source, target):
         threading.Thread.__init__(self)
@@ -378,14 +382,17 @@ class Communication(threading.Thread):
         self.target = target
 
     def run(self):
-        self.source_fs_mountpoint, self.target_fs_mountpoint, self.temp_directory = woeusb.init(from_cli=False, install_mode="device", source_media=self.source, target_media=self.target)[:3]
-        woeusb.main(self.source_fs_mountpoint, self.target_fs_mountpoint, self.source, self.target, "device", self.temp_directory, "FAT", False)
+        source_fs_mountpoint, target_fs_mountpoint, temp_directory = woeusb.init(from_cli=False,
+                                                                                 install_mode="device",
+                                                                                 source_media=self.source,
+                                                                                 target_media=self.target)[:3]
+        try:
+            woeusb.main(source_fs_mountpoint, target_fs_mountpoint, self.source, self.target, "device",
+                        temp_directory, "FAT", False)
+        except KeyboardInterrupt:
+            pass
 
-    def stop(self):
-        subprocess.run(["kill", str()])
-
-        woeusb.cleanup(self.source_fs_mountpoint, self.target_fs_mountpoint, self.temp_directory)
-
+        woeusb.cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
 
 
 frameTitle = "app"
