@@ -1,5 +1,22 @@
 #!/usr/bin/python3
 
+'''
+    This file is part of WoeUSB.
+
+    WoeUSB is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    WoeUSB is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with WoeUSB.  If not, see <http://www.gnu.org/licenses/>.
+'''
+
 import os
 import re
 import time
@@ -10,6 +27,14 @@ import wx
 import wx.adv
 
 import woeusb
+
+PROG_FULL_NAME = "WoeUSB"
+
+# Missing config.hpp included by AppConfig.hpp?
+#PROG_PKG_NAME = PACKAGE
+#PROG_PKG_NAME_GETTEXT = PROG_PKG_NAME
+
+VERSION = "1.0.0"
 
 
 class MainFrame(wx.Frame):
@@ -292,12 +317,12 @@ class DialogAbout(wx.Dialog):
 
         sizer_text = wx.BoxSizer(wx.VERTICAL)
 
-        self.__staticTextTitre = wx.StaticText(self, wx.ID_ANY, "app")
+        self.__staticTextTitre = wx.StaticText(self, wx.ID_ANY, PROG_FULL_NAME)
         self.__staticTextTitre.SetFont(wx.Font(16, 74, 90, 92, False, "Sans"))
         self.__staticTextTitre.SetForegroundColour(wx.Colour(0, 60, 118))
         sizer_text.Add(self.__staticTextTitre, 0, wx.EXPAND | wx.LEFT | wx.RIGHT | wx.TOP, 5)
 
-        self.__staticTextVersion = wx.StaticText(self, wx.ID_ANY, "Version 0.0.1")
+        self.__staticTextVersion = wx.StaticText(self, wx.ID_ANY, VERSION)
         self.__staticTextVersion.SetFont(wx.Font(10, 74, 90, 92, False, "Sans"))
         self.__staticTextVersion.SetForegroundColour(wx.Colour(69, 141, 196))
         sizer_text.Add(self.__staticTextVersion, 0, wx.LEFT, 5)
@@ -314,18 +339,20 @@ class DialogAbout(wx.Dialog):
                                 "data/c501-logo.png", "www.congelli.eu"), "Original WinUSB Developer", False)
 
         licence_str = '''
-            %s is free software: you can redistribute it and/or modify
+            This file is part of WoeUSB.
+
+            WoeUSB is free software: you can redistribute it and/or modify
             it under the terms of the GNU General Public License as published by
             the Free Software Foundation, either version 3 of the License, or
-            (at your option) any later version.\n
-            \n
-            %s is distributed in the hope that it will be useful,
+            (at your option) any later version.
+        
+            WoeUSB is distributed in the hope that it will be useful,
             but WITHOUT ANY WARRANTY; without even the implied warranty of
             MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-            GNU General Public License for more details.\n
-            \n
+            GNU General Public License for more details.
+        
             You should have received a copy of the GNU General Public License
-            along with %s.  If not, see <http://www.gnu.org/licenses/>.
+            along with WoeUSB.  If not, see <http://www.gnu.org/licenses/>.
         '''
 
         licence_txt = wx.TextCtrl(self.__NotebookAutorLicence, wx.ID_ANY, licence_str, wx.DefaultPosition,
@@ -484,7 +511,7 @@ def list_dvd_drive():
     return devices_list
 
 
-frameTitle = "app"
+frameTitle = PROG_FULL_NAME
 
 app = wx.App()
 

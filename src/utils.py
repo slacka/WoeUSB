@@ -134,11 +134,11 @@ def check_fat32_filesize_limitation(source_fs_mountpoint):
             path = os.path.join(dirpath, file)
             if os.path.getsize(path) > (2 ** 32) - 1:  # Max fat32 file size
                 print_with_color(
-                    "Error: File " + path + " in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.",
-                    "red")
+                    "Warining: File " + path + " in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation, swiching to NTFS filesystem.",
+                    "yellow")
                 print_with_color(
                     "Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.",
-                    "red")
+                    "yellow")
                 return 1
     return 0
 

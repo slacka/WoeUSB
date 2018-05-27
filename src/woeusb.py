@@ -171,6 +171,16 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
     if utils.check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
         return 1
 
+    current_state = "start-mounting"
+
+    if mount_source_filesystem(source_media, source_fs_mountpoint):
+        utils.print_with_color("Error: Unable to mount source filesystem", "red")
+        return 1
+
+    if target_filesystem_type == "FAT":
+        if utils.check_fat32_filesize_limitation(source_fs_mountpoint):
+            target_filesystem_type = "NTFS"
+
     if install_mode == "device":
         wipe_existing_partition_table_and_filesystem_signatures(target_device)
         create_target_partition_table(target_device, "legacy")
@@ -185,15 +195,7 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
     if install_mode == "partition":
         utils.check_target_partition(target_partition, install_mode, target_device)
 
-    current_state = "start-mounting"
 
-    if mount_source_filesystem(source_media, source_fs_mountpoint):
-        utils.print_with_color("Error: Unable to mount source filesystem", "red")
-        return 1
-
-    if target_filesystem_type == "FAT":
-        if utils.check_fat32_filesize_limitation(source_fs_mountpoint):
-            return 1
 
     if mount_target_filesystem(target_partition, target_fs_mountpoint, target_filesystem_type):
         utils.print_with_color("Error: Unable to mount target filesystem", "red")
@@ -364,9 +366,9 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
             "Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem.")
         return 1
 
-    shutil.move(file, download_directory.decode("utf-8").strip() + "/" + file)  # move file to download_directory
+    shutil.move(file, download_directory + "/" + file)  # move file to download_directory
 
-    shutil.copy2(download_directory.decode("utf-8").strip() + "/uefi-ntfs.img", uefi_ntfs_partition)
+    shutil.copy2(download_directory + "/uefi-ntfs.img", uefi_ntfs_partition)
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
@@ -598,7 +600,6 @@ def setup_arguments():
 # TODO: Put here more descriptive error
 
 def check_kill_signal():
-    print("check_kill_signal")
     if gui is not None:
         if gui.kill:
             raise sys.exit()
@@ -647,7 +648,8 @@ class CopyFiles(threading.Thread):
                 print(str(percentage) + "%")
 
             time.sleep(0.05)
-        gui.progress = False
+        if gui != None:
+            gui.progress = False
 
         return 0
 
