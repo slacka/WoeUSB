@@ -58,9 +58,6 @@ class MainFrame(wx.Frame):
         my_dialog_about = DialogAbout(self, wx.ID_ANY)
         my_dialog_about.ShowModal()
 
-    def enable_buttons(self, adrSelected):
-        pass
-
     def is_show_all_checked(self):
         return self.__menuItemShowAll.IsChecked()
 
@@ -188,9 +185,7 @@ class MainPanel(wx.Panel):
         device_list = ListUsb(show_all_checked).list()
 
         for device in device_list:
-            print(device[0])
             self.__usbStickDevList.append(device[0])
-            print(device[1])
             self.__usbStickList.Append(device[1])
 
         # ISO
@@ -198,14 +193,11 @@ class MainPanel(wx.Panel):
         self.__dvdDriveDevList = []
         self.__dvdDriveList.Clear()
 
-        readlink = subprocess.run("./data/listDvdDrive",
-                                  stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
+        drive_list = list_dvd_drive()
 
-        for device in range(len(readlink)):
-            if device % 2 == 0:
-                self.__dvdDriveDevList.append(readlink[device])
-            else:
-                self.__dvdDriveList.Append(readlink[device])
+        for drive in drive_list:
+            self.__dvdDriveDevList.append(drive[0])
+            self.__dvdDriveList.Append(drive[1])
 
         self.__btInstall.Enable(self.is_install_ok())
 
@@ -243,6 +235,7 @@ class MainPanel(wx.Panel):
             else:
                 iso = self.__dvdDriveDevList[self.__dvdDriveList.GetSelection()]
 
+            woe = WoeUSB(iso, device)
             woe.start()
 
             dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
@@ -373,7 +366,7 @@ class PanelNoteBookAutors(wx.Panel):
         self.SetSizer(sizer_note_book_autors)
 
 
-class Communication(threading.Thread):
+class WoeUSB(threading.Thread):
     progress = False
     state = ""
     error = ""
@@ -399,6 +392,7 @@ class Communication(threading.Thread):
 
         woeusb.cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
 
+
 # Packed to class for clarity
 
 
@@ -414,7 +408,7 @@ class ListUsb:
                                 "--noheadings",
                                 "--nodeps"], stdout=subprocess.PIPE).stdout.decode("utf-8")
 
-        devices = re.sub("sr[0-9]", "", lsblk).split()
+        devices = re.sub("sr[0-9]|cdrom[0-9]", "", lsblk).split()
 
         for device in devices:
             if self.is_removable_and_writable_device(device):
@@ -463,6 +457,31 @@ class ListUsb:
         else:
             return 1
 
+
+def list_dvd_drive():
+    devices_list = []
+    find = subprocess.run(["find", "/sys/block",
+                           "-maxdepth", "1",
+                           "-mindepth", "1"], stdout=subprocess.PIPE).stdout.decode("utf-8").split()
+    devices = []
+    for device in find:
+        tmp = re.findall("sr[0-9]", device)
+
+        if tmp == []:
+            continue
+
+        devices.append([device, tmp[0]])
+
+    for device in devices:
+        optical_disk_drive_devfs_path = "/dev/" + device[1]
+
+        model = open(device[0] + "/device/model", "r")
+        model_content = model.read().strip()
+        model.close()
+
+        devices_list.append([optical_disk_drive_devfs_path, optical_disk_drive_devfs_path + " - " + model_content])
+
+    return devices_list
 
 
 frameTitle = "app"
