@@ -1,13 +1,13 @@
 #!/usr/bin/python3
 
 import os
-import psutil
-
-import wx
-import wx.adv
+import re
 import time
 import threading
 import subprocess
+
+import wx
+import wx.adv
 
 import woeusb
 
@@ -62,7 +62,6 @@ class MainFrame(wx.Frame):
         pass
 
     def is_show_all_checked(self):
-        print("is_show_all_checked")
         return self.__menuItemShowAll.IsChecked()
 
 
@@ -119,13 +118,37 @@ class MainPanel(wx.Panel):
         main_sizer.Add(tmp_sizer, 1, wx.EXPAND, 0)
 
         # Target
-        main_sizer.AddSpacer(30)
+        main_sizer.AddSpacer(20)
 
         main_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Target device :"), 0, wx.ALL, 3)
 
         # List
         self.__usbStickList = wx.ListBox(self, wx.ID_ANY)
-        temp = main_sizer.Add(self.__usbStickList, 1, wx.EXPAND | wx.ALL, 3)
+        main_sizer.Add(self.__usbStickList, 1, wx.EXPAND | wx.ALL, 3)
+
+        '''
+        tmp_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        tmp_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Filesystem: "), 0, wx.CENTER, 2)
+
+        filesystem = wx.Choice(self, choices=["FAT", "NTFS"])
+        filesystem.SetSelection(0)
+        tmp_sizer.Add(filesystem, 1, wx.RIGHT | wx.LEFT, 1)
+
+        boot_flag = wx.CheckBox(self, label="Toggle boot flag")
+        tmp_sizer.Add(boot_flag, 1, wx.CENTER | wx.RIGHT, 1)
+
+        main_sizer.Add(tmp_sizer, 0, wx.Left, 3)
+
+        main_sizer.AddSpacer(20)
+
+        tmp_sizer = wx.BoxSizer(wx.HORIZONTAL)
+        tmp_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Label: "), 0, wx.CENTER, 2)
+
+        text = wx.TextCtrl(self)
+        tmp_sizer.Add(text, 1, wx.EXPAND, 1)
+
+        main_sizer.Add(tmp_sizer, 0, wx.Left, 3)
+        '''
 
         # Buttons
         main_sizer.AddSpacer(30)
@@ -162,19 +185,13 @@ class MainPanel(wx.Panel):
 
         show_all_checked = self.__parent.is_show_all_checked()
 
-        command = ["data/listUsb"]
+        device_list = ListUsb(show_all_checked).list()
 
-        if show_all_checked:
-            command.append("all")
-        command.append("2>/dev/null")
-
-        readlink = subprocess.run(command, stdout=subprocess.PIPE).stdout.decode("utf-8").strip().split("\n")
-
-        for device in range(len(readlink)):
-            if device % 2 == 0:
-                self.__usbStickDevList.append(readlink[device])
-            else:
-                self.__usbStickList.Append(readlink[device])
+        for device in device_list:
+            print(device[0])
+            self.__usbStickDevList.append(device[0])
+            print(device[1])
+            self.__usbStickList.Append(device[1])
 
         # ISO
 
@@ -193,8 +210,6 @@ class MainPanel(wx.Panel):
         self.__btInstall.Enable(self.is_install_ok())
 
     def on_source_option_changed(self, _):
-        print("on_source_option_changed")
-
         is_iso = self.__isoChoice.GetValue()
 
         self.__isoFile.Enable(is_iso)
@@ -203,27 +218,21 @@ class MainPanel(wx.Panel):
         self.__btInstall.Enable(self.is_install_ok())
 
     def is_install_ok(self):
-        print("is_install_ok")
         is_iso = self.__isoChoice.GetValue()
         return ((is_iso and os.path.isfile(self.__isoFile.GetPath())) or (
                 not is_iso and self.__dvdDriveList.GetSelection() != wx.NOT_FOUND)) and self.__usbStickList.GetSelection() != wx.NOT_FOUND
 
     def on_list_or_file_modified(self, event):
-        print("on_list_or_file_modified")
-
         if event.GetEventType() == wx.EVT_LISTBOX and not event.IsSelection():
             return
 
         self.__btInstall.Enable(self.is_install_ok())
 
     def on_refresh(self, _):
-        print("on_refresh")
-
         self.refresh_list_content()
 
     def on_install(self, _):
-        print("on_install")
-
+        global woe
         if self.is_install_ok():
             is_iso = self.__isoChoice.GetValue()
 
@@ -234,25 +243,16 @@ class MainPanel(wx.Panel):
             else:
                 iso = self.__dvdDriveDevList[self.__dvdDriveList.GetSelection()]
 
-            # subprocess.run(["pkexec", "sh", "-c", "'woeusb", "--no-color", "--for-gui", "--device", "\"" + iso + "\"",
-            #                "\"" + device + "\"", "2>&1'"], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-            woe = Communication(iso, device)
             woe.start()
 
             dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
                                        wx.PD_APP_MODAL | wx.PD_SMOOTH | wx.PD_CAN_ABORT)
 
             while woe.is_alive():
-                status = True
-
-                if woe.progress == 0 or woe.progress >= 99:
-                    if dialog.GetValue() != 0:
-                        dialog.Update(0)
-
+                if not woe.progress:
                     status = dialog.Pulse(woe.state)[0]
                     time.sleep(0.06)
-                elif woe.progress != 0:
+                else:
                     status = dialog.Update(woe.progress, woe.state)[0]
 
                 if not status:
@@ -260,10 +260,15 @@ class MainPanel(wx.Panel):
                                      wx.YES_NO | wx.ICON_QUESTION, self) == wx.NO:
                         dialog.Resume()
                     else:
-                        woe.kys = True
+                        woe.kill = True
                         break
             dialog.Destroy()
-            wx.MessageBox("Installation succeeded!", "Installation", wx.OK | wx.ICON_INFORMATION, self)
+
+            if woe.error == "":
+                wx.MessageBox("Installation succeeded!", "Installation", wx.OK | wx.ICON_INFORMATION, self)
+            else:
+                wx.MessageBox("Installation failed!" + "\n" + str(woe.error), "Installation", wx.OK | wx.ICON_ERROR,
+                              self)
 
     def on_show_all_drive(self, _):
         self.refresh_list_content()
@@ -369,7 +374,7 @@ class PanelNoteBookAutors(wx.Panel):
 
 
 class Communication(threading.Thread):
-    progress = 0
+    progress = False
     state = ""
     error = ""
     kill = False
@@ -389,17 +394,83 @@ class Communication(threading.Thread):
         try:
             woeusb.main(source_fs_mountpoint, target_fs_mountpoint, self.source, self.target, "device",
                         temp_directory, "FAT", False)
-        except KeyboardInterrupt:
+        except SystemExit:
             pass
 
         woeusb.cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
+
+# Packed to class for clarity
+
+
+class ListUsb:
+    def __init__(self, show_all=False):
+        self.show_all = show_all
+
+    def list(self):
+        devices_list = []
+
+        lsblk = subprocess.run(["lsblk",
+                                "--output", "NAME",
+                                "--noheadings",
+                                "--nodeps"], stdout=subprocess.PIPE).stdout.decode("utf-8")
+
+        devices = re.sub("sr[0-9]", "", lsblk).split()
+
+        for device in devices:
+            if self.is_removable_and_writable_device(device):
+                if not self.show_all:
+                    continue
+
+            # FIXME: Needs a more reliable detection mechanism instead of simply assuming it is under /dev
+            block_device = "/dev/" + device
+
+            device_capacity = subprocess.run(["lsblk",
+                                              "--output", "SIZE",
+                                              "--noheadings",
+                                              "--nodeps",
+                                              block_device], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
+
+            device_model = subprocess.run(["lsblk",
+                                           "--output", "MODEL",
+                                           "--noheadings",
+                                           "--nodeps",
+                                           block_device], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
+
+            if device_model != "":
+                devices_list.append([block_device, block_device + "(" + device_model + ", " + device_capacity + ")"])
+            else:
+                devices_list.append([block_device, block_device + "(" + device_capacity + ")"])
+
+        return devices_list
+
+    def is_removable_and_writable_device(self, block_device_name):
+        sysfs_block_device_dir = "/sys/block/" + block_device_name
+
+        # We consider device not removable if the removable sysfs item not exist
+        if os.path.isfile(sysfs_block_device_dir + "/removable"):
+            removable = open(sysfs_block_device_dir + "/removable")
+            removable_content = removable.read()
+            removable.close()
+
+            ro = open(sysfs_block_device_dir + "/ro")
+            ro_content = ro.read()
+            ro.close()
+
+            if removable_content.strip("\n") == "1" and ro_content.strip("\n") == "0":
+                return 0
+            else:
+                return 1
+        else:
+            return 1
+
 
 
 frameTitle = "app"
 
 app = wx.App()
 
-m_frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 500))
-m_frame.SetMinSize(wx.Size(300, 300))
+m_frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
+m_frame.SetMinSize(wx.Size(300, 450))
+
 m_frame.Show(True)
 app.MainLoop()

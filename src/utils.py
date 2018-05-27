@@ -223,6 +223,9 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
 def print_with_color(text, color=""):
     if gui != None:
         gui.state = text
+        if color == "red":
+            gui.error = text
+            sys.exit()
     else:
         if no_color or color == "":
             sys.stdout.write(text + "\n")

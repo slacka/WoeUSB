@@ -21,8 +21,8 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 
 import os
+import sys
 import time
-import lzma
 import shutil
 import argparse
 import tempfile
@@ -33,6 +33,7 @@ import urllib.request
 from datetime import datetime
 
 import utils
+import workaround
 
 application_name = 'WoeUSB'
 application_version = '@@WOEUSB_VERSION@@'
@@ -203,7 +204,7 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
 
     current_state = "copying-filesystem"
 
-    workaround_linux_make_writeback_buffering_not_suck(True)
+    workaround.linux_make_writeback_buffering_not_suck(True)
 
     copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint)
 
@@ -214,7 +215,7 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
     install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix)
 
     if workaround_bios_boot_flag:
-        workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
+        workaround.buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
 
     current_state = "finished"
 
@@ -274,16 +275,6 @@ def create_target_partition_table(target_device, partition_table_type):
     subprocess.run(["parted", "--script", target_device, "mklabel", parted_partiton_table_argument])
 
 
-def workaround_make_system_realize_partition_table_changed(target_device):
-    utils.print_with_color("Making system realize that partition table has changed...")
-
-    subprocess.run(["blockdev", "--rereadpt", target_device])
-    utils.print_with_color("Wait 3 seconds for block device nodes to populate...")
-
-    time.sleep(3)
-    check_kill_signal()
-
-
 def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
                             command_mkntfs):
     check_kill_signal()
@@ -328,7 +319,7 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
 
     check_kill_signal()
 
-    workaround_make_system_realize_partition_table_changed(target_device)
+    workaround.make_system_realize_partition_table_changed(target_device)
 
     # Format target partition's filesystem
     if filesystem_type in ["FAT", "vfat"]:
@@ -376,20 +367,6 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
     shutil.move(file, download_directory.decode("utf-8").strip() + "/" + file)  # move file to download_directory
 
     shutil.copy2(download_directory.decode("utf-8").strip() + "/uefi-ntfs.img", uefi_ntfs_partition)
-
-
-# Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
-
-
-def workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device):
-    check_kill_signal()
-
-    utils.print_with_color(
-        "Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled")
-
-    subprocess.run(["parted", "--script",
-                    target_device,
-                    "set", "1", "boot", "on"])
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
@@ -483,101 +460,6 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     CopyFiles_handle.stop = True
 
 
-# As Windows 7's installation media doesn't place the required EFI
-# bootloaders in the right location, we extract them from the
-# system image manually
-# TODO: Functionize Windows 7 checking
-
-
-def workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
-    global verbose
-
-    check_kill_signal()
-
-    grep = subprocess.run(["grep", "--extended-regexp", "--quiet", "^MinServer=7[0-9]{3}\.[0-9]",
-                           source_fs_mountpoint + "/sources/cversion.ini"],
-                          stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-    if grep == "" and not os.path.isfile(source_fs_mountpoint + "/bootmgr.efi"):
-        return 0
-
-    utils.print_with_color(
-        "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting",
-        "yellow")
-
-    efi_directory = ""
-    test_efi_directory = subprocess.run(["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/efi"],
-                                        stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if test_efi_directory == "":
-        efi_directory = target_fs_mountpoint + "/efi"
-        if verbose:
-            print("DEBUG: Can't find efi directory, use " + efi_directory)
-    else:
-        efi_directory = test_efi_directory
-        if verbose:
-            print("DEBUG: " + efi_directory + " detected.")
-
-    efi_boot_directory = ""
-    test_efi_boot_directory = subprocess.run(["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/boot"],
-                                             stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if test_efi_boot_directory == "":
-        efi_boot_directory = target_fs_mountpoint + "/boot"
-        if verbose:
-            print("DEBUG: Can't find efi/boot directory, use " + efi_boot_directory)
-    else:
-        efi_boot_directory = test_efi_boot_directory
-        if verbose:
-            print("DEBUG: " + efi_boot_directory + " detected.")
-
-    # If there's already an EFI bootloader existed, skip the workaround
-    test_efi_bootloader = subprocess.run(
-        ["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/efi/boot/boot*.efi"],
-        stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if test_efi_bootloader != "":
-        print("INFO: Detected existing EFI bootloader, workaround skipped.")
-        return 0
-
-    os.makedirs(efi_boot_directory)
-
-    wim = lzma.open(source_fs_mountpoint + "/sources/install.wim", mode="rb").read()
-
-    file = open(efi_boot_directory + "/bootx64.efi", mode="wb")
-    file.write(wim)
-    file.close()
-
-
-def workaround_linux_make_writeback_buffering_not_suck(mode):
-    VM_DIRTY_BACKGROUND_BYTES = str(16 * 1024 * 1024)  # 16MiB
-    VM_DIRTY_BYTES = str(48 * 1024 * 1024)  # 48MiB
-
-    if mode:
-        utils.print_with_color(
-            "Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
-            "yellow")
-
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write(VM_DIRTY_BACKGROUND_BYTES)
-        dirty_background_bytes.close()
-
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write(VM_DIRTY_BYTES)
-        dirty_bytes.close()
-    else:
-        utils.print_with_color(
-            "Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
-            "yellow")
-
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write("0")
-        dirty_background_bytes.close()
-
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write("0")
-        dirty_bytes.close()
-
-
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
     check_kill_signal()
 
@@ -637,7 +519,7 @@ def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
         CopyFiles_handle.stop = True
 
     if current_state in ["copying-filesystem", "finished"]:
-        workaround_linux_make_writeback_buffering_not_suck(False)
+        workaround.linux_make_writeback_buffering_not_suck(False)
 
     flag_unclean = False
     flag_unsafe = False
@@ -679,20 +561,6 @@ def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
         utils.print_with_color("The target device should be bootable now", "green")
 
 
-# Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
-# In python you can't just stop or kill thread, it must end its execution,
-# or recognize moment where you want it to stop and politely perform euthanasia on itself.
-# So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
-# simultaneously ending whatever script was doing meantime!
-# Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
-# TODO: Put here more descriptive error
-
-def check_kill_signal():
-    if gui is not None:
-        if gui.kill:
-            raise KeyboardInterrupt
-
-
 def setup_arguments():
     parser = argparse.ArgumentParser(
         description="WoeUSB can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image.")
@@ -721,6 +589,19 @@ def setup_arguments():
 
     return parser
 
+# Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
+# In python you can't just stop or kill thread, it must end its execution,
+# or recognize moment where you want it to stop and politely perform euthanasia on itself.
+# So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
+# simultaneously ending whatever script was doing meantime!
+# Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
+# TODO: Put here more descriptive error
+
+def check_kill_signal():
+    print("check_kill_signal")
+    if gui is not None:
+        if gui.kill:
+            raise sys.exit()
 
 # Classes for threading module
 
@@ -766,6 +647,7 @@ class CopyFiles(threading.Thread):
                 print(str(percentage) + "%")
 
             time.sleep(0.05)
+        gui.progress = False
 
         return 0
 
