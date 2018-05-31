@@ -452,14 +452,37 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
 
     for dirpath, _, filenames in os.walk(source_fs_mountpoint):
         check_kill_signal()
+
         if not os.path.isdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, "")):
             os.mkdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, ""))
         for file in filenames:
             path = os.path.join(dirpath, file)
             CopyFiles_handle.file = path
-            shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
+
+            if os.path.getsize(path) > 5 * 1024 * 1024: # Files bigger than 5 MiB
+                copy_large_file(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
+            else:
+                shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
 
     CopyFiles_handle.stop = True
+
+
+def copy_large_file(source, target):
+    source_file = open(source, "rb")  # Open for reading in byte mode
+    target_file = open(target, "wb")  # Open for writing in byte mode
+
+    while True:
+        check_kill_signal()
+
+        data = source_file.read(5 * 1024 * 1024)  # Read 5 MiB
+        if data == b"":
+            break
+
+        target_file.write(data)
+
+    source_file.close()
+    target_file.close()
+
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
