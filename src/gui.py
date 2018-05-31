@@ -469,13 +469,11 @@ class ListUsb:
 
         # We consider device not removable if the removable sysfs item not exist
         if os.path.isfile(sysfs_block_device_dir + "/removable"):
-            removable = open(sysfs_block_device_dir + "/removable")
-            removable_content = removable.read()
-            removable.close()
+            with open(sysfs_block_device_dir + "/removable") as removable:
+                removable_content = removable.read()
 
-            ro = open(sysfs_block_device_dir + "/ro")
-            ro_content = ro.read()
-            ro.close()
+            with open(sysfs_block_device_dir + "/ro") as ro:
+                ro_content = ro.read()
 
             if removable_content.strip("\n") == "1" and ro_content.strip("\n") == "0":
                 return 0
@@ -502,9 +500,8 @@ def list_dvd_drive():
     for device in devices:
         optical_disk_drive_devfs_path = "/dev/" + device[1]
 
-        model = open(device[0] + "/device/model", "r")
-        model_content = model.read().strip()
-        model.close()
+        with open(device[0] + "/device/model", "r") as model:
+            model_content = model.read().strip()
 
         devices_list.append([optical_disk_drive_devfs_path, optical_disk_drive_devfs_path + " - " + model_content])
 
