@@ -21,7 +21,6 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import sys
 import time
 import shutil
 import argparse
@@ -133,6 +132,7 @@ def init(from_cli=True, install_mode=None, source_media=None, target_media=None,
         debug = args.debug
 
     utils.no_color = no_color
+    utils.verbose = verbose
     utils.gui = gui
 
     return [source_fs_mountpoint, target_fs_mountpoint, temp_directory, install_mode, source_media, target_media,
@@ -210,7 +210,7 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
 
     copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint)
 
-    # workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint)
+    workaround.support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint)
 
     install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall)
 
@@ -242,7 +242,7 @@ def wipe_existing_partition_table_and_filesystem_signatures(target_device):
 
 
 def check_if_the_drive_is_really_wiped(target_device):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Ensure that " + target_device + " is really wiped...")
 
@@ -257,7 +257,7 @@ def check_if_the_drive_is_really_wiped(target_device):
 
 
 def create_target_partition_table(target_device, partition_table_type):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Creating new partition table on " + target_device + "...", "green")
 
@@ -279,7 +279,7 @@ def create_target_partition_table(target_device, partition_table_type):
 
 def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
                             command_mkntfs):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     if filesystem_type in ["FAT", "vfat"]:
         parted_mkpart_fs_type = "fat32"
@@ -319,7 +319,7 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
     else:
         utils.print_with_color("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
 
-    check_kill_signal()
+    utils.check_kill_signal()
 
     workaround.make_system_realize_partition_table_changed(target_device)
 
@@ -334,7 +334,7 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
 
 
 def create_uefi_ntfs_support_partition(target_device):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     # FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
     # NOTE: The --align is set to none because this partition is indeed misaligned, but ignored due to it's small size
@@ -357,7 +357,7 @@ def create_uefi_ntfs_support_partition(target_device):
 
 
 def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     try:
         file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")[0]
@@ -372,7 +372,7 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Mounting source filesystem...", "green")
 
@@ -406,7 +406,7 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
 
 
 def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Mounting target filesystem...", "green")
 
@@ -437,7 +437,7 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
 def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     global CopyFiles_handle
 
-    check_kill_signal()
+    utils.check_kill_signal()
 
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
@@ -451,7 +451,7 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     CopyFiles_handle.start()
 
     for dirpath, _, filenames in os.walk(source_fs_mountpoint):
-        check_kill_signal()
+        utils.check_kill_signal()
 
         if not os.path.isdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, "")):
             os.mkdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, ""))
@@ -472,7 +472,7 @@ def copy_large_file(source, target):
     target_file = open(target, "wb")  # Open for writing in byte mode
 
     while True:
-        check_kill_signal()
+        utils.check_kill_signal()
 
         data = source_file.read(5 * 1024 * 1024)  # Read 5 MiB
         if data == b"":
@@ -486,7 +486,7 @@ def copy_large_file(source, target):
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
 
@@ -503,7 +503,7 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 
 def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall,
                                              name_grub_prefix):
-    check_kill_signal()
+    utils.check_kill_signal()
 
     utils.print_with_color("Installing custom GRUB config for legacy PC booting...", "green")
 
@@ -511,10 +511,9 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
 
     os.makedirs(target_fs_mountpoint + "/" + name_grub_prefix, exist_ok=True)
 
-    cfg = open(grub_cfg, "w")
-    cfg.write("ntldr /bootmgr\n")
-    cfg.write("boot")
-    cfg.close()
+    with open(grub_cfg, "w") as cfg:
+        cfg.write("ntldr /bootmgr\n")
+        cfg.write("boot")
 
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
@@ -613,19 +612,6 @@ def setup_arguments():
     parser.add_argument('--for-gui', action="store_true", help=argparse.SUPPRESS)
 
     return parser
-
-# Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
-# In python you can't just stop or kill thread, it must end its execution,
-# or recognize moment where you want it to stop and politely perform euthanasia on itself.
-# So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
-# simultaneously ending whatever script was doing meantime!
-# Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
-# TODO: Put here more descriptive error
-
-def check_kill_signal():
-    if gui is not None:
-        if gui.kill:
-            raise sys.exit()
 
 # Classes for threading module
 

@@ -18,13 +18,15 @@ except ImportError:
     no_color = True
 
 gui = None
+verbose = False
+
 
 def check_runtime_dependencies(application_name):
     result = "success"
 
-    system_commands = ["mount", "wipefs", "lsblk", "blockdev", "df", "parted"]
+    system_commands = ["mount", "wipefs", "lsblk", "blockdev", "df", "parted", "7z"]
     for command in system_commands:
-        if shutil.which(command) == "":
+        if shutil.which(command) is None:
             print_with_color(
                 "Error: " + application_name + " requires " + command + " command in the executable search path, but it is not found.",
                 "red")
@@ -221,7 +223,7 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
 
 
 def print_with_color(text, color=""):
-    if gui != None:
+    if gui is not None:
         gui.state = text
         if color == "red":
             gui.error = text
@@ -248,3 +250,17 @@ def get_size(path):
             path = os.path.join(dirpath, file)
             total_size += os.path.getsize(path)
     return total_size
+
+# Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
+# In python you can't just stop or kill thread, it must end its execution,
+# or recognize moment where you want it to stop and politely perform euthanasia on itself.
+# So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
+# simultaneously ending whatever script was doing meantime!
+# Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
+# TODO: Put here more descriptive error
+
+
+def check_kill_signal():
+    if gui is not None:
+        if gui.kill:
+            raise sys.exit()

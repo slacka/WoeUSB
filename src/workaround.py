@@ -1,11 +1,11 @@
 #!/usr/bin/python3
 
 import os
-import lzma
 import subprocess
 import time
 
 import utils
+
 
 def make_system_realize_partition_table_changed(target_device):
     utils.print_with_color("Making system realize that partition table has changed...")
@@ -35,8 +35,6 @@ def buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device
 
 
 def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
-    global verbose
-
     grep = subprocess.run(["grep", "--extended-regexp", "--quiet", "^MinServer=7[0-9]{3}\.[0-9]",
                            source_fs_mountpoint + "/sources/cversion.ini"],
                           stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
@@ -52,11 +50,11 @@ def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
 
     if test_efi_directory == "":
         efi_directory = target_fs_mountpoint + "/efi"
-        if verbose:
+        if utils.verbose:
             print("DEBUG: Can't find efi directory, use " + efi_directory)
     else:
         efi_directory = test_efi_directory
-        if verbose:
+        if utils.verbose:
             print("DEBUG: " + efi_directory + " detected.")
 
     test_efi_boot_directory = subprocess.run(["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/boot"],
@@ -64,11 +62,11 @@ def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
 
     if test_efi_boot_directory == "":
         efi_boot_directory = target_fs_mountpoint + "/boot"
-        if verbose:
+        if utils.verbose:
             print("DEBUG: Can't find efi/boot directory, use " + efi_boot_directory)
     else:
         efi_boot_directory = test_efi_boot_directory
-        if verbose:
+        if utils.verbose:
             print("DEBUG: " + efi_boot_directory + " detected.")
 
     # If there's already an EFI bootloader existed, skip the workaround
@@ -80,40 +78,36 @@ def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
         print("INFO: Detected existing EFI bootloader, workaround skipped.")
         return 0
 
-    os.makedirs(efi_boot_directory)
+    os.makedirs(efi_boot_directory, exist_ok=True)
 
-    wim = lzma.open(source_fs_mountpoint + "/sources/install.wim", mode="rb").read()
+    bootloader = subprocess.run(["7z",
+                                 "e",
+                                 "-so",
+                                 source_fs_mountpoint + "/sources/install.wim",
+                                 "Windows/Boot/EFI/bootmgfw.efi"], stdout=subprocess.PIPE).stdout
 
-    file = open(efi_boot_directory + "/bootx64.efi", mode="wb")
-    file.write(wim)
-    file.close()
+    with open(efi_boot_directory + "/bootx64.efi", "wb") as target_bootloader:
+        target_bootloader.write(bootloader)
 
 
 def linux_make_writeback_buffering_not_suck(mode):
-    VM_DIRTY_BACKGROUND_BYTES = str(16 * 1024 * 1024)  # 16MiB
-    VM_DIRTY_BYTES = str(48 * 1024 * 1024)  # 48MiB
-
     if mode:
         utils.print_with_color(
             "Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
             "yellow")
 
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write(VM_DIRTY_BACKGROUND_BYTES)
-        dirty_background_bytes.close()
-
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write(VM_DIRTY_BYTES)
-        dirty_bytes.close()
+        vm_dirty_background_bytes = str(16 * 1024 * 1024)  # 16MiB
+        vm_dirty_bytes = str(48 * 1024 * 1024)  # 48MiB
     else:
         utils.print_with_color(
             "Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
             "yellow")
 
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write("0")
-        dirty_background_bytes.close()
+        vm_dirty_background_bytes = "0"
+        vm_dirty_bytes = "0"
 
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write("0")
-        dirty_bytes.close()
+    with open("/proc/sys/vm/dirty_background_bytes", "w") as dirty_background_bytes:
+        dirty_background_bytes.write(vm_dirty_background_bytes)
+
+    with open("/proc/sys/vm/dirty_bytes", "w") as dirty_bytes:
+        dirty_bytes.write(vm_dirty_bytes)

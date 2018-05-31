@@ -147,30 +147,6 @@ class MainPanel(wx.Panel):
         self.__usbStickList = wx.ListBox(self, wx.ID_ANY)
         main_sizer.Add(self.__usbStickList, 1, wx.EXPAND | wx.ALL, 3)
 
-        '''
-        tmp_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        tmp_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Filesystem: "), 0, wx.CENTER, 2)
-
-        filesystem = wx.Choice(self, choices=["FAT", "NTFS"])
-        filesystem.SetSelection(0)
-        tmp_sizer.Add(filesystem, 1, wx.RIGHT | wx.LEFT, 1)
-
-        boot_flag = wx.CheckBox(self, label="Toggle boot flag")
-        tmp_sizer.Add(boot_flag, 1, wx.CENTER | wx.RIGHT, 1)
-
-        main_sizer.Add(tmp_sizer, 0, wx.Left, 3)
-
-        main_sizer.AddSpacer(20)
-
-        tmp_sizer = wx.BoxSizer(wx.HORIZONTAL)
-        tmp_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Label: "), 0, wx.CENTER, 2)
-
-        text = wx.TextCtrl(self)
-        tmp_sizer.Add(text, 1, wx.EXPAND, 1)
-
-        main_sizer.Add(tmp_sizer, 0, wx.Left, 3)
-        '''
-
         # Buttons
         main_sizer.AddSpacer(30)
 
