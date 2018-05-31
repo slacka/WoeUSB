@@ -426,8 +426,12 @@ frameTitle = PROG_FULL_NAME
 
 app = wx.App()
 
-m_frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
-m_frame.SetMinSize(wx.Size(300, 450))
+locale = wx.Locale()
+locale.AddCatalogLookupPathPrefix("locale")
+locale.Init(wx.LANGUAGE_DEFAULT)
 
-m_frame.Show(True)
+frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
+frame.SetMinSize(wx.Size(300, 450))
+
+frame.Show(True)
 app.MainLoop()
