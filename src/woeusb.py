@@ -3,7 +3,7 @@
 # A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
 # Copyright © 2013 Colin GILLE / congelli501
 # Copyright © 2017 slacka et. al.
-# Python port - WaxyMocha
+# Python port - 2018 WaxyMocha
 #
 # This file is part of WoeUSB.
 #
@@ -21,31 +21,18 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 
 import os
-import re
-import sys
 import time
-import lzma
 import shutil
-import pathlib
-import tempfile
 import argparse
+import tempfile
 import traceback
 import threading
 import subprocess
 import urllib.request
 from datetime import datetime
 
-# Disable message coloring when set to 1, set by --no-color
-no_color = False
-
-# External tools
-try:
-    import termcolor
-except ImportError:
-    print("Module termcolor is not installed, text coloring disabled")
-    no_color = True
-
-# import parted  # Unused for now
+import utils
+import workaround
 
 application_name = 'WoeUSB'
 application_version = '@@WOEUSB_VERSION@@'
@@ -60,11 +47,9 @@ Global Parameters
 Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
 Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 TODO: Global parameter cleanup
-TODO: Use Y/N or true/false instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
 Doing GUI-specific stuff when set to 1, set by --only-for-gui
 Requires to be set to global due to indirectly referenced by trap
 '''
-global_only_for_gui = False
 
 # Increase verboseness, provide more information when required
 verbose = False
@@ -72,99 +57,135 @@ verbose = False
 debug = False
 
 # NOTE: Need to pass to traps, so need to be global
-source_fs_mountpoint = "/media/woeusb_source_" + str(
-    round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
-target_fs_mountpoint = "/media/woeusb_target_" + str(
-    round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
+# source_fs_mountpoint = ""
+# target_fs_mountpoint = ""
+
+# source_media may be a optical disk drive or a disk image
+# target_media may be an entire usb storage device or just a partition
+# source_media = ""
+# target_media = ""
 
 target_device = ""
 
-Pulse_handle = threading.Thread()
 CopyFiles_handle = threading.Thread()
 
 # Execution state for cleanup functions to determine if clean up is required
 # NOTE: Need to pass to traps, so need to be global
 current_state = 'pre-init'
 
-temp_directory = tempfile.mkdtemp(prefix="WoeUSB.")
+# temp_directory = b""
+# install_mode = ""
+gui = None
 
 
-def main(only_for_gui_ref):
-    global current_state
+def init(from_cli=True, install_mode=None, source_media=None, target_media=None, workaround_bios_boot_flag=False,
+         target_filesystem_type="FAT", filesystem_label=DEFAULT_NEW_FS_LABEL):
+    source_fs_mountpoint = "/media/woeusb_source_" + str(
+        round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
+    target_fs_mountpoint = "/media/woeusb_target_" + str(
+        round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
+
+    temp_directory = tempfile.mkdtemp(prefix="WoeUSB.")
+
+    verbose = False
+
+    no_color = True
+
+    debug = False
+
+    parser = None
+
+    if from_cli:
+        parser = setup_arguments()
+        args = parser.parse_args()
+
+        if args.about:
+            print_application_info()
+            return 0
+
+        if args.device:
+            install_mode = "device"
+        elif args.partition:
+            install_mode = "partition"
+        else:
+            utils.print_with_color("You need to specify instalation type (--device or --partition")
+            return 1
+
+        # source_media may be a optical disk drive or a disk image
+        # target_media may be an entire usb storage device or just a partition
+        source_media = args.source
+        target_media = args.target
+
+        workaround_bios_boot_flag = args.workaround_bios_boot_flag
+
+        target_filesystem_type = args.target_filesystem
+
+        # Parameters that needs to be determined in runtime
+        # due to different names in distributions
+
+        filesystem_label = args.label
+
+        verbose = args.verbose
+
+        no_color = args.no_color
+
+        debug = args.debug
+
+    utils.no_color = no_color
+    utils.verbose = verbose
+    utils.gui = gui
+
+    return [source_fs_mountpoint, target_fs_mountpoint, temp_directory, install_mode, source_media, target_media,
+            workaround_bios_boot_flag, target_filesystem_type, filesystem_label, verbose, debug, parser]
+
+
+def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
+         target_filesystem_type, workaround_bios_boot_flag):
+    global debug
     global verbose
     global no_color
+    global current_state
     global target_device
-    global debug
-    global global_only_for_gui
-
-    parser = setup_arguments()
-    args = parser.parse_args()
-
-    if args.about:
-        print_application_info()
-        return 0
 
     current_state = 'enter-init'
 
-    if args.device:
-        install_mode = "device"
-    elif args.partition:
-        install_mode = "partition"
-    else:
-        print_with_color("You need to specify instalation type (--device or --partition")
-        return 1
-
-    global_only_for_gui = args.for_gui
-
-    # source_media may be a optical disk drive or a disk image
-    # target_media may be an entire usb storage device or just a partition
-    source_media = args.source
-    target_media = args.target
-
-    workaround_bios_boot_flag = args.workaround_bios_boot_flag
-
-    target_filesystem_type = args.target_filesystem
-
-    # Parameters that needs to be determined in runtime
-    # due to different names in distributions
-
-    new_file_system_label = args.label
-
-    verbose = args.verbose
-
-    if not no_color:
-        no_color = args.no_color
-
-    debug = args.debug
-
-    command_mkdosfs, command_mkntfs, command_grubinstall = check_runtime_dependencies(application_name)
+    command_mkdosfs, command_mkntfs, command_grubinstall = utils.check_runtime_dependencies(application_name)
     if command_grubinstall == "grub-install":
         name_grub_prefix = "grub"
     else:
         name_grub_prefix = "grub2"
 
-    print_with_color(application_name + " v" + application_version)
-    print_with_color("==============================")
+    utils.print_with_color(application_name + " v" + application_version)
+    utils.print_with_color("==============================")
 
     if os.getuid() != 0:
-        print_with_color("Warning: You are not running " + application_name + " as root!", "yellow")
-        print_with_color("Warning: This might be the reason of the following failure.", "yellow")
+        utils.print_with_color("Warning: You are not running " + application_name + " as root!", "yellow")
+        utils.print_with_color("Warning: This might be the reason of the following failure.", "yellow")
 
-    if check_runtime_parameters(install_mode, source_media, target_media):
+    if utils.check_runtime_parameters(install_mode, source_media, target_media):
         parser.print_help()
         return 1
 
-    trigger_wxGenericProgressDialog_pulse(True, only_for_gui_ref)
+    target_device, target_partition = utils.determine_target_parameters(install_mode, target_media)
 
-    target_device, target_partition = determine_target_parameters(install_mode, target_media)
-
-    if check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
+    if utils.check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
         return 1
+
+    current_state = "start-mounting"
+
+    if mount_source_filesystem(source_media, source_fs_mountpoint):
+        utils.print_with_color("Error: Unable to mount source filesystem", "red")
+        return 1
+
+    if target_filesystem_type == "FAT":
+        if utils.check_fat32_filesize_limitation(source_fs_mountpoint):
+            target_filesystem_type = "NTFS"
 
     if install_mode == "device":
         wipe_existing_partition_table_and_filesystem_signatures(target_device)
         create_target_partition_table(target_device, "legacy")
-        create_target_partition(target_partition, target_filesystem_type, new_file_system_label, command_mkdosfs,
+        create_target_partition(target_device, target_partition, target_filesystem_type, target_filesystem_type,
+                                command_mkdosfs,
                                 command_mkntfs)
 
         if target_filesystem_type == "NTFS":
@@ -172,43 +193,31 @@ def main(only_for_gui_ref):
             install_uefi_ntfs_support_partition(target_device + "2", temp_directory)
 
     if install_mode == "partition":
-        check_target_partition(target_partition, install_mode, target_device)
-
-    current_state = "start-mounting"
-
-    if mount_source_filesystem(source_media, source_fs_mountpoint):
-        print_with_color("Error: Unable to mount source filesystem", "red")
-        return 1
-
-    if target_filesystem_type == "FAT":
-        if check_fat32_filesize_limitation(source_fs_mountpoint):
-            return 1
+        utils.check_target_partition(target_partition, install_mode, target_device)
 
     if mount_target_filesystem(target_partition, target_fs_mountpoint, target_filesystem_type):
-        print_with_color("Error: Unable to mount target filesystem", "red")
+        utils.print_with_color("Error: Unable to mount target filesystem", "red")
         return 1
 
-    if check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
+    if utils.check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
         return 1
 
     current_state = "copying-filesystem"
 
-    workaround_linux_make_writeback_buffering_not_suck(True)
+    workaround.linux_make_writeback_buffering_not_suck(True)
 
-    copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_gui_ref)
+    copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint)
 
-    #workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint)
+    workaround.support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint)
 
     install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall)
 
     install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall, name_grub_prefix)
 
-    if workaround_bios_boot_flag == "Y":
-        workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
+    if workaround_bios_boot_flag:
+        workaround.buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device)
 
     current_state = "finished"
-
-    trigger_wxGenericProgressDialog_pulse(False, only_for_gui_ref)
 
     return 0
 
@@ -220,117 +229,8 @@ def print_application_info():
     print(application_copyright_notice)
 
 
-def check_runtime_dependencies(application_name):
-    result = "success"
-
-    system_commands = ["mount", "wipefs", "lsblk", "blockdev", "df", "parted"]
-    for command in system_commands:
-        if shutil.which(command) == "":
-            print_with_color(
-                "Error: " + application_name + " requires " + command + " command in the executable search path, but it is not found.",
-                "red")
-            result = "failed"
-
-    fat = ["mkdosfs", "mkfs.msdos", "mkfs.vfat", "mkfs.fat"]
-    for command in fat:
-        if shutil.which(command) != "":
-            fat = command
-            break
-
-    if isinstance(fat, list):
-        print_with_color("Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!", "red")
-        print_with_color("Error: Please make sure that dosfstools is properly installed!", "red")
-        result = "failed"
-
-    ntfs = "mkntfs"
-    if shutil.which("mkntfs") == "":
-        print_with_color("Error: mkntfs command not found!", "red")
-        print_with_color("Error: Please make sure that ntfs-3g is properly installed!", "red")
-        result = "failed"
-
-    grub = ["grub-install", "grub2-install"]
-    for command in grub:
-        if shutil.which(command) != "":
-            grub = command
-            break
-
-    if isinstance(grub, list):
-        print_with_color("Error: grub-install or grub2-install command not found!", "red")
-        print_with_color("Error: Please make sure that GNU GRUB is properly installed!", "red")
-        result = "failed"
-
-    if result != "success":
-        raise RuntimeError("Dependencies are not met")
-    else:
-        return [fat, ntfs, grub]
-
-
-def check_runtime_parameters(install_mode, source_media, target_media):
-    if not os.path.isfile(source_media) and not pathlib.Path(source_media).is_block_device():
-        print_with_color(
-            "Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
-            "red")
-        return 1
-
-    if not pathlib.Path(target_media).is_block_device():
-        print_with_color("Error: Target media \"" + target_media + "\" is not a block device file!", "red")
-        return 1
-
-    if install_mode == "device" and target_media[-1].isdigit():
-        print_with_color("Error: Target media \"" + target_media + "\" is not an entire storage device!", "red")
-        return 1
-
-    if install_mode == "partition" and not target_media[-1].isdigit():
-        print_with_color("Error: Target media \"" + target_media + "\" is not an partition!", "red")
-        return 1
-    return 0
-
-
-def determine_target_parameters(install_mode, target_media):
-    if install_mode == "partition":
-        target_partition = target_media
-
-        while target_media[-1].isdigit():
-            target_media = target_media[:-1]
-        target_device = target_media
-    else:
-        target_device = target_media
-        target_partition = target_media + str(1)
-
-    if verbose:
-        print_with_color("Info: Target device is " + target_device)
-        print_with_color("Info: Target partition is " + target_partition)
-
-    return [target_device, target_partition]
-
-
-def check_is_target_device_busy(device):
-    mount = subprocess.run("mount", stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-    if re.findall(device, mount) != []:
-        return 1
-    return 0
-
-
-def check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
-    if check_is_target_device_busy(source_media):
-        print_with_color("Error: Source media is currently mounted, unmount the partition then try again", "red")
-        return 1
-
-    if install_mode == "partition":
-        if check_is_target_device_busy(target_partition):
-            print_with_color("Error: Target partition is currently mounted, unmount the partition then try again",
-                             "red")
-            return 1
-    else:
-        if check_is_target_device_busy(target_device):
-            print_with_color(
-                "Error: Target device is currently busy, unmount all mounted partitions in target device then try again",
-                "red")
-            return 1
-
-
 def wipe_existing_partition_table_and_filesystem_signatures(target_device):
-    print_with_color("Wiping all existing partition table and filesystem signatures in " + target_device, "green")
+    utils.print_with_color("Wiping all existing partition table and filesystem signatures in " + target_device, "green")
     subprocess.run(["wipefs", "--all", target_device])
     check_if_the_drive_is_really_wiped(target_device)
 
@@ -340,20 +240,24 @@ def wipe_existing_partition_table_and_filesystem_signatures(target_device):
 
 
 def check_if_the_drive_is_really_wiped(target_device):
-    print_with_color("Ensure that " + target_device + " is really wiped...")
+    utils.check_kill_signal()
+
+    utils.print_with_color("Ensure that " + target_device + " is really wiped...")
 
     lsblk = subprocess.run(["lsblk", "--pairs", "--output", "NAME,TYPE", target_device], stdout=subprocess.PIPE).stdout
 
     grep = subprocess.Popen(["grep", "--count", "TYPE=\"part\""], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
     if grep.communicate(input=lsblk)[0].decode("utf-8").strip() != "0":
-        print_with_color(
+        utils.print_with_color(
             "Error: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.")
         return 1
     return 0
 
 
 def create_target_partition_table(target_device, partition_table_type):
-    print_with_color("Creating new partition table on " + target_device + "...", "green")
+    utils.check_kill_signal()
+
+    utils.print_with_color("Creating new partition table on " + target_device + "...", "green")
 
     parted_partiton_table_argument = ""
 
@@ -361,37 +265,29 @@ def create_target_partition_table(target_device, partition_table_type):
         parted_partiton_table_argument = "msdos"
     elif partition_table_type in ["gpt", "guid"]:
         parted_partiton_table_argument = "gpt"
-        print_with_color("Error: Currently GUID partition table is not supported.", "red")
+        utils.print_with_color("Error: Currently GUID partition table is not supported.", "red")
         return 2
     else:
-        print_with_color("Error: Partition table not supported.", "red")
+        utils.print_with_color("Error: Partition table not supported.", "red")
         return 2
 
     # Create partition table(and overwrite the old one, whatever it was)
     subprocess.run(["parted", "--script", target_device, "mklabel", parted_partiton_table_argument])
 
 
-def workaround_make_system_realize_partition_table_changed(target_device):
-    print_with_color("Making system realize that partition table has changed...")
-
-    subprocess.run(["blockdev", "--rereadpt", target_device])
-    print_with_color("Wait 3 seconds for block device nodes to populate...")
-
-    time.sleep(3)
-
-
-def create_target_partition(target_partition, filesystem_type, filesystem_label, command_mkdosfs, command_mkntfs):
-    parted_mkpart_fs_type = ""
+def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
+                            command_mkntfs):
+    utils.check_kill_signal()
 
     if filesystem_type in ["FAT", "vfat"]:
         parted_mkpart_fs_type = "fat32"
     elif filesystem_type in ["NTFS", "ntfs"]:
         parted_mkpart_fs_type = "ntfs"
     else:
-        print_with_color("Error: Filesystem not supported", "red")
+        utils.print_with_color("Error: Filesystem not supported", "red")
         return 2
 
-    print_with_color("Creating target partition...", "green")
+    utils.print_with_color("Creating target partition...", "green")
 
     # Create target partition
     # We start at 4MiB for grub (it needs a post-mbr gap for its code) and alignment of flash memery block erase segment in general, for details see http://www.gnu.org/software/grub/manual/grub.html#BIOS-installation and http://lwn.net/Articles/428584/
@@ -419,9 +315,11 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
                         "-1025s"])  # Leave 512KiB==1024sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 512KiB and is intentionally let-it-be.
     # FIXME: Leave exact 512KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
     else:
-        print_with_color("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
+        utils.print_with_color("FATAL: Illegal parted_mkpart_fs_type, please report bug.", "green")
 
-    workaround_make_system_realize_partition_table_changed(target_device)
+    utils.check_kill_signal()
+
+    workaround.make_system_realize_partition_table_changed(target_device)
 
     # Format target partition's filesystem
     if filesystem_type in ["FAT", "vfat"]:
@@ -429,11 +327,13 @@ def create_target_partition(target_partition, filesystem_type, filesystem_label,
     elif filesystem_type in ["NTFS", "ntfs"]:
         subprocess.run([command_mkntfs, "--quick", "--label", filesystem_label, target_partition])
     else:
-        print_with_color("FATAL: Shouldn't be here")
+        utils.print_with_color("FATAL: Shouldn't be here")
         return 1
 
 
 def create_uefi_ntfs_support_partition(target_device):
+    utils.check_kill_signal()
+
     # FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
     # NOTE: The --align is set to none because this partition is indeed misaligned, but ignored due to it's small size
 
@@ -455,93 +355,29 @@ def create_uefi_ntfs_support_partition(target_device):
 
 
 def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory):
+    utils.check_kill_signal()
+
     try:
         file = urllib.request.urlretrieve("https://github.com/pbatard/rufus/raw/master/res/uefi/", "uefi-ntfs.img")[0]
     except urllib.request.ContentTooShortError:
-        print_with_color(
+        utils.print_with_color(
             "Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem.")
         return 1
 
-    shutil.move(file, download_directory.decode("utf-8").strip() + "/" + file)  # move file to download_directory
+    shutil.move(file, download_directory + "/" + file)  # move file to download_directory
 
-    shutil.copy2(download_directory.decode("utf-8").strip() + "/uefi-ntfs.img", uefi_ntfs_partition)
-
-
-# Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
-
-
-def workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device):
-    print_with_color(
-        "Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled")
-
-    subprocess.run(["parted", "--script",
-                    target_device,
-                    "set", "1", "boot", "on"])
-
-
-def check_fat32_filesize_limitation(source_fs_mountpoint):
-    for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
-        for file in filenames:
-            path = os.path.join(dirpath, file)
-            if os.path.getsize(path) > (2 ** 32) - 1:  # Max fat32 file size
-                print_with_color(
-                    "Error: File " + path + " in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.",
-                    "red")
-                print_with_color(
-                    "Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.",
-                    "red")
-                return 1
-    return 0
-
-
-# Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
-# target_partition: The target partition to check
-# install_mode: The usb storage creation method to be used
-# target_device: The parent device of the target partition, this is passed in to check UEFI:NTFS filesystem's existence on check_uefi_ntfs_support_partition
-
-
-def check_target_partition(target_partition, install_mode, target_device):
-    target_filesystem = subprocess.run(["lsblk",
-                                        "--output", "FSTYPE",
-                                        "--noheadings",
-                                        target_partition], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if target_filesystem == "vfat":
-        pass  # supported
-    elif target_filesystem == "ntfs":
-        check_uefi_ntfs_support_partition(target_device)
-    else:
-        print_with_color("Error: Target filesystem not supported, currently supported filesystem: FAT, NTFS.", "red")
-        return 1
-
-    return 0
-
-
-# Check if the UEFI:NTFS support partition exists
-# Currently it depends on the fact that this partition has a label of "UEFI_NTFS"
-# target_device: The UEFI:NTFS partition residing entier device file
-
-
-def check_uefi_ntfs_support_partition(target_device):
-    lsblk = subprocess.run(["lsblk",
-                            "--output", "LABEL",
-                            "--noheadings",
-                            target_device], stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if re.findall("UEFI_NTFS", lsblk) != []:
-        print_with_color(
-            "Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!")
-        print_with_color(
-            "Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
+    shutil.copy2(download_directory + "/uefi-ntfs.img", uefi_ntfs_partition)
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
-    print_with_color("Mounting source filesystem...", "green")
+    utils.check_kill_signal()
+
+    utils.print_with_color("Mounting source filesystem...", "green")
 
     # os.makedirs(source_fs_mountpoint, exist_ok=True)
 
     if subprocess.run(["mkdir", "--parents", source_fs_mountpoint]).returncode != 0:
-        print_with_color("Error: Unable to create " + source_fs_mountpoint + " mountpoint directory", "red")
+        utils.print_with_color("Error: Unable to create " + source_fs_mountpoint + " mountpoint directory", "red")
         return 1
 
     if os.path.isfile(source_media):
@@ -550,14 +386,14 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
                            "--types", "udf,iso9660",
                            source_media,
                            source_fs_mountpoint]).returncode != 0:
-            print_with_color("Error: Unable to mount source media", "red")
+            utils.print_with_color("Error: Unable to mount source media", "red")
             return 1
     else:
         if subprocess.run(["mount",
                            "--options", "ro",
                            source_media,
                            source_fs_mountpoint]).returncode != 0:
-            print_with_color("Error: Unable to mount source media", "red")
+            utils.print_with_color("Error: Unable to mount source media", "red")
             return 1
 
 
@@ -568,14 +404,14 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
 
 
 def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
-    mount_options = "defaults"
+    utils.check_kill_signal()
 
-    print_with_color("Mounting target filesystem...", "green")
+    utils.print_with_color("Mounting target filesystem...", "green")
 
     # os.makedirs(target_fs_mountpoint, exist_ok=True)
 
     if subprocess.run(["mkdir", "--parents", target_fs_mountpoint]).returncode != 0:
-        print_with_color("Error: Unable to create " + target_fs_mountpoint + " mountpoint directory", "red")
+        utils.print_with_color("Error: Unable to create " + target_fs_mountpoint + " mountpoint directory", "red")
         return 1
 
     # Determine proper mount options according to filesystem type
@@ -584,50 +420,22 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
     elif target_fs_type == "NTFS":
         pass
     else:
-        print_with_color("Fatal: Unsupported target_fs_type, please report bug.", "red")
+        utils.print_with_color("Fatal: Unsupported target_fs_type, please report bug.", "red")
 
     if subprocess.run(["mount",
                        target_partition,
                        target_fs_mountpoint]).returncode != 0:
-        print_with_color("Error: Unable to mount target media", "red")
-        return 1
-
-
-# TODO: add free_space_human_readable and needed_space_human_readable
-def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
-    df = subprocess.run(["df",
-                         "--block-size=1",
-                         target_fs_mountpoint], stdout=subprocess.PIPE).stdout
-    # free_space = int(df.strip().split()[4])
-
-    awk = subprocess.Popen(["awk", "{print $4}"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    free_space = awk.communicate(input=df)[0]
-    free_space = free_space.decode("utf-8").strip()
-    free_space = re.sub("[^0-9]", "", free_space)
-    free_space = int(free_space)
-
-    needed_space = 0
-    for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
-        for file in filenames:
-            path = os.path.join(dirpath, file)
-            needed_space += os.path.getsize(path)
-
-    additional_space_required_for_grub_installation = 1000 * 1000 * 10  # 10MiB
-
-    needed_space += additional_space_required_for_grub_installation
-
-    if needed_space > free_space:
-        print_with_color("Error: Not enough free space on target partition!")
-        print_with_color(
-            "Error: We required ${needed_space_human_readable}(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
+        utils.print_with_color("Error: Unable to mount target media", "red")
         return 1
 
 
 # Copying all files from one filesystem to another, with progress reporting
 
 
-def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_gui):
+def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
     global CopyFiles_handle
+
+    utils.check_kill_signal()
 
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
@@ -635,119 +443,49 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint, only_for_g
             path = os.path.join(dirpath, file)
             total_size += os.path.getsize(path)
 
-    # FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
-    trigger_wxGenericProgressDialog_pulse(False, only_for_gui)
-
-    print_with_color("Copying files from source media...", "green")
+    utils.print_with_color("Copying files from source media...", "green")
 
     CopyFiles_handle = CopyFiles(source_fs_mountpoint, target_fs_mountpoint)
     CopyFiles_handle.start()
 
     for dirpath, _, filenames in os.walk(source_fs_mountpoint):
+        utils.check_kill_signal()
+
         if not os.path.isdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, "")):
             os.mkdir(target_fs_mountpoint + dirpath.replace(source_fs_mountpoint, ""))
         for file in filenames:
             path = os.path.join(dirpath, file)
             CopyFiles_handle.file = path
-            shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
 
-    CopyFiles_handle.kill()
+            if os.path.getsize(path) > 5 * 1024 * 1024:  # Files bigger than 5 MiB
+                copy_large_file(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
+            else:
+                shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
 
-
-# As Windows 7's installation media doesn't place the required EFI
-# bootloaders in the right location, we extract them from the
-# system image manually
-# TODO: Functionize Windows 7 checking
+    CopyFiles_handle.stop = True
 
 
-def workaround_support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
-    global verbose
+def copy_large_file(source, target):
+    source_file = open(source, "rb")  # Open for reading in byte mode
+    target_file = open(target, "wb")  # Open for writing in byte mode
 
-    grep = subprocess.run(["grep", "--extended-regexp", "--quiet", "^MinServer=7[0-9]{3}\.[0-9]",source_fs_mountpoint + "/sources/cversion.ini"],
-                          stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-    if grep == "" and not os.path.isfile(source_fs_mountpoint + "/bootmgr.efi"):
-        return 0
+    while True:
+        utils.check_kill_signal()
 
-    print_with_color(
-        "Source media seems to be Windows 7-based with EFI support, applying workaround to make it support UEFI booting",
-        "yellow")
+        data = source_file.read(5 * 1024 * 1024)  # Read 5 MiB
+        if data == b"":
+            break
 
-    efi_directory = ""
-    test_efi_directory = subprocess.run(["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/efi"],
-                                        stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
+        target_file.write(data)
 
-    if test_efi_directory == "":
-        efi_directory = target_fs_mountpoint + "/efi"
-        if verbose:
-            print("DEBUG: Can't find efi directory, use " + efi_directory)
-    else:
-        efi_directory = test_efi_directory
-        if verbose:
-            print("DEBUG: " + efi_directory + " detected.")
-
-    efi_boot_directory = ""
-    test_efi_boot_directory = subprocess.run(["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/boot"],
-                                             stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if test_efi_boot_directory == "":
-        efi_boot_directory = target_fs_mountpoint + "/boot"
-        if verbose:
-            print("DEBUG: Can't find efi/boot directory, use " + efi_boot_directory)
-    else:
-        efi_boot_directory = test_efi_boot_directory
-        if verbose:
-            print("DEBUG: " + efi_boot_directory + " detected.")
-
-    # If there's already an EFI bootloader existed, skip the workaround
-    test_efi_bootloader = subprocess.run(
-        ["find", target_fs_mountpoint, "-ipath", target_fs_mountpoint + "/efi/boot/boot*.efi"],
-        stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
-
-    if test_efi_bootloader != "":
-        print("INFO: Detected existing EFI bootloader, workaround skipped.")
-        return 0
-
-    os.makedirs(efi_boot_directory)
-
-    wim = lzma.open(source_fs_mountpoint + "/sources/install.wim", mode="rb").read()
-
-    file = open(efi_boot_directory + "/bootx64.efi", mode="wb")
-    file.write(wim)
-    file.close()
-
-
-def workaround_linux_make_writeback_buffering_not_suck(mode):
-    VM_DIRTY_BACKGROUND_BYTES = str(16 * 1024 * 1024)  # 16MiB
-    VM_DIRTY_BYTES = str(48 * 1024 * 1024)  # 48MiB
-
-    if mode:
-        print_with_color(
-            "Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
-            "yellow")
-
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write(VM_DIRTY_BACKGROUND_BYTES)
-        dirty_background_bytes.close()
-
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write(VM_DIRTY_BYTES)
-        dirty_bytes.close()
-    else:
-        print_with_color(
-            "Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",
-            "yellow")
-
-        dirty_background_bytes = open("/proc/sys/vm/dirty_background_bytes", "w")
-        dirty_background_bytes.write("0")
-        dirty_background_bytes.close()
-
-        dirty_bytes = open("/proc/sys/vm/dirty_bytes", "w")
-        dirty_bytes.write("0")
-        dirty_bytes.close()
+    source_file.close()
+    target_file.close()
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
-    print_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
+    utils.check_kill_signal()
+
+    utils.print_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
 
     subprocess.run([command_grubinstall,
                     "--target=i386-pc",
@@ -762,16 +500,17 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
 
 def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall,
                                              name_grub_prefix):
-    print_with_color("Installing custom GRUB config for legacy PC booting...", "green")
+    utils.check_kill_signal()
+
+    utils.print_with_color("Installing custom GRUB config for legacy PC booting...", "green")
 
     grub_cfg = target_fs_mountpoint + "/" + name_grub_prefix + "/grub.cfg"
 
     os.makedirs(target_fs_mountpoint + "/" + name_grub_prefix, exist_ok=True)
 
-    cfg = open(grub_cfg, "w")
-    cfg.write("ntldr /bootmgr\n")
-    cfg.write("boot")
-    cfg.close()
+    with open(grub_cfg, "w") as cfg:
+        cfg.write("ntldr /bootmgr\n")
+        cfg.write("boot")
 
 
 # Unmount mounted filesystems and clean-up mountpoints before exiting program
@@ -780,44 +519,67 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
 #     unsafe(3): Target device cannot be safely detach from host
 
 
-def cleanup_mountpoint(fs_mountpoint, only_for_gui):
-    trigger_wxGenericProgressDialog_pulse(False, only_for_gui)
-
+def cleanup_mountpoint(fs_mountpoint):
     if os.path.ismount(fs_mountpoint):  # os.path.ismount() checks if path is a mount point
-        print_with_color("Unmounting and removing " + fs_mountpoint + "...", "green")
+        utils.print_with_color("Unmounting and removing " + fs_mountpoint + "...", "green")
         if subprocess.run(["umount", fs_mountpoint]).returncode:
-            print_with_color("Warning: Unable to unmount filesystem.", "yellow")
+            utils.print_with_color("Warning: Unable to unmount filesystem.", "yellow")
             return 1
 
         try:
             os.rmdir(fs_mountpoint)
         except OSError:
-            print_with_color("Warning: Unable to remove source mountpoint", "yellow")
+            utils.print_with_color("Warning: Unable to remove source mountpoint", "yellow")
             return 2
 
     return 0
 
 
-def trigger_wxGenericProgressDialog_pulse(swich, only_for_gui):
-    global Pulse_handle
+def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
+    if CopyFiles_handle.is_alive():
+        CopyFiles_handle.stop = True
 
-    if not only_for_gui:
-        return 0
+    if current_state in ["copying-filesystem", "finished"]:
+        workaround.linux_make_writeback_buffering_not_suck(False)
 
-    if swich:
-        # Don't do anything if it is already turned on
-        if Pulse_handle.is_alive():
-            return 0
+    flag_unclean = False
+    flag_unsafe = False
 
-        Pulse_handle = Pulse()
-        Pulse_handle.start()
+    cleanup_result = cleanup_mountpoint(source_fs_mountpoint)
+
+    if cleanup_result == 2:
+        flag_unclean = True
+
+    cleanup_result = cleanup_mountpoint(target_fs_mountpoint)
+
+    if cleanup_result == 1:
+        flag_unsafe = True
+    elif cleanup_result == 2:
+        flag_unclean = True
+
+    if flag_unclean:
+        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
+                               "yellow")
+
+    if flag_unsafe:
+        utils.print_with_color(
+            "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption",
+            "yellow")
+        utils.print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually",
+                               "yellow")
+
+    if utils.check_is_target_device_busy(target_device):
+        utils.print_with_color(
+            "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.",
+            "yellow")
     else:
-        if not Pulse_handle.is_alive():
-            return 0
+        utils.print_with_color("You may now safely detach the target device", "green")
 
-        Pulse_handle.kill()
-        Pulse_handle.join()
-        Pulse_handle = threading.Thread()
+    shutil.rmtree(temp_directory)
+
+    if current_state == "finished":
+        utils.print_with_color("Done :)", "green")
+        utils.print_with_color("The target device should be bootable now", "green")
 
 
 def setup_arguments():
@@ -840,8 +602,6 @@ def setup_arguments():
                         help="Specify label for the newly created file system in --device creation method")
     parser.add_argument("--workaround-bios-boot-flag", action="store_true",
                         help="Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled")
-    parser.add_argument("--debugging-internal-function-call", metavar="<function>", default="",
-                        help="Development option for developers to test certain function without running the entire build")
     parser.add_argument("--target-filesystem", "--tgt-fs", choices=["FAT", "NTFS"], default="FAT",
                         help="Specify the filesystem to use as the target partition's filesystem.")
     parser.add_argument('--for-gui', action="store_true", help=argparse.SUPPRESS)
@@ -849,51 +609,7 @@ def setup_arguments():
     return parser
 
 
-# Print function
-# This function takes into account no_color flag
-# Second parameter take color of text, default is no color
-
-
-def print_with_color(text, color=""):
-    if no_color or color == "":
-        sys.stdout.write(text + "\n")
-    else:
-        termcolor.cprint(text, color)
-
-
-def convert_to_human_readable_format(num, suffix='B'):
-    for unit in ['', 'Ki', 'Mi', 'Gi']:
-        if abs(num) < 1024.0:
-            return "%3.1f%s%s" % (num, unit, suffix)
-        num /= 1024.0
-    return "%.1f%s%s" % (num, 'Ti', suffix)
-
-
-def get_size(path):
-    total_size = 0
-    for dirpath, _, filenames in os.walk(path):
-        for file in filenames:
-            path = os.path.join(dirpath, file)
-            total_size += os.path.getsize(path)
-    return total_size
-
-# Class for threading module
-
-
-class Pulse(threading.Thread):
-    stop = False
-
-    def __init__(self):
-        threading.Thread.__init__(self)
-
-    def run(self):
-        while True and not self.stop:
-            time.sleep(0.05)
-            print("pulse")
-        return 0
-
-    def kill(self):
-        self.stop = True
+# Classes for threading module
 
 
 class CopyFiles(threading.Thread):
@@ -906,14 +622,14 @@ class CopyFiles(threading.Thread):
         self.target = target
 
     def run(self):
-        source_size = get_size(self.source)
+        source_size = utils.get_size(self.source)
         len_ = 0
         file_old = None
 
         while not self.stop:
-            target_size = get_size(self.target)
+            target_size = utils.get_size(self.target)
 
-            if len_ != 0:
+            if len_ != 0 and __name__ == "__main__":
                 print('\033[3A')
                 print(" " * len_)
                 print(" " * 4)
@@ -922,71 +638,40 @@ class CopyFiles(threading.Thread):
             # Prevent printing same filenames
             if self.file != file_old:
                 file_old = self.file
-                print(self.file.replace(self.source, ""))
+                utils.print_with_color(self.file.replace(self.source, ""))
 
-            string = "Copied " + convert_to_human_readable_format(target_size) + " from a total of " + convert_to_human_readable_format(source_size)
+            string = "Copied " + utils.convert_to_human_readable_format(
+                target_size) + " from a total of " + utils.convert_to_human_readable_format(source_size)
             len_ = len(string)
             percentage = (target_size * 100) // source_size
 
-            print(string)
-            print(str(percentage) + "%")
+            if gui is not None:
+                gui.state = string
+                gui.progress = percentage
+            else:
+                print(string)
+                print(str(percentage) + "%")
 
             time.sleep(0.05)
+        if gui is not None:
+            gui.progress = False
 
         return 0
 
-    def kill(self):
-        self.stop = True
 
+if __name__ == "__main__":
+    source_fs_mountpoint, target_fs_mountpoint, temp_directory, \
+    install_mode, source_media, target_media, \
+    workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
+    verbose, debug, parser = init()
+    try:
+        main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
+             target_filesystem_type, workaround_bios_boot_flag)
+    except KeyboardInterrupt:
+        pass
+    except Exception as error:
+        utils.print_with_color(error, "red")
+        if debug:
+            traceback.print_exc()
 
-try:
-    main(global_only_for_gui)
-except KeyboardInterrupt:
-    pass
-except Exception as error:
-    print_with_color(error, "red")
-    if debug:
-        traceback.print_exc()
-
-if CopyFiles_handle.is_alive():
-    CopyFiles_handle.kill()
-
-if current_state in ["copying-filesystem", "finished"]:
-    workaround_linux_make_writeback_buffering_not_suck(False)
-
-flag_unclean = False
-flag_unsafe = False
-
-cleanup_result = cleanup_mountpoint(source_fs_mountpoint, global_only_for_gui)
-
-if cleanup_result == 2:
-    flag_unclean = True
-
-cleanup_result = cleanup_mountpoint(target_fs_mountpoint, global_only_for_gui)
-
-if cleanup_result == 1:
-    flag_unsafe = True
-elif cleanup_result == 2:
-    flag_unclean = True
-
-if flag_unclean:
-    print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually", "yellow")
-
-if flag_unsafe:
-    print_with_color(
-        "We unable to unmount target filesystem for you, please make sure target filesystem is unmounted before detaching to prevent data corruption",
-        "yellow")
-    print_with_color("Some mountpoints are not unmount/cleaned successfully and must be done manually", "yellow")
-
-if check_is_target_device_busy(target_device):
-    print_with_color(
-        "Target device is busy, please make sure you unmount all filesystems on target device or shutdown the computer before detaching it.",
-        "yellow")
-else:
-    print_with_color("You may now safely detach the target device", "green")
-
-shutil.rmtree(temp_directory)
-
-if current_state == "finished":
-    print_with_color("Done :)", "green")
-    print_with_color("The target device should be bootable now", "green")
+    cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
