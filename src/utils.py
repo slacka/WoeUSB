@@ -115,9 +115,9 @@ def determine_target_parameters(install_mode, target_media):
         target_device = target_media
         target_partition = target_media + str(1)
 
-#   if verbose:
-#       print_with_color("Info: Target device is " + target_device)
-#       print_with_color("Info: Target partition is " + target_partition)
+    if verbose:
+        print_with_color("Info: Target device is " + target_device)
+        print_with_color("Info: Target partition is " + target_partition)
 
     return [target_device, target_partition]
 
@@ -228,7 +228,8 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
     if needed_space > free_space:
         print_with_color("Error: Not enough free space on target partition!")
         print_with_color(
-            "Error: We required " + get_size(needed_space) + "(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
+            "Error: We required " + get_size(
+                needed_space) + "(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
         return 1
 
 
@@ -266,6 +267,7 @@ def get_size(path):
             path = os.path.join(dirpath, file)
             total_size += os.path.getsize(path)
     return total_size
+
 
 # Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
 # In python you can't just stop or kill thread, it must end its execution,

@@ -457,7 +457,7 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
             path = os.path.join(dirpath, file)
             CopyFiles_handle.file = path
 
-            if os.path.getsize(path) > 5 * 1024 * 1024: # Files bigger than 5 MiB
+            if os.path.getsize(path) > 5 * 1024 * 1024:  # Files bigger than 5 MiB
                 copy_large_file(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
             else:
                 shutil.copy2(path, target_fs_mountpoint + path.replace(source_fs_mountpoint, ""))
@@ -608,6 +608,7 @@ def setup_arguments():
 
     return parser
 
+
 # Classes for threading module
 
 
@@ -660,9 +661,9 @@ class CopyFiles(threading.Thread):
 
 if __name__ == "__main__":
     source_fs_mountpoint, target_fs_mountpoint, temp_directory, \
-        install_mode, source_media, target_media, \
-        workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
-        verbose, debug, parser = init()
+    install_mode, source_media, target_media, \
+    workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
+    verbose, debug, parser = init()
     try:
         main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
              target_filesystem_type, workaround_bios_boot_flag)

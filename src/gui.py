@@ -246,8 +246,12 @@ class MainPanel(wx.Panel):
             else:
                 iso = self.__dvdDriveDevList[self.__dvdDriveList.GetSelection()]
 
-            woe = WoeUSB(iso, device, boot_flag=self.__parent.options_boot.IsChecked(),
-                         filesystem=self.__parent.options_filesystem.IsChecked())
+            if self.__parent.options_filesystem.IsChecked():
+                filesystem = "NTFS"
+            else:
+                filesystem = "FAT"
+
+            woe = WoeUSB(iso, device, boot_flag=self.__parent.options_boot.IsChecked(), filesystem=filesystem)
             woe.start()
 
             dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
