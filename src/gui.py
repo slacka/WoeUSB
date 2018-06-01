@@ -30,8 +30,8 @@ import list_devices
 PROG_FULL_NAME = "WoeUSB"
 
 # Missing config.hpp included by AppConfig.hpp?
-#PROG_PKG_NAME = PACKAGE
-#PROG_PKG_NAME_GETTEXT = PROG_PKG_NAME
+# PROG_PKG_NAME = PACKAGE
+# PROG_PKG_NAME_GETTEXT = PROG_PKG_NAME
 
 VERSION = "1.0.0"
 
@@ -56,8 +56,19 @@ class MainFrame(wx.Frame):
         help_menu = wx.Menu()
         help_item = help_menu.Append(wx.ID_ABOUT)
 
+        options_menu = wx.Menu()
+        self.options_boot = wx.MenuItem(options_menu, wx.ID_ANY, "Set boot flag",
+                                        "Sets boot flag after process of copying.",
+                                        wx.ITEM_CHECK)
+        self.options_filesystem = wx.MenuItem(options_menu, wx.ID_ANY, "Use NTFS",
+                                              "Use NTFS instead of FAT. NOTE: NTFS seems to be slower than FAT.",
+                                              wx.ITEM_CHECK)
+        options_menu.Append(self.options_boot)
+        options_menu.Append(self.options_filesystem)
+
         self.__MenuBar = wx.MenuBar()
         self.__MenuBar.Append(file_menu, "&File")
+        self.__MenuBar.Append(options_menu, "&Options")
         self.__MenuBar.Append(help_menu, "&Help")
 
         self.SetMenuBar(self.__MenuBar)
@@ -235,7 +246,8 @@ class MainPanel(wx.Panel):
             else:
                 iso = self.__dvdDriveDevList[self.__dvdDriveList.GetSelection()]
 
-            woe = WoeUSB(iso, device)
+            woe = WoeUSB(iso, device, boot_flag=self.__parent.options_boot.IsChecked(),
+                         filesystem=self.__parent.options_filesystem.IsChecked())
             woe.start()
 
             dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
@@ -374,12 +386,14 @@ class WoeUSB(threading.Thread):
     error = ""
     kill = False
 
-    def __init__(self, source, target):
+    def __init__(self, source, target, boot_flag, filesystem):
         threading.Thread.__init__(self)
 
         woeusb.gui = self
         self.source = source
         self.target = target
+        self.boot_flag = boot_flag
+        self.filesystem = filesystem
 
     def run(self):
         source_fs_mountpoint, target_fs_mountpoint, temp_directory = woeusb.init(from_cli=False,
@@ -388,14 +402,11 @@ class WoeUSB(threading.Thread):
                                                                                  target_media=self.target)[:3]
         try:
             woeusb.main(source_fs_mountpoint, target_fs_mountpoint, self.source, self.target, "device",
-                        temp_directory, "FAT", False)
+                        temp_directory, self.filesystem, self.boot_flag)
         except SystemExit:
             pass
 
         woeusb.cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
-
-
-
 
 
 frameTitle = PROG_FULL_NAME

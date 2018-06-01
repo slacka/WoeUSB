@@ -195,8 +195,6 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
     if install_mode == "partition":
         utils.check_target_partition(target_partition, install_mode, target_device)
 
-
-
     if mount_target_filesystem(target_partition, target_fs_mountpoint, target_filesystem_type):
         utils.print_with_color("Error: Unable to mount target filesystem", "red")
         return 1
@@ -484,7 +482,6 @@ def copy_large_file(source, target):
     target_file.close()
 
 
-
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
     utils.check_kill_signal()
 
@@ -605,8 +602,6 @@ def setup_arguments():
                         help="Specify label for the newly created file system in --device creation method")
     parser.add_argument("--workaround-bios-boot-flag", action="store_true",
                         help="Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled")
-    parser.add_argument("--debugging-internal-function-call", metavar="<function>", default="",
-                        help="Development option for developers to test certain function without running the entire build")
     parser.add_argument("--target-filesystem", "--tgt-fs", choices=["FAT", "NTFS"], default="FAT",
                         help="Specify the filesystem to use as the target partition's filesystem.")
     parser.add_argument('--for-gui', action="store_true", help=argparse.SUPPRESS)
@@ -649,7 +644,7 @@ class CopyFiles(threading.Thread):
             len_ = len(string)
             percentage = (target_size * 100) // source_size
 
-            if __name__ != "__main__":
+            if gui is not None:
                 gui.state = string
                 gui.progress = percentage
             else:
@@ -657,7 +652,7 @@ class CopyFiles(threading.Thread):
                 print(str(percentage) + "%")
 
             time.sleep(0.05)
-        if gui != None:
+        if gui is not None:
             gui.progress = False
 
         return 0

@@ -203,7 +203,6 @@ def check_uefi_ntfs_support_partition(target_device):
             "Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method")
 
 
-# TODO: add free_space_human_readable and needed_space_human_readable
 def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
     df = subprocess.run(["df",
                          "--block-size=1",
@@ -274,7 +273,6 @@ def get_size(path):
 # So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
 # simultaneously ending whatever script was doing meantime!
 # Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
-# TODO: Put here more descriptive error
 
 
 def check_kill_signal():
