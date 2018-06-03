@@ -11,6 +11,6 @@ import subprocess
 # Don't work, give error:
 # Unable to access the X Display, is $DISPLAY set properly?
 if os.getuid() != 0:
-    subprocess.run(["pkexec", "python", os.path.abspath("gui.py")])
+    subprocess.run(["pkexec", "python3", os.path.abspath("gui.py")])
 else:
     subprocess.run(["./gui.py"])
