@@ -31,6 +31,7 @@ Makefile.in
 
 ## Compiled object code
 *.o
+*.pyc
 
 ## Linked executable
 /src/woeusbgui
@@ -39,3 +40,4 @@ Makefile.in
 *.mo
 
 \.idea/
+doc/_build

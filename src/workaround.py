@@ -25,6 +25,10 @@ import utils
 
 
 def make_system_realize_partition_table_changed(target_device):
+    """
+    :param target_device:
+    :return:
+    """
     utils.print_with_color("Making system realize that partition table has changed...")
 
     subprocess.run(["blockdev", "--rereadpt", target_device])
@@ -33,10 +37,13 @@ def make_system_realize_partition_table_changed(target_device):
     time.sleep(3)
 
 
-# Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
-
-
 def buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device):
+    """
+    Some buggy BIOSes won't put detected device with valid MBR but no partitions with boot flag toggled into the boot menu, workaround this by setting the first partition's boot flag(which partition doesn't matter as GNU GRUB doesn't depend on it anyway
+
+    :param target_device:
+    :return:
+    """
     utils.print_with_color(
         "Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled")
 
@@ -45,13 +52,18 @@ def buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(target_device
                     "set", "1", "boot", "on"])
 
 
-# As Windows 7's installation media doesn't place the required EFI
-# bootloaders in the right location, we extract them from the
-# system image manually
-# TODO: Functionize Windows 7 checking
-
-
 def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
+    """
+    As Windows 7's installation media doesn't place the required EFI
+    bootloaders in the right location, we extract them from the
+    system image manually
+
+    :TODO: Functionize Windows 7 checking
+
+    :param source_fs_mountpoint:
+    :param target_fs_mountpoint:
+    :return:
+    """
     grep = subprocess.run(["grep", "--extended-regexp", "--quiet", "^MinServer=7[0-9]{3}\.[0-9]",
                            source_fs_mountpoint + "/sources/cversion.ini"],
                           stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
@@ -108,6 +120,9 @@ def support_windows_7_uefi_boot(source_fs_mountpoint, target_fs_mountpoint):
 
 
 def linux_make_writeback_buffering_not_suck(mode):
+    """
+    :param mode: True - enable; False - disable
+    """
     if mode:
         utils.print_with_color(
             "Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.",

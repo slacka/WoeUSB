@@ -1,24 +1,27 @@
 #!/usr/bin/python3
 
-# A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
-# Copyright © 2013 Colin GILLE / congelli501
-# Copyright © 2017 slacka et. al.
-# Python port - 2018 WaxyMocha
-#
-# This file is part of WoeUSB.
-#
-# WoeUSB is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-#
-# WoeUSB is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
+"""
+A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
+Copyright © 2013 Colin GILLE / congelli501
+Copyright © 2017 slacka et. al.
+Python port - 2018 WaxyMocha
+
+This file is part of WoeUSB.
+
+WoeUSB is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+WoeUSB is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
+"""
+
 
 import os
 import time
@@ -42,44 +45,34 @@ application_site_url = 'https://github.com/slacka/WoeUSB'
 application_copyright_declaration = "Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"
 application_copyright_notice = application_name + " is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
 
-'''
-Global Parameters
-Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
-Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
-TODO: Global parameter cleanup
-Doing GUI-specific stuff when set to 1, set by --only-for-gui
-Requires to be set to global due to indirectly referenced by trap
-'''
-
-# Increase verboseness, provide more information when required
+#: Increase verboseness, provide more information when required
 verbose = False
 
 debug = False
-
-# NOTE: Need to pass to traps, so need to be global
-# source_fs_mountpoint = ""
-# target_fs_mountpoint = ""
-
-# source_media may be a optical disk drive or a disk image
-# target_media may be an entire usb storage device or just a partition
-# source_media = ""
-# target_media = ""
 
 target_device = ""
 
 CopyFiles_handle = threading.Thread()
 
-# Execution state for cleanup functions to determine if clean up is required
-# NOTE: Need to pass to traps, so need to be global
+#: Execution state for cleanup functions to determine if clean up is required
 current_state = 'pre-init'
 
-# temp_directory = b""
-# install_mode = ""
 gui = None
 
 
 def init(from_cli=True, install_mode=None, source_media=None, target_media=None, workaround_bios_boot_flag=False,
          target_filesystem_type="FAT", filesystem_label=DEFAULT_NEW_FS_LABEL):
+    """
+    :param from_cli:
+    :type from_cli: bool
+    :param install_mode:
+    :param source_media:
+    :param target_media:
+    :param workaround_bios_boot_flag:
+    :param target_filesystem_type:
+    :param filesystem_label:
+    :return: List
+    """
     source_fs_mountpoint = "/media/woeusb_source_" + str(
         round((datetime.today() - datetime.fromtimestamp(0)).total_seconds())) + "_" + str(os.getpid())
     target_fs_mountpoint = "/media/woeusb_target_" + str(
@@ -111,17 +104,14 @@ def init(from_cli=True, install_mode=None, source_media=None, target_media=None,
             utils.print_with_color("You need to specify instalation type (--device or --partition")
             return 1
 
-        # source_media may be a optical disk drive or a disk image
-        # target_media may be an entire usb storage device or just a partition
+        #: source_media may be a optical disk drive or a disk image
         source_media = args.source
+        #: target_media may be an entire usb storage device or just a partition
         target_media = args.target
 
         workaround_bios_boot_flag = args.workaround_bios_boot_flag
 
         target_filesystem_type = args.target_filesystem
-
-        # Parameters that needs to be determined in runtime
-        # due to different names in distributions
 
         filesystem_label = args.label
 
@@ -141,6 +131,17 @@ def init(from_cli=True, install_mode=None, source_media=None, target_media=None,
 
 def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
          target_filesystem_type, workaround_bios_boot_flag):
+    """
+    :param source_fs_mountpoint:
+    :param target_fs_mountpoint:
+    :param source_media:
+    :param target_media:
+    :param install_mode:
+    :param temp_directory:
+    :param target_filesystem_type:
+    :param workaround_bios_boot_flag:
+    :return: 0 - succes; 1 - failure
+    """
     global debug
     global verbose
     global no_color
@@ -193,7 +194,8 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
             install_uefi_ntfs_support_partition(target_device + "2", temp_directory)
 
     if install_mode == "partition":
-        utils.check_target_partition(target_partition, install_mode, target_device)
+        utils.check_target_partition(target_partition, target_device)
+        utils.check_target_partition(target_partition, target_device)
 
     if mount_target_filesystem(target_partition, target_fs_mountpoint, target_filesystem_type):
         utils.print_with_color("Error: Unable to mount target filesystem", "red")
@@ -230,16 +232,22 @@ def print_application_info():
 
 
 def wipe_existing_partition_table_and_filesystem_signatures(target_device):
+    """
+    :param target_device:
+    :return: None
+    """
     utils.print_with_color("Wiping all existing partition table and filesystem signatures in " + target_device, "green")
     subprocess.run(["wipefs", "--all", target_device])
     check_if_the_drive_is_really_wiped(target_device)
 
 
-# Some broken locked-down flash drive will appears to be successfully wiped but actually nothing is written into it and will shown previous partition scheme afterwards.  This is the detection of the case and will bail out if such things happened
-# target_device: The target device file to be checked
-
-
 def check_if_the_drive_is_really_wiped(target_device):
+    """
+    Some broken locked-down flash drive will appears to be successfully wiped but actually nothing is written into it and will shown previous partition scheme afterwards.  This is the detection of the case and will bail out if such things happened
+
+    :param target_device: The target device file to be checked
+    :return: 0 - success; 1 - failure
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Ensure that " + target_device + " is really wiped...")
@@ -255,6 +263,11 @@ def check_if_the_drive_is_really_wiped(target_device):
 
 
 def create_target_partition_table(target_device, partition_table_type):
+    """
+    :param target_device:
+    :param partition_table_type:
+    :return: None - success; 2 - failure
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Creating new partition table on " + target_device + "...", "green")
@@ -277,6 +290,15 @@ def create_target_partition_table(target_device, partition_table_type):
 
 def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
                             command_mkntfs):
+    """
+    :param target_device:
+    :param target_partition:
+    :param filesystem_type:
+    :param filesystem_label:
+    :param command_mkdosfs:
+    :param command_mkntfs:
+    :return: 1,2 - failure
+    """
     utils.check_kill_signal()
 
     if filesystem_type in ["FAT", "vfat"]:
@@ -332,6 +354,10 @@ def create_target_partition(target_device, target_partition, filesystem_type, fi
 
 
 def create_uefi_ntfs_support_partition(target_device):
+    """
+    :param target_device:
+    :return: None
+    """
     utils.check_kill_signal()
 
     # FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
@@ -347,14 +373,16 @@ def create_uefi_ntfs_support_partition(target_device):
                     "--", "-1024s", "-1s"])
 
 
-# Install UEFI:NTFS partition by writing the partition image into the created partition
-# FIXME: Currently this requires internet access to download the image from GitHub directly, it should be replaced by including the image in our datadir
-# uefi_ntfs_partition: The previously allocated partition for installing UEFI:NTFS, requires at least 512KiB
-# download_directory: The temporary directory for downloading UEFI:NTFS image from GitHub
-# target_device: For workaround_make_system_realize_partition_table_changed
-
-
 def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory):
+    """
+    Install UEFI:NTFS partition by writing the partition image into the created partition
+
+    FIXME: Currently this requires internet access to download the image from GitHub directly, it should be replaced by including the image in our datadir
+
+    :param uefi_ntfs_partition: The previously allocated partition for installing UEFI:NTFS, requires at least 512KiB
+    :param download_directory: The temporary directory for downloading UEFI:NTFS image from GitHub
+    :return: 1 - failure
+    """
     utils.check_kill_signal()
 
     try:
@@ -370,6 +398,11 @@ def install_uefi_ntfs_support_partition(uefi_ntfs_partition, download_directory)
 
 
 def mount_source_filesystem(source_media, source_fs_mountpoint):
+    """
+    :param source_media:
+    :param source_fs_mountpoint:
+    :return: 1 - failure
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Mounting source filesystem...", "green")
@@ -397,13 +430,15 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
             return 1
 
 
-# Mount target filesystem to existing path as mountpoint
-# target_partition: The partition device file target filesystem resides, for example /dev/sdX1
-# target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
-# target_fs_type: The filesystem of the target filesystem currently supports: FAT, NTFS
-
-
 def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
+    """
+    Mount target filesystem to existing path as mountpoint
+
+    :param target_partition: The partition device file target filesystem resides, for example /dev/sdX1
+    :param target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
+    :param target_fs_type: The filesystem of the target filesystem currently supports: FAT, NTFS
+    :return: 1 - failure
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Mounting target filesystem...", "green")
@@ -429,10 +464,14 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
         return 1
 
 
-# Copying all files from one filesystem to another, with progress reporting
-
-
 def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
+    """
+    Copying all files from one filesystem to another, with progress reporting
+
+    :param source_fs_mountpoint:
+    :param target_fs_mountpoint:
+    :return: None
+    """
     global CopyFiles_handle
 
     utils.check_kill_signal()
@@ -466,6 +505,11 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
 
 
 def copy_large_file(source, target):
+    """
+    :param source:
+    :param target:
+    :return: None
+    """
     source_file = open(source, "rb")  # Open for reading in byte mode
     target_file = open(target, "wb")  # Open for writing in byte mode
 
@@ -483,6 +527,12 @@ def copy_large_file(source, target):
 
 
 def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, command_grubinstall):
+    """
+    :param target_fs_mountpoint:
+    :param target_device:
+    :param command_grubinstall:
+    :return: None
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Installing GRUB bootloader for legacy PC booting support...", "green")
@@ -493,13 +543,17 @@ def install_legacy_pc_bootloader_grub(target_fs_mountpoint, target_device, comma
                     "--force", target_device])
 
 
-# Install a GRUB config file to chainload Microsoft Windows's bootloader in Legacy PC bootmode
-# target_fs_mountpoint: Target filesystem's mountpoint(where GRUB is installed)
-# name_grub_prefix: May be different between distributions, so need to be specified (grub/grub2)
-
-
 def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device, command_grubinstall,
                                              name_grub_prefix):
+    """
+    Install a GRUB config file to chainload Microsoft Windows's bootloader in Legacy PC bootmode
+
+    :param target_fs_mountpoint: Target filesystem's mountpoint(where GRUB is installed)
+    :param target_device:
+    :param command_grubinstall:
+    :param name_grub_prefix: May be different between distributions, so need to be specified (grub/grub2)
+    :return: None
+    """
     utils.check_kill_signal()
 
     utils.print_with_color("Installing custom GRUB config for legacy PC booting...", "green")
@@ -513,13 +567,13 @@ def install_legacy_pc_bootloader_grub_config(target_fs_mountpoint, target_device
         cfg.write("boot")
 
 
-# Unmount mounted filesystems and clean-up mountpoints before exiting program
-# exit status:
-#     unclean(2): Not fully clean, target device can be safely detach from host
-#     unsafe(3): Target device cannot be safely detach from host
-
-
 def cleanup_mountpoint(fs_mountpoint):
+    """
+    Unmount mounted filesystems and clean-up mountpoints before exiting program
+
+    :param fs_mountpoint:
+    :return: unclean(2): Not fully clean, target device can be safely detach from host; unsafe(3): Target device cannot be safely detach from host
+    """
     if os.path.ismount(fs_mountpoint):  # os.path.ismount() checks if path is a mount point
         utils.print_with_color("Unmounting and removing " + fs_mountpoint + "...", "green")
         if subprocess.run(["umount", fs_mountpoint]).returncode:
@@ -536,6 +590,12 @@ def cleanup_mountpoint(fs_mountpoint):
 
 
 def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
+    """
+    :param source_fs_mountpoint:
+    :param target_fs_mountpoint:
+    :param temp_directory:
+    :return: None
+    """
     if CopyFiles_handle.is_alive():
         CopyFiles_handle.stop = True
 
@@ -583,6 +643,9 @@ def cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory):
 
 
 def setup_arguments():
+    """
+    :return: Setted up argparse.ArgumentParser object
+    """
     parser = argparse.ArgumentParser(
         description="WoeUSB can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image.")
     parser.add_argument("source", help="Source")
@@ -609,10 +672,10 @@ def setup_arguments():
     return parser
 
 
-# Classes for threading module
-
-
 class CopyFiles(threading.Thread):
+    """
+    Classes for threading module
+    """
     file = ""
     stop = False
 

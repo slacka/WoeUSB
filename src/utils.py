@@ -24,7 +24,7 @@ import shutil
 import pathlib
 import subprocess
 
-# Disable message coloring when set to True, set by --no-color
+#: Disable message coloring when set to True, set by --no-color
 no_color = False
 
 # External tools
@@ -39,6 +39,10 @@ verbose = False
 
 
 def check_runtime_dependencies(application_name):
+    """
+    :param application_name:
+    :return:
+    """
     result = "success"
 
     system_commands = ["mount", "wipefs", "lsblk", "blockdev", "df", "parted", "7z"]
@@ -84,6 +88,12 @@ def check_runtime_dependencies(application_name):
 
 
 def check_runtime_parameters(install_mode, source_media, target_media):
+    """
+    :param install_mode:
+    :param source_media:
+    :param target_media:
+    :return:
+    """
     if not os.path.isfile(source_media) and not pathlib.Path(source_media).is_block_device():
         print_with_color(
             "Error: source media \"" + source_media + "\" not found or not a regular file or a block device file!",
@@ -105,6 +115,11 @@ def check_runtime_parameters(install_mode, source_media, target_media):
 
 
 def determine_target_parameters(install_mode, target_media):
+    """
+    :param install_mode:
+    :param target_media:
+    :return:
+    """
     if install_mode == "partition":
         target_partition = target_media
 
@@ -123,6 +138,10 @@ def determine_target_parameters(install_mode, target_media):
 
 
 def check_is_target_device_busy(device):
+    """
+    :param device:
+    :return:
+    """
     mount = subprocess.run("mount", stdout=subprocess.PIPE).stdout.decode("utf-8").strip()
     if re.findall(device, mount) != []:
         return 1
@@ -130,6 +149,13 @@ def check_is_target_device_busy(device):
 
 
 def check_source_and_target_not_busy(install_mode, source_media, target_device, target_partition):
+    """
+    :param install_mode:
+    :param source_media:
+    :param target_device:
+    :param target_partition:
+    :return:
+    """
     if check_is_target_device_busy(source_media):
         print_with_color("Error: Source media is currently mounted, unmount the partition then try again", "red")
         return 1
@@ -148,6 +174,10 @@ def check_source_and_target_not_busy(install_mode, source_media, target_device, 
 
 
 def check_fat32_filesize_limitation(source_fs_mountpoint):
+    """
+    :param source_fs_mountpoint:
+    :return:
+    """
     for dirpath, dirnames, filenames in os.walk(source_fs_mountpoint):
         for file in filenames:
             path = os.path.join(dirpath, file)
@@ -162,13 +192,14 @@ def check_fat32_filesize_limitation(source_fs_mountpoint):
     return 0
 
 
-# Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
-# target_partition: The target partition to check
-# install_mode: The usb storage creation method to be used
-# target_device: The parent device of the target partition, this is passed in to check UEFI:NTFS filesystem's existence on check_uefi_ntfs_support_partition
+def check_target_partition(target_partition, target_device):
+    """
+    Check target partition for potential problems before mounting them for --partition creation mode as we don't know about the existing partition
 
-
-def check_target_partition(target_partition, install_mode, target_device):
+    :param target_partition: The target partition to check
+    :param target_device: The parent device of the target partition, this is passed in to check UEFI:NTFS filesystem's existence on check_uefi_ntfs_support_partition
+    :return:
+    """
     target_filesystem = subprocess.run(["lsblk",
                                         "--output", "FSTYPE",
                                         "--noheadings",
@@ -185,12 +216,14 @@ def check_target_partition(target_partition, install_mode, target_device):
     return 0
 
 
-# Check if the UEFI:NTFS support partition exists
-# Currently it depends on the fact that this partition has a label of "UEFI_NTFS"
-# target_device: The UEFI:NTFS partition residing entier device file
-
-
 def check_uefi_ntfs_support_partition(target_device):
+    """
+    Check if the UEFI:NTFS support partition exists
+    Currently it depends on the fact that this partition has a label of "UEFI_NTFS"
+
+    :param target_device: The UEFI:NTFS partition residing entier device file
+    :return:
+    """
     lsblk = subprocess.run(["lsblk",
                             "--output", "LABEL",
                             "--noheadings",
@@ -204,6 +237,12 @@ def check_uefi_ntfs_support_partition(target_device):
 
 
 def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoint, target_partition):
+    """
+    :param target_fs_mountpoint:
+    :param source_fs_mountpoint:
+    :param target_partition:
+    :return:
+    """
     df = subprocess.run(["df",
                          "--block-size=1",
                          target_fs_mountpoint], stdout=subprocess.PIPE).stdout
@@ -233,13 +272,15 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
         return 1
 
 
-# Print function
-# This function takes into account no_color flag
-# Also if used by gui, sends information to it, rather than putting it into standard output
-# Second parameter take color of text, default is no color
-
-
 def print_with_color(text, color=""):
+    """
+    Print function
+    This function takes into account no_color flag
+    Also if used by gui, sends information to it, rather than putting it into standard output
+
+    :param text: Text to be printed
+    :param color: Color of the text
+    """
     if gui is not None:
         gui.state = text
         if color == "red":
@@ -278,6 +319,14 @@ def get_size(path):
 
 
 def check_kill_signal():
+    """
+    Ok, you may asking yourself, what the f**k is this, and why is it called everywhere. Let me explain
+    In python you can't just stop or kill thread, it must end its execution,
+    or recognize moment where you want it to stop and politely perform euthanasia on itself.
+    So, here, if gui is set, we throw exception which is going to be (hopefully) catch by GUI,
+    simultaneously ending whatever script was doing meantime!
+    Everyone goes to home happy and user is left with wrecked pendrive (just joking, next thing called by gui is cleanup)
+    """
     if gui is not None:
         if gui.kill:
             raise sys.exit()

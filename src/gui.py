@@ -385,6 +385,9 @@ class PanelNoteBookAutors(wx.Panel):
 
 
 class WoeUSB(threading.Thread):
+    """
+    Class for handling communication with woeusb.
+    """
     progress = False
     state = ""
     error = ""
@@ -413,16 +416,17 @@ class WoeUSB(threading.Thread):
         woeusb.cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
 
 
-frameTitle = PROG_FULL_NAME
+if __name__ == "__main__":
+    frameTitle = PROG_FULL_NAME
 
-app = wx.App()
+    app = wx.App()
 
-locale = wx.Locale()
-locale.AddCatalogLookupPathPrefix("locale")
-locale.Init(wx.LANGUAGE_DEFAULT)
+    locale = wx.Locale()
+    locale.AddCatalogLookupPathPrefix("locale")
+    locale.Init(wx.LANGUAGE_DEFAULT)
 
-frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
-frame.SetMinSize(wx.Size(300, 450))
+    frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
+    frame.SetMinSize(wx.Size(300, 450))
 
-frame.Show(True)
-app.MainLoop()
+    frame.Show(True)
+    app.MainLoop()
