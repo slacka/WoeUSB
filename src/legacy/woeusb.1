@@ -1,0 +1,114 @@
+.TH woeusb 1 "@@WOEUSB_VERSION@@" "WoeUSB" "WoeUSB User Manual"
+.SH NAME
+woeusb \- Bootable Windows installation/PE USB storage creator
+
+.SH SYNOPSIS
+.B woeusb
+[OPTIONS] --device|--partition
+.I source_media target_media
+
+.SH DESCRIPTION
+.B woeusb
+is a command-line utility that enables you to create your own bootable Windows installation USB storage device from an existing Windows Installation DVD or its ISO image.
+.PP
+
+It mainly extracts all files from
+.I source_media
+to
+.I target_media
+, then installs GNU GRUB bootloader and a small configuration into it to support chainloading Windows BOOTMGR.
+.PP
+
+It also supports UEFI bootstrap scheme, however in this case Windows UEFI bootloader is used instead.
+.PP
+
+.SH COMMAND\-LINE OPTIONS
+.SS CREATION METHOD
+.TP
+\fB--device\fR / \fB-d\fR \fIsource_media\fR \fItarget_device\fR
+Drop
+.I target_device
+\'s partition table(if there's any), create a new PC/Legacy/MBR partition table, create a FAT32/NTFS partition spanning (almost) the entire disk, then setup bootable Windows on it.
+
+WARNING: ALL PREVIOUS DATA ON \fItarget_device\fR WILL BE DROPPED!
+
+.TP
+\fB--partition\fR / \fB-p\fR \fIsource_media\fR \fItarget_partition\fR
+Mount
+.I target_partition
+\'s file system, extracts all files from
+.I source_media
+into it, then make it bootable.
+
+WARNING: ALL FILES EXISTING ON \fItarget_partition\fR WITH THE SAME FILENAME IN \fIsource_media\fR WILL BE OVERWRITTEN!
+
+.SS MISCELLANEOUS
+.TP
+.B --help / -h
+Print application help message
+.TP
+.B --version / -V
+Print application version
+.TP
+.B --about / -ab
+Print info about this application
+.TP
+.B --verbose / -v
+Be more verbose
+.TP
+.B --debug
+Enable script debugging
+.TP
+.B --no-color
+Disable message coloring
+.TP
+\fB--label\fR / \fB-l\fR \fIfilesystem_label\fR
+Specify label for the newly created file system in
+.B --device
+creation method
+
+Note that the label is not verified for validity and may be illegal for the filesystem
+.TP
+.B --workaround-bios-boot-flag
+Apply workaround for buggy BIOSes that doesn't consider a device bootable if none of its partition's boot flag is toggled.
+.TP
+\fB--debugging-internal-function-call\fR \fIfunction_name (function_parameters...)\fR
+Development option for developers to test certain function without running the entire build
+.TP
+\fB--target-filesystem\fR / \fB--tgt-fs\fR \fIfilesystem_name\fR
+Specify the filesystem to use as the target partition's filesystem.
+Currently supported: FAT(default)/NTFS
+
+.SH EXAMPLES
+We love examples!
+
+Completely DESTROY all previous data on a USB storage device, recreate the partition table and the target partition, copy the Windows files, and make it bootable
+.EX
+# woeusb --device win7_amd64.iso /dev/sdX
+# woeusb --device /dev/sr0 /dev/sdX
+.EE
+
+Copy Windows files to an existing FAT partition of a USB storage device and make it bootable
+.EX
+# woeusb --partition win7_amd64.iso /dev/sdX1
+# woeusb --partition /dev/sr0 /dev/sdX1
+.EE
+
+.SH EXIT STATUS
+0 when success, 1 (and non-zero if there's any) when failure
+
+.SH BUGS
+Refer to our
+.UR https://github.com/slacka/WoeUSB/issues
+issue tracker
+.UE
+for any known issues
+.br
+
+.SH SEE ALSO
+woeusbgui(1)
+
+.SH AUTHORS
+Colin GILLE / congelli501 <colingille@hotmail.com>
+.br
+林博仁 <Buo.Ren.Lin@gmail.com>

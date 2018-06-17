@@ -18,12 +18,15 @@
 '''
 
 import os
+import sys
 import time
 import threading
 import subprocess
 
 import wx
 import wx.adv
+
+sys.path.append("/usr/share/pyshare")
 
 import woeusb
 import list_devices
