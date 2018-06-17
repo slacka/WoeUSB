@@ -423,7 +423,7 @@ class WoeUSB(threading.Thread):
 if __name__ == "__main__":
 
     if os.getuid() != 0:
-        subprocess.run(["pkexec", "python3", os.path.abspath("woeusbgui.py")])
+        subprocess.run(["pkexec", os.path.abspath("woeusbgui.py")])
         exit(0)
 
     frameTitle = PROG_FULL_NAME
