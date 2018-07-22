@@ -1118,7 +1118,7 @@ check_fat32_filesize_limitation(){
 				'Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.\n'
 			return 1
 		fi
-	done < <(find "${source_fs_mountpoint}" -type f)
+	done < <(find "${source_fs_mountpoint}" -type f -print0)
 	return 0
 }; declare -fr check_fat32_filesize_limitation
 
