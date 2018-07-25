@@ -33,9 +33,6 @@ Makefile.in
 *.o
 *.pyc
 
-## Linked executable
-/src/woeusbgui
-
 ## Gettext compiled message catalogs
 *.mo
 
