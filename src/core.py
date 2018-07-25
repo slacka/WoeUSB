@@ -130,8 +130,9 @@ def init(from_cli=True, install_mode=None, source_media=None, target_media=None,
 
 
 def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
-         target_filesystem_type, workaround_bios_boot_flag):
+         target_filesystem_type, workaround_bios_boot_flag, parser):
     """
+    :param parser:
     :param source_fs_mountpoint:
     :param target_fs_mountpoint:
     :param source_media:
@@ -681,7 +682,7 @@ class CopyFiles(threading.Thread):
         while not self.stop:
             target_size = utils.get_size(self.target)
 
-            if len_ != 0 and gui is not None:
+            if len_ != 0 and gui is None:
                 print('\033[3A')
                 print(" " * len_)
                 print(" " * 4)
@@ -694,6 +695,7 @@ class CopyFiles(threading.Thread):
 
             string = "Copied " + utils.convert_to_human_readable_format(
                 target_size) + " from a total of " + utils.convert_to_human_readable_format(source_size)
+
             len_ = len(string)
             percentage = (target_size * 100) // source_size
 
@@ -718,7 +720,7 @@ def run():
         verbose, debug, parser = init()
     try:
         main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
-             target_filesystem_type, workaround_bios_boot_flag)
+             target_filesystem_type, workaround_bios_boot_flag, parser)
     except KeyboardInterrupt:
         pass
     except Exception as error:
