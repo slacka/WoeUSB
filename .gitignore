@@ -41,3 +41,5 @@ Makefile.in
 
 \.idea/
 doc/_build
+
+venv/

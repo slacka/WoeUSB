@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-'''
+"""
 This file is part of WoeUSB.
 
 WoeUSB is free software: you can redistribute it and/or modify
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with WoeUSB.  If not, see <http://www.gnu.org/licenses/>.
-'''
+"""
 
 import os
 import re
@@ -49,7 +49,8 @@ def check_runtime_dependencies(application_name):
     for command in system_commands:
         if shutil.which(command) is None:
             print_with_color(
-                "Error: " + application_name + " requires " + command + " command in the executable search path, but it is not found.",
+                "Error: " + application_name + " requires " + command +
+                " command in the executable search path, but it is not found.",
                 "red")
             result = "failed"
 
@@ -268,7 +269,7 @@ def check_target_filesystem_free_space(target_fs_mountpoint, source_fs_mountpoin
         print_with_color("Error: Not enough free space on target partition!")
         print_with_color(
             "Error: We required " + get_size(
-                needed_space) + "(" + needed_space + " bytes) but '" + target_partition + "' only has ${free_space_human_readable}(" + free_space + " bytes).")
+                str(needed_space)) + "(" + str(needed_space) + " bytes) but '" + target_partition + "' only has " + str(free_space) + "(" + str(free_space) + " bytes).")
         return 1
 
 

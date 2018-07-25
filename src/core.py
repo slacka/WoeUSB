@@ -272,12 +272,9 @@ def create_target_partition_table(target_device, partition_table_type):
 
     utils.print_with_color("Creating new partition table on " + target_device + "...", "green")
 
-    parted_partiton_table_argument = ""
-
     if partition_table_type in ["legacy", "msdos", "mbr", "pc"]:
         parted_partiton_table_argument = "msdos"
     elif partition_table_type in ["gpt", "guid"]:
-        parted_partiton_table_argument = "gpt"
         utils.print_with_color("Error: Currently GUID partition table is not supported.", "red")
         return 2
     else:
@@ -448,14 +445,6 @@ def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_ty
     if subprocess.run(["mkdir", "--parents", target_fs_mountpoint]).returncode != 0:
         utils.print_with_color("Error: Unable to create " + target_fs_mountpoint + " mountpoint directory", "red")
         return 1
-
-    # Determine proper mount options according to filesystem type
-    if target_fs_type == "FAT":
-        mount_options = "utf8=1"
-    elif target_fs_type == "NTFS":
-        pass
-    else:
-        utils.print_with_color("Fatal: Unsupported target_fs_type, please report bug.", "red")
 
     if subprocess.run(["mount",
                        target_partition,
@@ -692,7 +681,7 @@ class CopyFiles(threading.Thread):
         while not self.stop:
             target_size = utils.get_size(self.target)
 
-            if len_ != 0 and __name__ == "__main__":
+            if len_ != 0 and gui is not None:
                 print('\033[3A')
                 print(" " * len_)
                 print(" " * 4)
@@ -722,11 +711,11 @@ class CopyFiles(threading.Thread):
         return 0
 
 
-if __name__ == "__main__":
+def run():
     source_fs_mountpoint, target_fs_mountpoint, temp_directory, \
-    install_mode, source_media, target_media, \
-    workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
-    verbose, debug, parser = init()
+        install_mode, source_media, target_media, \
+        workaround_bios_boot_flag, target_filesystem_type, new_file_system_label, \
+        verbose, debug, parser = init()
     try:
         main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media, install_mode, temp_directory,
              target_filesystem_type, workaround_bios_boot_flag)
@@ -738,3 +727,7 @@ if __name__ == "__main__":
             traceback.print_exc()
 
     cleanup(source_fs_mountpoint, target_fs_mountpoint, temp_directory)
+
+
+if __name__ == "__main__":
+    run()
