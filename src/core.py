@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 """
 A Linux program to create bootable Windows USB stick from a real Windows DVD or an image
