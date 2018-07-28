@@ -67,7 +67,7 @@ bool PipeManager::GetLine(std::string &line)
         {
             return 1;
         }
-        else if(letter == EOF)
+        else if((int)letter == EOF)
         {
             return 0;
         }
