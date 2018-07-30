@@ -31,9 +31,12 @@ Makefile.in
 
 ## Compiled object code
 *.o
-
-## Linked executable
-/src/woeusbgui
+*.pyc
 
 ## Gettext compiled message catalogs
 *.mo
+
+\.idea/
+doc/_build
+
+venv/

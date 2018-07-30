@@ -1,117 +1,122 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# Polish translations for woeusb package
+# Polskie tłumaczenia dla pakietu woeusb.
+# Copyright (C) 2018 THE woeusb'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the woeusb package.
+# Jakub Szymański <jakubmateusz@poczta.onet.pl>, 2018.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: woeusb\n"
-"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
+"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/"
+"issues>\n"
 "POT-Creation-Date: 2018-07-30 15:09+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: 2018-07-30 15:34+0200\n"
 "Last-Translator: Jakub Szymański <jakubmateusz@poczta.onet.pl>\n"
-"Language-Team: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
-"Language: \n"
+"Language-Team: Polish\n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Poedit-SourceCharset: utf-8\n"
 "X-Poedit-Basepath: .\n"
+"Plural-Forms: nplurals=3; plural=(n==1 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 "
+"|| n%100>=20) ? 1 : 2);\n"
+"X-Generator: Poedit 2.0.9\n"
 "X-Poedit-SearchPath-0: ..\n"
 
 #: woeusbgui:67
 msgid "Show all drives"
-msgstr ""
+msgstr "Pokaż wszystkie dyski"
 
 #: woeusbgui:68
 msgid "Show all drives, even those not detected as USB stick."
 msgstr ""
+"Pokaż wszystkie dyski, nawet jeśli system nie widzi ich jako pamięci na USB."
 
 #: woeusbgui:78
 msgid "Set boot flag"
-msgstr ""
+msgstr "Ustaw flagę boot"
 
 #: woeusbgui:79
 msgid "Sets boot flag after process of copying."
-msgstr ""
+msgstr "Ustawia flagę \"boot\" po zakończeniu kopiowania."
 
 #: woeusbgui:81
 msgid "Use NTFS"
-msgstr ""
+msgstr "Użyj NTFS"
 
 #: woeusbgui:82
 msgid "Use NTFS instead of FAT. NOTE: NTFS seems to be slower than FAT."
-msgstr ""
+msgstr "Użyj NTFS zamiast FAT. Notka: NTFS zdaje się być wolniejszy od FAT."
 
 #: woeusbgui:88
 msgid "&File"
-msgstr ""
+msgstr "&Plik"
 
 #: woeusbgui:89
 msgid "&Options"
-msgstr ""
+msgstr "&Opcje"
 
 #: woeusbgui:90
 msgid "&Help"
-msgstr ""
+msgstr "&Pomoc"
 
 #: woeusbgui:146
 msgid "Source :"
-msgstr ""
+msgstr "Źródło :"
 
 #: woeusbgui:149
 msgid "From a disk image (iso)"
-msgstr ""
+msgstr "Z pliku (iso) na dysku"
 
 #: woeusbgui:154
 msgid "Please select a disk image"
-msgstr ""
+msgstr "Prosze wybierz obraz dysku"
 
 #: woeusbgui:160
 msgid "From a CD/DVD drive"
-msgstr ""
+msgstr "Z napędu optycznego"
 
 #: woeusbgui:173
 msgid "Target device :"
-msgstr ""
+msgstr "Urządzenie docelowe :"
 
 #: woeusbgui:185
 msgid "Install"
-msgstr ""
+msgstr "Instaluj"
 
 #: woeusbgui:275
 msgid "Installing"
-msgstr ""
+msgstr "Instalacja"
 
 #: woeusbgui:275
 msgid "Please wait..."
-msgstr ""
+msgstr "Proszę czekać..."
 
 #: woeusbgui:286
 msgid "Are you sure you want to cancel the installation?"
-msgstr ""
+msgstr "Jesteś pewnien że chcesz przerwać instalacje?"
 
 #: woeusbgui:286
 msgid "Cancel"
-msgstr ""
+msgstr "Przerwi"
 
 #: woeusbgui:295
 msgid "Installation succeeded!"
-msgstr ""
+msgstr "Instalacja!"
 
 #: woeusbgui:295 woeusbgui:297
 msgid "Installation"
-msgstr ""
+msgstr "Instalacja"
 
 #: woeusbgui:297
 msgid "Installation failed!"
-msgstr ""
+msgstr "Instalacja zakończona niepowodzeniem!"
 
 #: woeusbgui:312
 msgid "About"
-msgstr ""
+msgstr "O programie"
 
 #: woeusbgui:370
 msgid "License"
-msgstr ""
+msgstr "Licencja"

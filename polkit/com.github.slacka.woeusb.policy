@@ -12,9 +12,11 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 	<action id="com.github.slacka.woeusb.run-cli-using-pkexec">
 		<description>Run `woeusb` as SuperUser</description>
 		<description xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb`</description>
+		<description xml:lang="pl_PL">Uruchom `woeusb` jako root</description>
 		
 		<message>Authentication is required to run `woeusb` as SuperUser.</message>
 		<message xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb` 需要通過身份驗證。</message>
+		<message xml:lang="pl_PL">Wymagana jest autoryzacja do uruchomienia `woeusb` jako root</message>
 		
 		<defaults>
 			<allow_any>auth_admin</allow_any>
@@ -24,13 +26,34 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 		
 		<annotate key="org.freedesktop.policykit.exec.path">/usr/bin/woeusb</annotate>
 	</action>
+
+	<action id="com.github.slacka.woeusb.run-gui-using-pkexec">
+		<description>Run `woeusb` as SuperUser</description>
+		<description xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb`</description>
+		<description xml:lang="pl_PL">Uruchom `woeusb` jako root</description>
+		
+		<message>Authentication is required to run `woeusb` as SuperUser.</message>
+		<message xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb` 需要通過身份驗證。</message>
+		<message xml:lang="pl_PL">Wymagana jest autoryzacja do uruchomienia `woeusb` jako root</message>
+		
+		<defaults>
+			<allow_any>auth_admin</allow_any>
+			<allow_inactive>auth_admin</allow_inactive>
+			<allow_active>auth_admin_keep</allow_active>
+		</defaults>
+		
+		<annotate key="org.freedesktop.policykit.exec.path">/usr/bin/woeusbgui</annotate>
+   		<annotate key="org.freedesktop.policykit.exec.allow_gui">true</annotate>
+	</action>
 	
 	<action id="com.github.slacka.woeusb.run-cli-using-pkexec-usr-local">
 		<description>Run `woeusb` as SuperUser</description>
 		<description xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb`</description>
+		<description xml:lang="pl_PL">Uruchom `woeusb` jako root</description>
 		
 		<message>Authentication is required to run `woeusb` as SuperUser.</message>
 		<message xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb` 需要通過身份驗證。</message>
+		<message xml:lang="pl_PL">Wymagana jest autoryzacja do uruchomienia `woeusb` jako root</message>
 		
 		<defaults>
 			<allow_any>auth_admin</allow_any>
