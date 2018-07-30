@@ -20,6 +20,7 @@
 import os
 import sys
 import time
+import gettext
 import threading
 import subprocess
 
@@ -30,6 +31,19 @@ sys.path.append("/opt/woeusb")
 
 import core
 import list_devices
+
+app = wx.App()
+
+locale = wx.Locale(wx.LANGUAGE_DEFAULT)
+locale.AddCatalogLookupPathPrefix("locale")
+locale.AddCatalog("woeusb")
+
+translation = gettext.translation("woeusb", "locale",
+                                    [locale.GetCanonicalName()], fallback=True)
+translation.install()
+
+_ = wx.GetTranslation
+
 
 PROG_FULL_NAME = "WoeUSB"
 
@@ -50,8 +64,8 @@ class MainFrame(wx.Frame):
         super(MainFrame, self).__init__(None, -1, title, pos, size, style)
 
         file_menu = wx.Menu()
-        self.__menuItemShowAll = wx.MenuItem(file_menu, wx.ID_ANY, "Show all drives \tCtrl+A",
-                                             "Show all drives, even those not detected as USB stick.", wx.ITEM_CHECK)
+        self.__menuItemShowAll = wx.MenuItem(file_menu, wx.ID_ANY, _("Show all drives") + " \tCtrl+A",
+                                             _("Show all drives, even those not detected as USB stick."), wx.ITEM_CHECK)
         file_menu.Append(self.__menuItemShowAll)
 
         file_menu.AppendSeparator()
@@ -61,19 +75,19 @@ class MainFrame(wx.Frame):
         help_item = help_menu.Append(wx.ID_ABOUT)
 
         options_menu = wx.Menu()
-        self.options_boot = wx.MenuItem(options_menu, wx.ID_ANY, "Set boot flag",
-                                        "Sets boot flag after process of copying.",
+        self.options_boot = wx.MenuItem(options_menu, wx.ID_ANY, _("Set boot flag"),
+                                        _("Sets boot flag after process of copying."),
                                         wx.ITEM_CHECK)
-        self.options_filesystem = wx.MenuItem(options_menu, wx.ID_ANY, "Use NTFS",
-                                              "Use NTFS instead of FAT. NOTE: NTFS seems to be slower than FAT.",
+        self.options_filesystem = wx.MenuItem(options_menu, wx.ID_ANY, _("Use NTFS"),
+                                              _("Use NTFS instead of FAT. NOTE: NTFS seems to be slower than FAT."),
                                               wx.ITEM_CHECK)
         options_menu.Append(self.options_boot)
         options_menu.Append(self.options_filesystem)
 
         self.__MenuBar = wx.MenuBar()
-        self.__MenuBar.Append(file_menu, "&File")
-        self.__MenuBar.Append(options_menu, "&Options")
-        self.__MenuBar.Append(help_menu, "&Help")
+        self.__MenuBar.Append(file_menu, _("&File"))
+        self.__MenuBar.Append(options_menu, _("&Options"))
+        self.__MenuBar.Append(help_menu, _("&Help"))
 
         self.SetMenuBar(self.__MenuBar)
 
@@ -129,21 +143,21 @@ class MainPanel(wx.Panel):
         main_sizer = wx.BoxSizer(wx.VERTICAL)
 
         # Iso / CD
-        main_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Source :"), 0, wx.ALL, 3)
+        main_sizer.Add(wx.StaticText(self, wx.ID_ANY, _("Source :")), 0, wx.ALL, 3)
 
         # Iso
-        self.__isoChoice = wx.RadioButton(self, wx.ID_ANY, "From a disk image (iso)")
+        self.__isoChoice = wx.RadioButton(self, wx.ID_ANY, _("From a disk image (iso)"))
         main_sizer.Add(self.__isoChoice, 0, wx.ALL, 3)
 
         tmp_sizer = wx.BoxSizer(wx.HORIZONTAL)
         tmp_sizer.AddSpacer(20)
-        self.__isoFile = wx.FilePickerCtrl(self, wx.ID_ANY, "", "Please select a disk image",
+        self.__isoFile = wx.FilePickerCtrl(self, wx.ID_ANY, "", _("Please select a disk image"),
                                            "Iso images (*.iso)|*.iso;*.ISO|All files|*")
         tmp_sizer.Add(self.__isoFile, 1, wx.LEFT | wx.RIGHT | wx.BOTTOM, 3)
         main_sizer.Add(tmp_sizer, 0, wx.EXPAND, 0)
 
         # DVD
-        self.__dvdChoice = wx.RadioButton(self, wx.ID_ANY, "From a CD/DVD drive")
+        self.__dvdChoice = wx.RadioButton(self, wx.ID_ANY, _("From a CD/DVD drive"))
         main_sizer.Add(self.__dvdChoice, 0, wx.ALL, 3)
 
         # List
@@ -156,7 +170,7 @@ class MainPanel(wx.Panel):
         # Target
         main_sizer.AddSpacer(20)
 
-        main_sizer.Add(wx.StaticText(self, wx.ID_ANY, "Target device :"), 0, wx.ALL, 3)
+        main_sizer.Add(wx.StaticText(self, wx.ID_ANY, _("Target device :")), 0, wx.ALL, 3)
 
         # List
         self.__usbStickList = wx.ListBox(self, wx.ID_ANY)
@@ -168,7 +182,7 @@ class MainPanel(wx.Panel):
         bt_sizer = wx.BoxSizer(wx.HORIZONTAL)
         self.__btRefresh = wx.Button(self, wx.ID_REFRESH)
         bt_sizer.Add(self.__btRefresh, 0, wx.ALL, 3)
-        self.__btInstall = wx.Button(self, wx.ID_ANY, "Install")
+        self.__btInstall = wx.Button(self, wx.ID_ANY, _("Install"))
         bt_sizer.Add(self.__btInstall, 0, wx.ALL, 3)
 
         main_sizer.Add(bt_sizer, 0, wx.ALIGN_RIGHT, 0)
@@ -258,7 +272,7 @@ class MainPanel(wx.Panel):
             woe = WoeUSB(iso, device, boot_flag=self.__parent.options_boot.IsChecked(), filesystem=filesystem)
             woe.start()
 
-            dialog = wx.ProgressDialog("Installing", "Please wait...", 101, self.GetParent(),
+            dialog = wx.ProgressDialog(_("Installing"), _("Please wait..."), 101, self.GetParent(),
                                        wx.PD_APP_MODAL | wx.PD_SMOOTH | wx.PD_CAN_ABORT)
 
             while woe.is_alive():
@@ -269,7 +283,7 @@ class MainPanel(wx.Panel):
                     status = dialog.Update(woe.progress, woe.state)[0]
 
                 if not status:
-                    if wx.MessageBox("Are you sure you want to cancel the installation?", "Cancel",
+                    if wx.MessageBox(_("Are you sure you want to cancel the installation?"), _("Cancel"),
                                      wx.YES_NO | wx.ICON_QUESTION, self) == wx.NO:
                         dialog.Resume()
                     else:
@@ -278,9 +292,9 @@ class MainPanel(wx.Panel):
             dialog.Destroy()
 
             if woe.error == "":
-                wx.MessageBox("Installation succeeded!", "Installation", wx.OK | wx.ICON_INFORMATION, self)
+                wx.MessageBox(_("Installation succeeded!"), _("Installation"), wx.OK | wx.ICON_INFORMATION, self)
             else:
-                wx.MessageBox("Installation failed!" + "\n" + str(woe.error), "Installation", wx.OK | wx.ICON_ERROR,
+                wx.MessageBox(_("Installation failed!") + "\n" + str(woe.error), _("Installation"), wx.OK | wx.ICON_ERROR,
                               self)
 
     def on_show_all_drive(self, _):
@@ -295,7 +309,7 @@ class DialogAbout(wx.Dialog):
     __MyPanelNoteBookAutors = None
     __BtOk = None
 
-    def __init__(self, parent, ID=wx.ID_ANY, title="About", pos=wx.DefaultPosition, size=wx.Size(570, 590),
+    def __init__(self, parent, ID=wx.ID_ANY, title=_("About"), pos=wx.DefaultPosition, size=wx.Size(570, 590),
                  style=wx.DEFAULT_DIALOG_STYLE):
         super(DialogAbout, self).__init__(parent, ID, title, pos, size, style)
 
@@ -353,7 +367,7 @@ class DialogAbout(wx.Dialog):
         licence_txt = wx.TextCtrl(self.__NotebookAutorLicence, wx.ID_ANY, licence_str, wx.DefaultPosition,
                                   wx.DefaultSize, wx.TE_MULTILINE | wx.TE_READONLY)
 
-        self.__NotebookAutorLicence.AddPage(licence_txt, "License")
+        self.__NotebookAutorLicence.AddPage(licence_txt, _("License"))
 
         sizer_all.Add(self.__NotebookAutorLicence, 1, wx.EXPAND | wx.ALL, 5)
 
@@ -428,11 +442,7 @@ if __name__ == "__main__":
 
     frameTitle = PROG_FULL_NAME
 
-    app = wx.App()
 
-    locale = wx.Locale()
-    locale.AddCatalogLookupPathPrefix("locale")
-    locale.Init(wx.LANGUAGE_DEFAULT)
 
     frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
     frame.SetMinSize(wx.Size(300, 450))
