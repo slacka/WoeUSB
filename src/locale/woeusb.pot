@@ -1,10 +1,16 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: woeusb\n"
 "Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
-"POT-Creation-Date: 2011-07-14 00:07+0100\n"
-"PO-Revision-Date: 2011-07-14 00:07+0100\n"
-"Last-Translator: GILLE Colin <colingille@hotmail.com>\n"
+"POT-Creation-Date: 2018-07-30 15:09+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Jakub Szymański <jakubmateusz@poczta.onet.pl>\n"
 "Language-Team: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
 "Language: \n"
 "MIME-Version: 1.0\n"
@@ -14,134 +20,98 @@ msgstr ""
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SearchPath-0: ..\n"
 
-#: ../MainFrame.cpp:41
+#: woeusbgui:67
 msgid "Show all drives"
 msgstr ""
 
-#: ../MainFrame.cpp:41
+#: woeusbgui:68
 msgid "Show all drives, even those not detected as USB stick."
 msgstr ""
 
-#: ../MainFrame.cpp:53
+#: woeusbgui:78
+msgid "Set boot flag"
+msgstr ""
+
+#: woeusbgui:79
+msgid "Sets boot flag after process of copying."
+msgstr ""
+
+#: woeusbgui:81
+msgid "Use NTFS"
+msgstr ""
+
+#: woeusbgui:82
+msgid "Use NTFS instead of FAT. NOTE: NTFS seems to be slower than FAT."
+msgstr ""
+
+#: woeusbgui:88
 msgid "&File"
 msgstr ""
 
-#: ../MainFrame.cpp:54
+#: woeusbgui:89
+msgid "&Options"
+msgstr ""
+
+#: woeusbgui:90
 msgid "&Help"
 msgstr ""
 
-#: ../App.cpp:82
-msgid "Error : "
-msgstr ""
-
-#: ../App.cpp:82
-#: ../App.cpp:124
-msgid "Error..."
-msgstr ""
-
-#: ../App.cpp:117
-msgid "Unknown error as occured!"
-msgstr ""
-
-#: ../App.cpp:124
-msgid "Fatal error : "
-msgstr ""
-
-#: ../DialogAbout.cpp:46
-#, c-format
-msgid "Version %s"
-msgstr ""
-
-#: ../DialogAbout.cpp:55
-msgid "Developer"
-msgstr ""
-
-#: ../DialogAbout.cpp:58
-#, c-format
-msgid ""
-"%s is free software: you can redistribute it and/or modifyit under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n"
-"\n"
-"%s is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
-"\n"
-"You should have received a copy of the GNU General Public Licensealong with %s.  If not, see <http://www.gnu.org/licenses/>."
-msgstr ""
-
-#: ../DialogAbout.cpp:73
-msgid "License"
-msgstr ""
-
-#: ../MainPanel.cpp:45
+#: woeusbgui:146
 msgid "Source :"
 msgstr ""
 
-#: ../MainPanel.cpp:48
+#: woeusbgui:149
 msgid "From a disk image (iso)"
 msgstr ""
 
-#: ../MainPanel.cpp:53
+#: woeusbgui:154
 msgid "Please select a disk image"
 msgstr ""
 
-#: ../MainPanel.cpp:58
+#: woeusbgui:160
 msgid "From a CD/DVD drive"
 msgstr ""
 
-#: ../MainPanel.cpp:70
+#: woeusbgui:173
 msgid "Target device :"
 msgstr ""
 
-#: ../MainPanel.cpp:81
+#: woeusbgui:185
 msgid "Install"
 msgstr ""
 
-#: ../MainPanel.cpp:247
-msgid "Installing.."
+#: woeusbgui:275
+msgid "Installing"
 msgstr ""
 
-#: ../MainPanel.cpp:247
+#: woeusbgui:275
 msgid "Please wait..."
 msgstr ""
 
-#: ../MainPanel.cpp:270
-#: ../MainPanel.cpp:289
+#: woeusbgui:286
 msgid "Are you sure you want to cancel the installation?"
 msgstr ""
 
-#: ../MainPanel.cpp:270
-#: ../MainPanel.cpp:289
+#: woeusbgui:286
 msgid "Cancel"
 msgstr ""
 
-#: ../MainPanel.cpp:312
-msgid "Installation succeded!"
+#: woeusbgui:295
+msgid "Installation succeeded!"
 msgstr ""
 
-#: ../MainPanel.cpp:312
-#: ../MainPanel.cpp:316
+#: woeusbgui:295 woeusbgui:297
 msgid "Installation"
 msgstr ""
 
-#: ../MainPanel.cpp:316
+#: woeusbgui:297
 msgid "Installation failed!"
 msgstr ""
 
-#: ../findFile.cpp:54
-msgid "File not Found : "
-msgstr ""
-
-#: ../findFile.cpp:54
-msgid "Error"
-msgstr ""
-
-#: ../strWxStdConv.hpp:106
-msgid "bytes"
-msgstr ""
-
-#: ../AppConfig.hpp:7
-msgid "WoeUSB"
-msgstr ""
-
-#: ../DialogAbout.hpp:68
+#: woeusbgui:312
 msgid "About"
 msgstr ""
 
+#: woeusbgui:370
+msgid "License"
+msgstr ""
