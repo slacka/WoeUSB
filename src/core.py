@@ -198,7 +198,7 @@ def main(source_fs_mountpoint, target_fs_mountpoint, source_media, target_media,
         utils.check_target_partition(target_partition, target_device)
         utils.check_target_partition(target_partition, target_device)
 
-    if mount_target_filesystem(target_partition, target_fs_mountpoint, target_filesystem_type):
+    if mount_target_filesystem(target_partition, target_fs_mountpoint):
         utils.print_with_color("Error: Unable to mount target filesystem", "red")
         return 1
 
@@ -428,13 +428,12 @@ def mount_source_filesystem(source_media, source_fs_mountpoint):
             return 1
 
 
-def mount_target_filesystem(target_partition, target_fs_mountpoint, target_fs_type):
+def mount_target_filesystem(target_partition, target_fs_mountpoint):
     """
     Mount target filesystem to existing path as mountpoint
 
     :param target_partition: The partition device file target filesystem resides, for example /dev/sdX1
     :param target_fs_mountpoint: The existing directory used as the target filesystem's mountpoint, for example /mnt/target_filesystem
-    :param target_fs_type: The filesystem of the target filesystem currently supports: FAT, NTFS
     :return: 1 - failure
     """
     utils.check_kill_signal()
@@ -474,7 +473,7 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
 
     utils.print_with_color("Copying files from source media...", "green")
 
-    CopyFiles_handle = CopyFiles(source_fs_mountpoint, target_fs_mountpoint)
+    CopyFiles_handle = ReportCopyProgress(source_fs_mountpoint, target_fs_mountpoint)
     CopyFiles_handle.start()
 
     for dirpath, _, filenames in os.walk(source_fs_mountpoint):
@@ -496,6 +495,11 @@ def copy_filesystem_files(source_fs_mountpoint, target_fs_mountpoint):
 
 def copy_large_file(source, target):
     """
+    Because python's copy is atomic it is not possible to do anything during process.
+    It is not a big problem when using cli (user can just hit ctrl+c and throw exception),
+    but when using gui this part of script needs to "ping" gui for progress reporting
+    and check if user didn't click "cancel" (see utils.check_kill_signal())
+
     :param source:
     :param target:
     :return: None
@@ -506,7 +510,7 @@ def copy_large_file(source, target):
     while True:
         utils.check_kill_signal()
 
-        data = source_file.read(5 * 1024 * 1024)  # Read 5 MiB
+        data = source_file.read(5 * 1024 * 1024)  # Read 5 MiB, speeds of shitty pendrives can be as low as 2 MiB/s
         if data == b"":
             break
 
@@ -662,7 +666,7 @@ def setup_arguments():
     return parser
 
 
-class CopyFiles(threading.Thread):
+class ReportCopyProgress(threading.Thread):
     """
     Classes for threading module
     """
