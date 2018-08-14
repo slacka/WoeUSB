@@ -101,7 +101,7 @@ alias\
 
 declare temp_directory; temp_directory=$(
 	# COMPATIBILITY: Use short option for Slackware 14.2
-	#   -d: --directory
+	#	-d: --directory
 	#	-t: --tmpdir
 	mktemp \
 		-d \
