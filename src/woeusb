@@ -100,9 +100,12 @@ alias\
 	printf_with_color=util_printf_with_color
 
 declare temp_directory; temp_directory=$(
-	mktemp\
-		--tmpdir\
-		--directory\
+	# COMPATIBILITY: Use short option for Slackware 14.2
+	#   -d: --directory
+	#	-t: --tmpdir
+	mktemp \
+		-d \
+		-t \
 		WoeUSB.XXXXXX.tempdir
 ); declare -r temp_directory
 
