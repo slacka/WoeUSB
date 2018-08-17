@@ -43,7 +43,7 @@ try:
 
 except ImportError:
     # Add possible directories where WoeUSB can be installed and try to import form them
-    sys.path.append(dirs)
+    sys.path = sys.path + dirs
 
     try:
         import core

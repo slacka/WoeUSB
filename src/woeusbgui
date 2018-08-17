@@ -24,13 +24,42 @@ import gettext
 import threading
 import subprocess
 
+from os.path import  dirname, realpath
+
 import wx
 import wx.adv
 
-sys.path.append("/opt/woeusb")
+if "XDG_DATA_DIRS" in os.environ:
+    dirs = os.environ["XDG_DATA_DIRS"].split(":")
 
-import core
-import list_devices
+    tmp = []
+    for directory in dirs:
+        tmp.append(directory + "/WoeUSB")
+
+    dirs = tmp
+else:
+    dirs = ["/usr/local/share/WoeUSB", "/usr/share/WoeUSB"]
+
+dirs.append(dirname(realpath(__file__)))
+
+try:
+    # Try to import from same folder where this file is
+    import core
+    import list_devices
+
+except ImportError:
+    # Add possible directories where WoeUSB can be installed and try to import form them
+    sys.path = sys.path + dirs
+
+    try:
+        import core
+        import list_devices
+    except ImportError:
+        # Broken installation?
+        print("Couldn't find program files, please reinstall WoeUSB and if that won't help contact us on github")
+        sys.exit(1)
+
+
 
 app = wx.App()
 
@@ -437,12 +466,12 @@ class WoeUSB(threading.Thread):
 if __name__ == "__main__":
 
     if os.getuid() != 0:
-        subprocess.run(["pkexec", "/usr/bin/woeusbgui"])
+        for directory in dirs:
+            if os.path.isfile(directory.rstrip("/") + "/woeusbgui"):
+                subprocess.run(["pkexec", directory.rstrip("/") + "/woeusbgui"])
         exit(0)
 
     frameTitle = PROG_FULL_NAME
-
-
 
     frame = MainFrame(frameTitle, wx.DefaultPosition, wx.Size(400, 600))
     frame.SetMinSize(wx.Size(300, 450))
