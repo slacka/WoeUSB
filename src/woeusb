@@ -22,10 +22,35 @@
 +along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 +"""
 
+import os
 import sys
 
-sys.path.append("/opt/woeusb")
+if "XDG_DATA_DIRS" in os.environ:
+    dirs = os.environ["XDG_DATA_DIRS"].split(":")
 
-import core
+    tmp = []
+    for directory in dirs:
+        tmp.append(directory + "/WoeUSB")
+
+    dirs = tmp
+else:
+    dirs = ["/usr/local/share/WoeUSB", "/usr/share/WoeUSB"]
+
+
+try:
+    # Try to import from same folder where this file is
+    import core
+
+except ImportError:
+    # Add possible directories where WoeUSB can be installed and try to import form them
+    sys.path.append(dirs)
+
+    try:
+        import core
+    except ImportError:
+        # Broken installation?
+        print("Couldn't find program files, please reinstall WoeUSB and if that won't help contact us on github")
+        sys.exit(1)
+
 
 core.run()

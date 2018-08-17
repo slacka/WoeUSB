@@ -50,6 +50,7 @@ verbose = False
 
 debug = False
 
+#: used in cleanup()
 target_device = ""
 
 CopyFiles_handle = threading.Thread()
@@ -267,7 +268,7 @@ def create_target_partition_table(target_device, partition_table_type):
     """
     :param target_device:
     :param partition_table_type:
-    :return: None - success; 2 - failure
+    :return: 0 - success; 1 - failure
     """
     utils.check_kill_signal()
 
@@ -277,13 +278,15 @@ def create_target_partition_table(target_device, partition_table_type):
         parted_partiton_table_argument = "msdos"
     elif partition_table_type in ["gpt", "guid"]:
         utils.print_with_color("Error: Currently GUID partition table is not supported.", "red")
-        return 2
+        return 1
     else:
         utils.print_with_color("Error: Partition table not supported.", "red")
-        return 2
+        return 1
 
     # Create partition table(and overwrite the old one, whatever it was)
     subprocess.run(["parted", "--script", target_device, "mklabel", parted_partiton_table_argument])
+
+    return 0
 
 
 def create_target_partition(target_device, target_partition, filesystem_type, filesystem_label, command_mkdosfs,
