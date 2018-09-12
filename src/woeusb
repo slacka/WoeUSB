@@ -821,7 +821,7 @@ check_is_target_device_busy(){
 
 	if [ "$(mount\
 			| grep\
-			-c\
+			--count\
 			--fixed-strings\
 			"${device}"
 		)" -ne 0 ]; then
@@ -840,7 +840,7 @@ check_source_and_target_not_busy(){
 
 	if [ "$(mount\
 			| grep\
-			-c\
+			--count\
 			--fixed-strings\
 			"${source_media}"
 		)" != 0 ]; then
@@ -851,7 +851,7 @@ check_source_and_target_not_busy(){
 	if [ "${install_mode}" = "partition" ]; then
 		if [ "$(mount\
 				| grep\
-				-c\
+				--count\
 				--fixed-strings\
 				"${target_partition}"
 			)" != 0 ]; then
