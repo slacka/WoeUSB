@@ -66,16 +66,15 @@ declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 ## Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
 ## Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 ## TODO: Global parameter cleanup
-## TODO: Use `true`/`false` instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
-### Doing GUI-specific stuff when set to 1, set by --only-for-gui
+### Doing GUI-specific stuff when set to `true`, set by --only-for-gui
 ### Requires to be set to global due to indirectly referenced by trap
-declare -i global_only_for_gui=0
+declare global_only_for_gui=false
 
 ### Increase verboseness, provide more information when required
-declare -i verbose=0
+declare verbose=false
 
-### Disable message coloring when set to 1, set by --no-color
-declare -i no_color=0
+### Disable message coloring when set to `true`, set by --no-color
+declare no_color=false
 
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
@@ -124,9 +123,9 @@ init(){
 	current_state='enter-init'
 
 	local \
-		flag_print_help=N \
-		flag_print_version=N \
-		flag_print_about=N \
+		flag_print_help=false \
+		flag_print_version=false \
+		flag_print_about=false \
 
 	local -r \
 		application_site_url='https://github.com/slacka/WoeUSB' \
@@ -142,7 +141,7 @@ init(){
 
 	local target_partition
 
-	local workaround_bios_boot_flag='N'
+	local workaround_bios_boot_flag=false
 
 	local target_filesystem_type='FAT'
 
@@ -321,7 +320,7 @@ init(){
 		"${target_fs_mountpoint}" \
 		"${name_grub_prefix}"
 
-	if [ "${workaround_bios_boot_flag}" == 'Y' ]; then
+	if [ "${workaround_bios_boot_flag}" == true ]; then
 		workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled \
 			"${target_device}"
 	fi
@@ -446,43 +445,43 @@ process_commandline_parameters(){
 	local -n only_for_gui_ref="${1}"
 
 	if [ "${#RUNTIME_COMMANDLINE_PARAMETERS[@]}" -eq 0 ]; then
-		flag_print_help_ref=Y
+		flag_print_help_ref=true
 		return 0
 	fi
 
 	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
 	local \
-		enable_debug=N \
-		enable_device=N \
-		enable_partition=N \
-		enable_label=N \
-		enable_workaround_bios_boot_flag=N \
-		enable_debugging_internal_function_call=N \
-		enable_target_filesystem=N
+		enable_debug=false \
+		enable_device=false \
+		enable_partition=false \
+		enable_label=false \
+		enable_workaround_bios_boot_flag=false \
+		enable_debugging_internal_function_call=false \
+		enable_target_filesystem=false
 
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
 			--help \
 			|-h)
-				flag_print_help_ref=Y
+				flag_print_help_ref=true
 				return 0
 				;;
 			--version \
 			|-V)
-				flag_print_version_ref=Y
+				flag_print_version_ref=true
 				return 0
 				;;
 			--about \
 			|-ab)
-				flag_print_about_ref=Y
+				flag_print_about_ref=true
 				return 0
 				;;
 			--debug)
-				enable_debug="Y"
+				enable_debug=true
 				;;
 			--partition \
 			|-p)
-				enable_partition=Y
+				enable_partition=true
 				install_mode_ref='partition'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
@@ -497,7 +496,7 @@ process_commandline_parameters(){
 				;;
 			--device \
 			|-d)
-				enable_device=Y
+				enable_device=true
 				# Limitation of ShellCheck to detect usage of indirection variables
 				# https://github.com/koalaman/shellcheck/wiki/SC2034
 				# shellcheck disable=SC2034
@@ -514,17 +513,17 @@ process_commandline_parameters(){
 				target_media_ref="${parameters[0]}"
 				;;
 			--verbose|-v)
-				verbose='1'
+				verbose=true
 				;;
 			--for-gui)
-				no_color='1'
-				only_for_gui_ref='1'
+				no_color=true
+				only_for_gui_ref=true
 				;;
 			--no-color)
-				no_color='1'
+				no_color=true
 				;;
 			--label|-l)
-				enable_label=Y
+				enable_label=true
 				shift_array parameters
 				if [ ${#parameters[@]} -lt 1 ]; then
 					printf_with_color \
@@ -537,11 +536,11 @@ process_commandline_parameters(){
 				new_file_system_label_ref="${parameters[0]}"
 				;;
 			--workaround-bios-boot-flag)
-				enable_workaround_bios_boot_flag=Y
-				workaround_bios_boot_flag_ref='Y'
+				enable_workaround_bios_boot_flag=true
+				workaround_bios_boot_flag_ref=true
 				;;
 			--debugging-internal-function-call)
-				enable_debugging_internal_function_call=Y
+				enable_debugging_internal_function_call=true
 				shift_array parameters
 
 				if [ ${#parameters[@]} -lt 1 ]; then
@@ -557,7 +556,7 @@ process_commandline_parameters(){
 				;;
 			--target-filesystem \
 			|--tgt-fs)
-				enable_target_filesystem=Y
+				enable_target_filesystem=true
 
 				shift_array parameters
 				if [ ${#parameters[@]} -lt 1 ]; then
@@ -580,38 +579,38 @@ process_commandline_parameters(){
 
 	# None useful action is specified
 	if \
-		[ "${enable_device}" == N ] \
-		&& [ "${enable_partition}" == N ] \
-		&& [ "${enable_debugging_internal_function_call}" == N ]; then
+		[ "${enable_device}" == false ] \
+		&& [ "${enable_partition}" == false ] \
+		&& [ "${enable_debugging_internal_function_call}" == false ]; then
 		# intentionally don't mention about the internal function call option
 		echo_with_color \
 			red \
 			"${FUNCNAME[0]}: Error: No creation method specified!" >&2
 		return 1
 	elif \
-		[ "${enable_device}" == Y ]  \
-		&& [ "${enable_partition}" == Y ]; then
+		[ "${enable_device}" == false ]  \
+		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --device and --partition creation method are mutual-exclusive." >&2
 		return 1
 	fi
 	
 	# --label option is no use with --partition creation method
 	if \
-		[ "${enable_partition}" == Y ] \
-		&& [ "${enable_label}" == Y ]; then
+		[ "${enable_partition}" == true ] \
+		&& [ "${enable_label}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --label option only can be used with --device creation method"
 		return 1
 	fi
 
 	## --target-filesystem option is no use with --partition creation method
 	if \
-		[ "${enable_target_filesystem}" == Y ] \
-		&& [ "${enable_partition}" == Y ]; then
+		[ "${enable_target_filesystem}" == true ] \
+		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --target-filesystem option only can be used with --device creation method"
 		return 1
 	fi
 
-	if [ "${verbose}" = '1' ] && [ "${enable_debug}" != 'Y' ]; then
+	if [ "${verbose}" = true ] && [ "${enable_debug}" != true ]; then
 		trap 'trap_return "${FUNCNAME[0]}"' RETURN
 
 		# Disabled due to FIXME
@@ -619,7 +618,7 @@ process_commandline_parameters(){
 	fi
 
 	# Always be the last condition so that less debug message from this function will be printed
-	if [ "${enable_debug}" = 'Y' ]; then
+	if [ "${enable_debug}" = true ]; then
 		set -o xtrace
 	fi
 	return 0
@@ -637,7 +636,7 @@ process_miscellaneous_requests(){
 	local -r application_copyright_notice="${1}"; shift
 	local -r runtime_executable_name="${1}"; shift
 
-	if [ "${flag_print_help}" == 'Y' ]; then
+	if [ "${flag_print_help}" == true ]; then
 		print_help \
 			"${application_name}" \
 			"${application_version}" \
@@ -645,13 +644,13 @@ process_miscellaneous_requests(){
 		exit 0
 	fi
 
-	if [ "${flag_print_version}" == 'Y' ]; then
+	if [ "${flag_print_version}" == true ]; then
 		print_version \
 			"${application_version}"
 		exit 0
 	fi
 
-	if [ "${flag_print_about}" == 'Y' ]; then
+	if [ "${flag_print_about}" == true ]; then
 		print_application_info \
 			"${application_name}" \
 			"${application_version}" \
@@ -809,7 +808,7 @@ determine_target_parameters(){
 		target_partition_ref="${target_device}1"
 	fi
 
-	if [ "${verbose}" = '1' ]; then
+	if [ "${verbose}" = true ]; then
 		echo "${FUNCNAME[0]}: Info: Target device is '${target_device_ref}'."
 		echo "${FUNCNAME[0]}: Info: Target partition is '${target_partition_ref}'."
 	fi
@@ -1377,7 +1376,7 @@ copy_filesystem_files(){
 		if [ -d "${source_file}" ]; then
 			mkdir --parents "${dest_file}"
 		elif [ -f "${source_file}" ]; then
-			if [ "${verbose}" = 1 ]; then
+			if [ "${verbose}" = true ]; then
 				echo -e "\\nINFO: Copying \"${source_file}\"..."
 			fi
 			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
@@ -1501,7 +1500,7 @@ workaround_support_windows_7_uefi_boot(){
 	)"
 	if [ -z "${test_efi_directory}" ]; then
 		efi_directory="${target_fs_mountpoint}/efi"
-		if [ "${verbose}" = '1' ]; then
+		if [ "${verbose}" = true ]; then
 			printf --\
 				"%s: DEBUG: Can't find efi directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
@@ -1509,7 +1508,7 @@ workaround_support_windows_7_uefi_boot(){
 		fi
 	else # efi directory(case don't care) exists
 		efi_directory="${test_efi_directory}"
-		if [ "${verbose}" = '1' ]; then
+		if [ "${verbose}" = true ]; then
 			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
@@ -1528,7 +1527,7 @@ workaround_support_windows_7_uefi_boot(){
 	)"
 	if [ -z "${test_efi_boot_directory}" ]; then
 		efi_boot_directory="${efi_directory}/boot"
-		if [ "${verbose}" = '1' ]; then
+		if [ "${verbose}" = true ]; then
 			printf --\
 				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n"\
 				"${FUNCNAME[0]}"\
@@ -1536,7 +1535,7 @@ workaround_support_windows_7_uefi_boot(){
 		fi
 	else # boot directory(case don't care) exists
 		efi_boot_directory="${test_efi_boot_directory}"
-		if [ "${verbose}" = '1' ]; then
+		if [ "${verbose}" = true ]; then
 			printf --\
 				'%s: DEBUG: %s detected.\n'\
 				"${FUNCNAME[0]}"\
@@ -1661,7 +1660,7 @@ install_legacy_pc_bootloader_grub_config(){
 cleanup_mountpoint(){
 	util_check_function_parameters_quantity 2 "${#}"
 	local -r fs_mountpoint="${1}"; shift
-	local -ir only_for_gui="${1}"; shift
+	local -r only_for_gui="${1}"; shift
 
 	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
 	popd &>/dev/null\
@@ -1702,9 +1701,9 @@ trigger_wxGenericProgressDialog_pulse(){
 	util_check_function_parameters_quantity 2 $#
 
 	local switch="$1"; shift
-	local -ir only_for_gui="$1"
+	local -r only_for_gui="$1"
 
-	if [ "${only_for_gui}" -eq 0 ]; then
+	if [ "${only_for_gui}" = false ]; then
 		return 0
 	fi
 
@@ -1966,7 +1965,7 @@ util_echo_with_color(){
 	local -r message_color="${1}"; shift
 	local -r message_body="${1}"
 
-	if [ "${no_color}" -eq 1 ]; then
+	if [ "${no_color}" = true ]; then
 		echo -e "${message_body}"
 	else
 		switch_terminal_text_color "${message_color}"
@@ -1978,13 +1977,13 @@ util_echo_with_color(){
 ## Print formatted message with color
 util_printf_with_color(){
 	if [ ${#} -lt 2 ]; then
-		if [ "${no_color}" == 0 ]; then
+		if [ "${no_color}" == false ]; then
 			switch_terminal_text_color red
 		fi
 		printf --\
 			'Fatal: %s: Parameter quantity illegal, please report bug.\n'\
 			"${FUNCNAME[0]}"
-		if [ "${no_color}" == 0 ]; then
+		if [ "${no_color}" == false ]; then
 			switch_terminal_text_color none
 		fi
 		exit 1
@@ -1992,12 +1991,12 @@ util_printf_with_color(){
 	local -r color="${1}"; shift
 	local -ar printf_parameters=("${@}")
 
-	if [ "${no_color}" == 1 ]; then
+	if [ "${no_color}" == true ]; then
 		# False positive: not format string(ShellCheck #1028)
 		# shellcheck disable=SC2059
 		printf --\
 			"${printf_parameters[@]}"
-	else # no_color = 0
+	else # no_color = false
 		switch_terminal_text_color "${color}"
 		# False positive: not format string(ShellCheck #1028)
 		# shellcheck disable=SC2059
