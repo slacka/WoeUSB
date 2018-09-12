@@ -52,11 +52,11 @@ if [ -v "BASH_SOURCE[0]" ]; then
 	RUNTIME_COMMANDLINE_BASECOMMAND="${0}"
 	# Keep these partially unused variables declared
 	# shellcheck disable=SC2034
-	declare -r\
-		RUNTIME_EXECUTABLE_PATH\
-		RUNTIME_EXECUTABLE_FILENAME\
-		RUNTIME_EXECUTABLE_NAME\
-		RUNTIME_EXECUTABLE_DIRECTORY\
+	declare -r \
+		RUNTIME_EXECUTABLE_PATH \
+		RUNTIME_EXECUTABLE_FILENAME \
+		RUNTIME_EXECUTABLE_NAME \
+		RUNTIME_EXECUTABLE_DIRECTORY \
 		RUNTIME_COMMANDLINE_BASECOMMAND
 fi
 declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
@@ -79,9 +79,9 @@ declare -i no_color=0
 declare -ir DD_BLOCK_SIZE="((4 * 1024 * 1024))" # 4MiB
 
 ## NOTE: Need to pass to traps, so need to be global
-declare\
-	source_fs_mountpoint\
-	target_fs_mountpoint\
+declare \
+	source_fs_mountpoint \
+	target_fs_mountpoint \
 	target_device
 
 ## FIXME: No documentation for this non-trivial parameter
@@ -92,11 +92,11 @@ declare -i pulse_current_pid=0
 declare current_state='pre-init'
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
-alias\
-	echo_with_color=util_echo_with_color\
-	switch_terminal_text_color=util_switch_terminal_text_color\
-	shift_array=util_shift_array\
-	is_target_busy=check_is_target_device_busy\
+alias \
+	echo_with_color=util_echo_with_color \
+	switch_terminal_text_color=util_switch_terminal_text_color \
+	shift_array=util_shift_array \
+	is_target_busy=check_is_target_device_busy \
 	printf_with_color=util_printf_with_color
 
 declare temp_directory; temp_directory=$(
@@ -122,21 +122,21 @@ init(){
 
 	current_state='enter-init'
 
-	local\
-		flag_print_help=N\
-		flag_print_version=N\
-		flag_print_about=N\
+	local \
+		flag_print_help=N \
+		flag_print_version=N \
+		flag_print_about=N \
 
 	local -r \
-		application_site_url='https://github.com/slacka/WoeUSB'\
-		application_copyright_declaration="Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017"\
+		application_site_url='https://github.com/slacka/WoeUSB' \
+		application_copyright_declaration="Copyright © Colin GILLE / congelli501 2013\\nCopyright © slacka et.al. 2017" \
 		application_copyright_notice="${application_name} is free software licensed under the GNU General Public License version 3(or any later version of your preference) that gives you THE 4 ESSENTIAL FREEDOMS\\nhttps://www.gnu.org/philosophy/"
 	local install_mode
 
 	# source_media may be a optical disk drive or a disk image
 	# target_media may be an entire usb storage device or just a partition
-	local\
-		source_media\
+	local \
+		source_media \
 		target_media
 
 	local target_partition
@@ -150,185 +150,185 @@ init(){
 
 	# Parameters that needs to be determined in runtime
 	# due to different names in distributions
-	declare\
-		command_mkdosfs\
-		command_mkntfs\
-		command_grubinstall\
+	declare \
+		command_mkdosfs \
+		command_mkntfs \
+		command_grubinstall \
 		name_grub_prefix
 
 	declare new_file_system_label="${DEFAULT_NEW_FS_LABEL}"
 
-	if ! check_runtime_dependencies\
-		"${application_name}"\
-		command_mkdosfs\
-		command_mkntfs\
-		command_grubinstall\
+	if ! check_runtime_dependencies \
+		"${application_name}" \
+		command_mkdosfs \
+		command_mkntfs \
+		command_grubinstall \
 		name_grub_prefix; then
 		exit 1
 	fi
 
-	if !\
-		process_commandline_parameters\
-			application_name\
-			flag_print_help\
-			flag_print_version\
-			flag_print_about\
-			install_mode\
-			source_media\
-			target_media\
-			new_file_system_label\
-			workaround_bios_boot_flag\
-			target_filesystem_type\
+	if ! \
+		process_commandline_parameters \
+			application_name \
+			flag_print_help \
+			flag_print_version \
+			flag_print_about \
+			install_mode \
+			source_media \
+			target_media \
+			new_file_system_label \
+			workaround_bios_boot_flag \
+			target_filesystem_type \
 			global_only_for_gui; then
-		print_help\
-			"${application_name}"\
-			"${application_version}"\
+		print_help \
+			"${application_name}" \
+			"${application_version}" \
 			"${runtime_executable_name}"
 		exit 1
 
 	fi
 
-	process_miscellaneous_requests\
-		"${flag_print_help}"\
-		"${flag_print_version}"\
-		"${flag_print_about}"\
-		"${application_name}"\
-		"${application_version}"\
-		"${application_site_url}"\
-		"${application_copyright_declaration}"\
-		"${application_copyright_notice}"\
+	process_miscellaneous_requests \
+		"${flag_print_help}" \
+		"${flag_print_version}" \
+		"${flag_print_about}" \
+		"${application_name}" \
+		"${application_version}" \
+		"${application_site_url}" \
+		"${application_copyright_declaration}" \
+		"${application_copyright_notice}" \
 		"${runtime_executable_name}"
 
-	printf --\
-		'%s\n%s\n'\
-		"${application_name} v${application_version}"\
+	printf -- \
+		'%s\n%s\n' \
+		"${application_name} v${application_version}" \
 		'=============================='
 
-	check_permission\
+	check_permission \
 		"${application_name}"
 
-	if ! check_runtime_parameters\
-		install_mode\
-		source_media\
-		target_media\
+	if ! check_runtime_parameters \
+		install_mode \
+		source_media \
+		target_media \
 		"${new_file_system_label}"; then
-		print_help\
-			"${application_name}"\
-			"${application_version}"\
+		print_help \
+			"${application_name}" \
+			"${application_version}" \
 			"${runtime_executable_name}"
 		exit 1
 	fi
 
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse on` here?
-	trigger_wxGenericProgressDialog_pulse\
-		on\
+	trigger_wxGenericProgressDialog_pulse \
+		on \
 		"${only_for_gui_ref}"
 
-	determine_target_parameters\
-		"${install_mode}"\
-		"${target_media}"\
-		target_device\
+	determine_target_parameters \
+		"${install_mode}" \
+		"${target_media}" \
+		target_device \
 		target_partition
 
-	check_source_and_target_not_busy\
-		"${install_mode}"\
-		"${source_media}"\
-		"${target_device}"\
+	check_source_and_target_not_busy \
+		"${install_mode}" \
+		"${source_media}" \
+		"${target_device}" \
 		"${target_partition}"
 
 	current_state=mount-source-filesystem
 
-	if ! mount_source_filesystem\
-		"${source_media}"\
+	if ! mount_source_filesystem \
+		"${source_media}" \
 		"${source_fs_mountpoint}"; then
 		echo_with_color red 'Error: Unable to mount source filesystem'
 		exit 1
 	fi
 
 	if [ "${target_filesystem_type}" == 'FAT' ]; then
-		if ! check_fat32_filesize_limitation\
+		if ! check_fat32_filesize_limitation \
 				"${source_fs_mountpoint}"; then
 			exit 1
 		fi
 	fi
 
 	if [ "${install_mode}" = 'device' ]; then
-		wipe_existing_partition_table_and_filesystem_signatures\
+		wipe_existing_partition_table_and_filesystem_signatures \
 			"${target_device}"
-		create_target_partition_table\
-			"${target_device}"\
+		create_target_partition_table \
+			"${target_device}" \
 			'legacy'
-		create_target_partition\
-			"${target_partition}"\
-			"${target_filesystem_type}"\
-			"${new_file_system_label}"\
-			"${command_mkdosfs}"\
+		create_target_partition \
+			"${target_partition}" \
+			"${target_filesystem_type}" \
+			"${new_file_system_label}" \
+			"${command_mkdosfs}" \
 			"${command_mkntfs}"
 
 		if [ "${target_filesystem_type}" == 'NTFS' ]; then
-			create_uefi_ntfs_support_partition\
+			create_uefi_ntfs_support_partition \
 				"${target_device}"
-			install_uefi_ntfs_support_partition\
-				"${target_device}2"\
-				"${temp_directory}"\
+			install_uefi_ntfs_support_partition \
+				"${target_device}2" \
+				"${temp_directory}" \
 				"${target_device}"
 		fi
 	fi
 
 	if [ "${install_mode}" = 'partition' ]; then
-		check_target_partition\
-			"${target_partition}"\
-			"${install_mode}"\
+		check_target_partition \
+			"${target_partition}" \
+			"${install_mode}" \
 			"${target_device}"
 	fi
 
 	current_state=mount-target-filesystem
 
-	if ! mount_target_filesystem\
-		"${target_partition}"\
-		"${target_fs_mountpoint}" \
+	if ! mount_target_filesystem \
+		"${target_partition}" \
+		"${target_fs_mountpoint}"  \
 		"${target_filesystem_type}"; then
 		echo_with_color red 'Error: Unable to mount target filesystem'
 		exit 1
 	fi
 
-	check_target_filesystem_free_space\
-		"${target_fs_mountpoint}"\
-		"${source_fs_mountpoint}"\
+	check_target_filesystem_free_space \
+		"${target_fs_mountpoint}" \
+		"${source_fs_mountpoint}" \
 		|| exit 1
 
 	current_state='copying-filesystem'
 
-	workaround_linux_make_writeback_buffering_not_suck\
+	workaround_linux_make_writeback_buffering_not_suck \
 		apply
 
-	copy_filesystem_files\
-		"${source_fs_mountpoint}"\
-		"${target_fs_mountpoint}"\
+	copy_filesystem_files \
+		"${source_fs_mountpoint}" \
+		"${target_fs_mountpoint}" \
 		"${only_for_gui_ref}"
 
-	workaround_support_windows_7_uefi_boot\
-		"${source_fs_mountpoint}"\
+	workaround_support_windows_7_uefi_boot \
+		"${source_fs_mountpoint}" \
 		"${target_fs_mountpoint}"
 
-	install_legacy_pc_bootloader_grub\
-		"${target_fs_mountpoint}"\
-		"${target_device}"\
+	install_legacy_pc_bootloader_grub \
+		"${target_fs_mountpoint}" \
+		"${target_device}" \
 		"${command_grubinstall}"
 
-	install_legacy_pc_bootloader_grub_config\
-		"${target_fs_mountpoint}"\
+	install_legacy_pc_bootloader_grub_config \
+		"${target_fs_mountpoint}" \
 		"${name_grub_prefix}"
 
 	if [ "${workaround_bios_boot_flag}" == 'Y' ]; then
-		workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled\
+		workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled \
 			"${target_device}"
 	fi
 
 	current_state='finished'
 
-	trigger_wxGenericProgressDialog_pulse\
-		off\
+	trigger_wxGenericProgressDialog_pulse \
+		off \
 		"${only_for_gui_ref}"
 
 	exit 0
@@ -410,8 +410,8 @@ print_version(){
 
 	local -r application_version="$1"
 
-	printf --\
-		'%s\n'\
+	printf -- \
+		'%s\n' \
 		"${application_version}"
 }; declare -fr print_version
 
@@ -450,28 +450,28 @@ process_commandline_parameters(){
 	fi
 
 	local -a parameters=("${RUNTIME_COMMANDLINE_PARAMETERS[@]}")
-	local\
-		enable_debug=N\
-		enable_device=N\
-		enable_partition=N\
-		enable_label=N\
-		enable_workaround_bios_boot_flag=N\
-		enable_debugging_internal_function_call=N\
+	local \
+		enable_debug=N \
+		enable_device=N \
+		enable_partition=N \
+		enable_label=N \
+		enable_workaround_bios_boot_flag=N \
+		enable_debugging_internal_function_call=N \
 		enable_target_filesystem=N
 
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
-			--help\
+			--help \
 			|-h)
 				flag_print_help_ref=Y
 				return 0
 				;;
-			--version\
+			--version \
 			|-V)
 				flag_print_version_ref=Y
 				return 0
 				;;
-			--about\
+			--about \
 			|-ab)
 				flag_print_about_ref=Y
 				return 0
@@ -479,14 +479,14 @@ process_commandline_parameters(){
 			--debug)
 				enable_debug="Y"
 				;;
-			--partition\
+			--partition \
 			|-p)
 				enable_partition=Y
 				install_mode_ref='partition'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
-					echo_with_color\
-						'red'\
+					echo_with_color \
+						'red' \
 						"${FUNCNAME[0]}: Error: --partition option requires 2 arguments!"
 					return 1
 				fi
@@ -494,7 +494,7 @@ process_commandline_parameters(){
 				shift_array parameters
 				target_media_ref="${parameters[0]}"
 				;;
-			--device\
+			--device \
 			|-d)
 				enable_device=Y
 				# Limitation of ShellCheck to detect usage of indirection variables
@@ -503,8 +503,8 @@ process_commandline_parameters(){
 				install_mode_ref='device'
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
-					echo_with_color\
-						'red'\
+					echo_with_color \
+						'red' \
 						"${FUNCNAME[0]}: Error: --device option requires 2 arguments!"
 					return 1
 				fi
@@ -526,10 +526,10 @@ process_commandline_parameters(){
 				enable_label=Y
 				shift_array parameters
 				if [ ${#parameters[@]} -lt 1 ]; then
-					printf_with_color\
-						red\
-						'%s: %s\n'\
-						"${FUNCNAME[0]}"\
+					printf_with_color \
+						red \
+						'%s: %s\n' \
+						"${FUNCNAME[0]}" \
 						'ERROR: --label option requires 1 argument.'
 					return 1
 				fi
@@ -544,26 +544,26 @@ process_commandline_parameters(){
 				shift_array parameters
 
 				if [ ${#parameters[@]} -lt 1 ]; then
-					printf_with_color\
-						red\
-						'%s: %s\n'\
-						"${FUNCNAME[0]}"\
+					printf_with_color \
+						red \
+						'%s: %s\n' \
+						"${FUNCNAME[0]}" \
 						'ERROR: --debugging-internal-function-call option requires at least 1 argument.'
 					return 1
 				fi
 				"${parameters[@]}"
 				exit ${?}
 				;;
-			--target-filesystem\
+			--target-filesystem \
 			|--tgt-fs)
 				enable_target_filesystem=Y
 
 				shift_array parameters
 				if [ ${#parameters[@]} -lt 1 ]; then
-					printf_with_color\
-						red\
-						'%s: %s\n'\
-						"${FUNCNAME[0]}"\
+					printf_with_color \
+						red \
+						'%s: %s\n' \
+						"${FUNCNAME[0]}" \
 						'ERROR: --target-filesystem option requires 1 argument.'
 					return 1
 				fi
@@ -583,12 +583,12 @@ process_commandline_parameters(){
 		&& [ "${enable_partition}" == N ] \
 		&& [ "${enable_debugging_internal_function_call}" == N ]; then
 		# intentionally don't mention about the internal function call option
-		echo_with_color\
-			red\
+		echo_with_color \
+			red \
 			"${FUNCNAME[0]}: Error: No creation method specified!" >&2
 		return 1
-	elif\
-		[ "${enable_device}" == Y ] \
+	elif \
+		[ "${enable_device}" == Y ]  \
 		&& [ "${enable_partition}" == Y ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --device and --partition creation method are mutual-exclusive." >&2
 		return 1
@@ -637,25 +637,25 @@ process_miscellaneous_requests(){
 	local -r runtime_executable_name="${1}"; shift
 
 	if [ "${flag_print_help}" == 'Y' ]; then
-		print_help\
-			"${application_name}"\
-			"${application_version}"\
+		print_help \
+			"${application_name}" \
+			"${application_version}" \
 			"${runtime_executable_name}"
 		exit 0
 	fi
 
 	if [ "${flag_print_version}" == 'Y' ]; then
-		print_version\
+		print_version \
 			"${application_version}"
 		exit 0
 	fi
 
 	if [ "${flag_print_about}" == 'Y' ]; then
-		print_application_info\
-			"${application_name}"\
-			"${application_version}"\
-			"${application_site_url}"\
-			"${application_copyright_declaration}"\
+		print_application_info \
+			"${application_name}" \
+			"${application_version}" \
+			"${application_site_url}" \
+			"${application_copyright_declaration}" \
 			"${application_copyright_notice}"
 		exit 0
 	fi
@@ -672,25 +672,25 @@ check_runtime_dependencies(){
 
 	local result='unknown'
 
-	for required_command in\
-		awk\
-		blockdev\
-		dd\
-		df\
-		du\
-		find\
-		grep\
-		id\
-		lsblk\
-		mkdir\
-		mktemp\
-		mount\
-		parted\
-		partprobe\
-		readlink\
-		rm\
-		stat\
-		wget\
+	for required_command in \
+		awk \
+		blockdev \
+		dd \
+		df \
+		du \
+		find \
+		grep \
+		id \
+		lsblk \
+		mkdir \
+		mktemp \
+		mount \
+		parted \
+		partprobe \
+		readlink \
+		rm \
+		stat \
+		wget \
 		wipefs
 		do
 		if ! command -v "${required_command}" >/dev/null; then
@@ -708,9 +708,9 @@ check_runtime_dependencies(){
 	elif command -v 'mkfs.fat' &>/dev/null; then
 		command_mkdosfs_ref='mkfs.fat'
 	else
-		echo_with_color red\
+		echo_with_color red \
 			"${FUNCNAME[0]}: Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!" >&2
-		echo_with_color red\
+		echo_with_color red \
 			"${FUNCNAME[0]}: Error: Please make sure that dosfstools is properly installed!" >&2
 		result='failed'
 	fi
@@ -718,9 +718,9 @@ check_runtime_dependencies(){
 	if command -v 'mkntfs' &>/dev/null; then
 		command_mkntfs_ref='mkntfs'
 	else
-		printf_with_color red\
-			'%s\n%s\n'\
-			"${FUNCNAME[0]}: Error: mkntfs command not found!"\
+		printf_with_color red \
+			'%s\n%s\n' \
+			"${FUNCNAME[0]}: Error: mkntfs command not found!" \
 			"${FUNCNAME[0]}: Error: Please make sure that ntfs-3g is properly installed!"
 		result='failed'
 	fi
@@ -749,10 +749,10 @@ check_permission(){
 	local -r application_name="$1"
 
 	if [ ! "$(id --user)" = 0 ]; then
-		printf_with_color\
-			yellow\
-			'%s\n%s\n'\
-			"Warning: You are not running ${application_name} as root!"\
+		printf_with_color \
+			yellow \
+			'%s\n%s\n' \
+			"Warning: You are not running ${application_name} as root!" \
 			'Warning: This might be the reason of the following failure.' >&2
 	fi
 	return 0
@@ -819,9 +819,9 @@ check_is_target_device_busy(){
 	util_check_function_parameters_quantity 1 $#
 	local device="${1}"
 
-	if [ "$(mount\
-			| grep\
-			--count\
+	if [ "$(mount \
+			| grep \
+			--count \
 			--fixed-strings\
 			"${device}"
 		)" -ne 0 ]; then
