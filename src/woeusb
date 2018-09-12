@@ -45,7 +45,7 @@ done
 ## Non-overridable Primitive Variables
 ## BASHDOC: Shell Variables » Bash Variables
 ## BASHDOC: Basic Shell Features » Shell Parameters » Special Parameters
-if [ -v "BASH_SOURCE[0]" ]; then
+if [ -v 'BASH_SOURCE[0]' ]; then
 	RUNTIME_EXECUTABLE_PATH="$(realpath --strip "${BASH_SOURCE[0]}")"
 	RUNTIME_EXECUTABLE_FILENAME="$(basename "${RUNTIME_EXECUTABLE_PATH}")"
 	RUNTIME_EXECUTABLE_NAME="${RUNTIME_EXECUTABLE_FILENAME%.*}"
@@ -88,8 +88,9 @@ declare \
 declare -i pulse_current_pid=0
 
 ## Execution state for cleanup functions to determine if clean up is required
+## VALUE: Dash-seperated, lowercased words, no quoting
 ## NOTE: Need to pass to traps, so need to be global
-declare current_state='pre-init'
+declare current_state=pre-init
 
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias \
@@ -120,7 +121,7 @@ init(){
 
 	declare -r DEFAULT_NEW_FS_LABEL='Windows USB'
 
-	current_state='enter-init'
+	current_state=enter-init
 
 	local \
 		flag_print_help=false \
@@ -245,19 +246,19 @@ init(){
 		exit 1
 	fi
 
-	if [ "${target_filesystem_type}" == 'FAT' ]; then
+	if [ "${target_filesystem_type}" == FAT ]; then
 		if ! check_fat32_filesize_limitation \
 				"${source_fs_mountpoint}"; then
 			exit 1
 		fi
 	fi
 
-	if [ "${install_mode}" = 'device' ]; then
+	if [ "${install_mode}" = device ]; then
 		wipe_existing_partition_table_and_filesystem_signatures \
 			"${target_device}"
 		create_target_partition_table \
 			"${target_device}" \
-			'legacy'
+			legacy
 		create_target_partition \
 			"${target_partition}" \
 			"${target_filesystem_type}" \
@@ -265,7 +266,7 @@ init(){
 			"${command_mkdosfs}" \
 			"${command_mkntfs}"
 
-		if [ "${target_filesystem_type}" == 'NTFS' ]; then
+		if [ "${target_filesystem_type}" == NTFS ]; then
 			create_uefi_ntfs_support_partition \
 				"${target_device}"
 			install_uefi_ntfs_support_partition \
@@ -275,7 +276,7 @@ init(){
 		fi
 	fi
 
-	if [ "${install_mode}" = 'partition' ]; then
+	if [ "${install_mode}" = partition ]; then
 		check_target_partition \
 			"${target_partition}" \
 			"${install_mode}" \
@@ -297,7 +298,7 @@ init(){
 		"${source_fs_mountpoint}" \
 		|| exit 1
 
-	current_state='copying-filesystem'
+	current_state=copying-filesystem
 
 	workaround_linux_make_writeback_buffering_not_suck \
 		apply
@@ -325,7 +326,7 @@ init(){
 			"${target_device}"
 	fi
 
-	current_state='finished'
+	current_state=finished
 
 	trigger_wxGenericProgressDialog_pulse \
 		off \
@@ -482,11 +483,11 @@ process_commandline_parameters(){
 			--partition \
 			|-p)
 				enable_partition=true
-				install_mode_ref='partition'
+				install_mode_ref=partition
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
 					echo_with_color \
-						'red' \
+						red \
 						"${FUNCNAME[0]}: Error: --partition option requires 2 arguments!"
 					return 1
 				fi
@@ -500,11 +501,11 @@ process_commandline_parameters(){
 				# Limitation of ShellCheck to detect usage of indirection variables
 				# https://github.com/koalaman/shellcheck/wiki/SC2034
 				# shellcheck disable=SC2034
-				install_mode_ref='device'
+				install_mode_ref=device
 				shift_array parameters
 				if [ "${#parameters[@]}" -lt 2 ]; then
 					echo_with_color \
-						'red' \
+						red \
 						"${FUNCNAME[0]}: Error: --device option requires 2 arguments!"
 					return 1
 				fi
@@ -670,7 +671,7 @@ check_runtime_dependencies(){
 	local -n command_grubinstall_ref="$1"; shift
 	local -n name_grub_prefix_ref="$1"
 
-	local result='unknown'
+	local result=unknown
 
 	for required_command in \
 		awk \
@@ -699,14 +700,14 @@ check_runtime_dependencies(){
 		fi
 	done; unset required_command
 
-	if command -v 'mkdosfs' &> /dev/null; then
-		command_mkdosfs_ref='mkdosfs'
-	elif command -v 'mkfs.msdos' &> /dev/null; then
-		command_mkdosfs_ref='mkfs.msdos'
-	elif command -v 'mkfs.vfat' &>/dev/null; then
-		command_mkdosfs_ref='mkfs.vfat'
-	elif command -v 'mkfs.fat' &>/dev/null; then
-		command_mkdosfs_ref='mkfs.fat'
+	if command -v mkdosfs &> /dev/null; then
+		command_mkdosfs_ref=mkdosfs
+	elif command -v mkfs.msdos &> /dev/null; then
+		command_mkdosfs_ref=mkfs.msdos
+	elif command -v mkfs.vfat &>/dev/null; then
+		command_mkdosfs_ref=mkfs.vfat
+	elif command -v mkfs.fat &>/dev/null; then
+		command_mkdosfs_ref=mkfs.fat
 	else
 		echo_with_color red \
 			"${FUNCNAME[0]}: Error: mkdosfs/mkfs.msdos/mkfs.vfat/mkfs.fat command not found!" >&2
@@ -715,29 +716,29 @@ check_runtime_dependencies(){
 		result='failed'
 	fi
 
-	if command -v 'mkntfs' &>/dev/null; then
-		command_mkntfs_ref='mkntfs'
+	if command -v mkntfs &>/dev/null; then
+		command_mkntfs_ref=mkntfs
 	else
 		printf_with_color red \
 			'%s\n%s\n' \
 			"${FUNCNAME[0]}: Error: mkntfs command not found!" \
 			"${FUNCNAME[0]}: Error: Please make sure that ntfs-3g is properly installed!"
-		result='failed'
+		result=failed
 	fi
 
-	if command -v 'grub-install' &> /dev/null; then
-		command_grubinstall_ref='grub-install'
-		name_grub_prefix_ref='grub'
-	elif command -v 'grub2-install' &> /dev/null; then
-		command_grubinstall_ref='grub2-install'
-		name_grub_prefix_ref='grub2'
+	if command -v grub-install &> /dev/null; then
+		command_grubinstall_ref=grub-install
+		name_grub_prefix_ref=grub
+	elif command -v grub2-install &> /dev/null; then
+		command_grubinstall_ref=grub2-install
+		name_grub_prefix_ref=grub2
 	else
 		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
 		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result='failed'
+		result=failed
 	fi
 
-	if [ "${result}" == 'failed' ]; then
+	if [ "${result}" == failed ]; then
 		return 1
 	else
 		return 0
@@ -799,7 +800,7 @@ determine_target_parameters(){
 	local -n target_device_ref="${1}"; shift
 	local -n target_partition_ref="${1}"; shift
 
-	if [ "${install_mode}" = 'partition' ]; then
+	if [ "${install_mode}" = partition ]; then
 		target_partition_ref="${target_media}"
 		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
 		target_device_ref="${target_media/%[0-9]/}"
@@ -848,7 +849,7 @@ check_source_and_target_not_busy(){
 		exit 1
 	fi
 
-	if [ "${install_mode}" = "partition" ]; then
+	if [ "${install_mode}" = partition ]; then
 		if [ "$(mount\
 				| grep\
 				--count\
@@ -921,10 +922,10 @@ create_target_partition_table(){
 
 	case "${partition_table_type}" in
 		legacy|msdos|mbr|pc)
-			parted_partiton_table_argument='msdos'
+			parted_partiton_table_argument=msdos
 			;;
 		gpt|guid)
-			parted_partiton_table_argument='gpt'
+			parted_partiton_table_argument=gpt
 			echo_with_color\
 				red\
 				"${FUNCNAME[0]}: Error: Currently GUID partition table is not supported."
@@ -977,10 +978,10 @@ create_target_partition(){
 	local parted_mkpart_fs_type
 	case "${filesystem_type}" in
 		FAT|vfat)
-			parted_mkpart_fs_type='fat32'
+			parted_mkpart_fs_type=fat32
 			;;
 		NTFS|ntfs)
-			parted_mkpart_fs_type='ntfs'
+			parted_mkpart_fs_type=ntfs
 			;;
 		*)
 			echo_with_color red "${FUNCNAME[0]}: Error: Filesystem not supported"
@@ -1716,7 +1717,7 @@ trigger_wxGenericProgressDialog_pulse(){
 
 			while true; do
 				sleep 0.05
-				echo 'pulse'
+				echo pulse
 			done &
 			pulse_current_pid="$!"
 			disown
@@ -1819,7 +1820,7 @@ trap_exit(){
 		--recursive\
 		"${temp_directory}"
 
-	if [ "${current_state}" = 'finished' ]; then
+	if [ "${current_state}" = finished ]; then
 		echo_with_color green 'Done :)'
 		echo_with_color green 'The target device should be bootable now'
 	fi
@@ -1865,10 +1866,10 @@ trap_debug(){
 	done
 
 	case "$(type -t "${command_base}")" in
-		'file')
+		file)
 			echo_with_color green "${FUNCNAME[0]}: INFO: Executing ${command_to_be_executed}"
 			;;
-		'function')
+		function)
 			echo_with_color green "${FUNCNAME[0]}: INFO: Calling ${command_base}"
 			;;
 		*)
@@ -1887,7 +1888,7 @@ util_call_external_command(){
 	local command_output
 	local -i command_exit_status
 	if command_output="$( "${command[@]}" 2>&1 )"; then
-		command_exit_status='0'
+		command_exit_status=0
 	else
 		command_exit_status="$?"
 	fi
@@ -1898,15 +1899,15 @@ util_call_external_command(){
 		local -r read_prompt="Read command output (Y/n)?"
 		printf '%s' "${read_prompt}"
 
-		local answer='y'
+		local answer=y
 
 		while true; do
 			read -r answer
 
-			if [ "${answer}" == 'y' ] || [ "${answer}" == 'Y' ]; then
+			if [ "${answer}" == y ] || [ "${answer}" == Y ]; then
 				echo "${command_output}"
 				break
-			elif [ "${answer}" == 'n' ] || [ "${answer}" == 'N' ]; then
+			elif [ "${answer}" == n ] || [ "${answer}" == N ]; then
 				break
 			else
 				printf '%s' "${read_prompt}"
