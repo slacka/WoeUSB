@@ -530,7 +530,7 @@ process_commandline_parameters(){
 						red\
 						'%s: %s\n'\
 						"${FUNCNAME[0]}"\
-						'ERROR: --label option requires at least 1 argument.'
+						'ERROR: --label option requires 1 argument.'
 					return 1
 				fi
 				new_file_system_label_ref="${parameters[0]}"
@@ -564,7 +564,7 @@ process_commandline_parameters(){
 						red\
 						'%s: %s\n'\
 						"${FUNCNAME[0]}"\
-						'ERROR: --target-filesystem option requires at least 1 argument.'
+						'ERROR: --target-filesystem option requires 1 argument.'
 					return 1
 				fi
 				target_filesystem_type_ref="${parameters[0]}"
