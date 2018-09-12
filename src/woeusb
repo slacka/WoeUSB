@@ -19,7 +19,7 @@
 # along with WoeUSB  If not, see <http://www.gnu.org/licenses/>.
 #
 # Notes:
-# * Use --strip instead of --no-symlinks for compatibility of Ubuntu 14.04(EoL: April 2019)
+# * Use `--strip` instead of `--no-symlinks` for realpath(1) for compatibility of Ubuntu 14.04(EoL: April 2019)
 #
 # We use indirections and primitive variables, which is false positive of this rule
 # shellcheck disable=SC2034
