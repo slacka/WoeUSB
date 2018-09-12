@@ -819,7 +819,12 @@ check_is_target_device_busy(){
 	util_check_function_parameters_quantity 1 $#
 	local device="${1}"
 
-	if [ "$(mount | grep -c "${device}")" -ne 0 ]; then
+	if [ "$(mount\
+			| grep\
+			-c\
+			--fixed-strings\
+			"${device}"
+		)" -ne 0 ]; then
 		return 0
 	else
 		return 1
@@ -833,13 +838,23 @@ check_source_and_target_not_busy(){
 	local target_device="$1"; shift
 	local target_partition="$1"
 
-	if [ "$(mount | grep -c "${source_media}")" != 0 ]; then
+	if [ "$(mount\
+			| grep\
+			-c\
+			--fixed-strings\
+			"${source_media}"
+		)" != 0 ]; then
 		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
 		exit 1
 	fi
 
 	if [ "${install_mode}" = "partition" ]; then
-		if [ "$(mount | grep -c "${target_partition}")" != 0 ]; then
+		if [ "$(mount\
+				| grep\
+				-c\
+				--fixed-strings\
+				"${target_partition}"
+			)" != 0 ]; then
 			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
 			exit 1
 		fi
@@ -882,7 +897,9 @@ check_if_the_drive_is_really_wiped(){
 		"${target_device}"\
 		| grep\
 			--count\
-			' TYPE="part"')" -ne 0 ]; then
+			--fixed-strings\
+			' TYPE="part"'
+		)" -ne 0 ]; then
 		printf_with_color\
 			red\
 			'Error: %s: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.\n'\
@@ -1176,6 +1193,7 @@ check_uefi_ntfs_support_partition(){
 			--noheadings\
 			"${target_device}"\
 		| grep\
+			--fixed-strings\
 			--silent\
 			'UEFI_NTFS'; then
 		printf_with_color yellow\
@@ -1283,14 +1301,18 @@ check_target_filesystem_free_space(){
 		df\
 			--block-size=1\
 			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
+		| grep\
+			--fixed-strings\
+			"${target_fs_mountpoint}"\
 		| awk '{print $4}'
 	)
 	free_space_human_readable=$(
 		df\
 			--human-readable\
 			"${target_fs_mountpoint}"\
-		| grep "${target_fs_mountpoint}"\
+		| grep\
+			--fixed-strings\
+			"${target_fs_mountpoint}"\
 		| awk '{print $4}'
 	)
 	needed_space=$(
@@ -1617,7 +1639,8 @@ install_legacy_pc_bootloader_grub_config(){
 			--raw\
 			--output UUID,MOUNTPOINT\
 		| grep\
-			"${target_fs_mountpoint}\$"\
+			--extended-regexp\
+			"${target_fs_mountpoint}"$\
 		| cut\
 			--fields=1\
 			--delimiter=' '
