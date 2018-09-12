@@ -66,7 +66,7 @@ declare -ar RUNTIME_COMMANDLINE_PARAMETERS=("${@}")
 ## Only set parameters global when there's no other way around(like passing in function as a function argument), usually when the variable is directly or indirectly referenced by traps
 ## Even when the parameter is set global, you should pass it in as function argument when it's possible for better code reusability.
 ## TODO: Global parameter cleanup
-## TODO: Use Y/N or true/false instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
+## TODO: Use `true`/`false` instead 1(true)/0(false) as boolean value so it won't confuse with the regular bash intepretation of 0(true)/non-zero(false)
 ### Doing GUI-specific stuff when set to 1, set by --only-for-gui
 ### Requires to be set to global due to indirectly referenced by trap
 declare -i global_only_for_gui=0
