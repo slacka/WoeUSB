@@ -54,8 +54,8 @@ NOTE: This currently only applies to the GNU Bash shell scripts.
 * Function parameters should be caught by `local` parameters instead of directly referenced using positional parameter syntax
 * To increase code reusability, avoid referencing global variables from a function, alway pass it by function arguments
 
-### Character Encoding of Files
-We use UTF-8 encoding for all of our files
+### Character Encoding of Plaintext Files
+[UTF-8 everywhere!](https://utf8everywhere.org)  (Unless otherwise mandated by its specification)
 
 ## Promote This Project to Others
 It is appreciated if you share this project with others.  Also, if you write an article about this project, plese [share it with us](https://github.com/slacka/WoeUSB/wiki/Public-Reactions), we'd love to hear about it!
@@ -63,8 +63,8 @@ It is appreciated if you share this project with others.  Also, if you write an 
 ## Design Artwork/Logos for This Software
 All current artwork is stored under src/data.  **Please only use materials that are under a free license.**
 
-## Hints on Using the Git VCS
-### Create commits based on minimal independent changes
+## Guidelines in Using Git SCM
+### Create Commits Based on Minimal Independent Changes
 Avoid creating commits that do multiple things at once as this will help other developers understand the change history.
 
 ### Write Comprehensible Commit Messages
