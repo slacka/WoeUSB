@@ -58,10 +58,10 @@ NOTE: This currently only applies to the GNU Bash shell scripts.
 We use UTF-8 encoding for all of our files
 
 ## Promote This Project to Others
-It is appreciated if you share this project with others.  Also, if you write an article about this project, plese share it with us, we'd love to hear about it!
+It is appreciated if you share this project with others.  Also, if you write an article about this project, plese [share it with us](https://github.com/slacka/WoeUSB/wiki/Public-Reactions), we'd love to hear about it!
 
 ## Design Artwork/Logos for This Software
-All current artwork is stored under src/data.  Please only use materials that are under a free license.
+All current artwork is stored under src/data.  **Please only use materials that are under a free license.**
 
 ## Hints on Using the Git VCS
 ### Create commits based on minimal independent changes
