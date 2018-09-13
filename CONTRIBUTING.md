@@ -68,6 +68,9 @@ All current artwork is stored under src/data.  **Please only use materials that 
 Avoid creating commits that do multiple things at once as this will help other developers understand the change history.
 
 ### Write Comprehensible Commit Messages
-Use concrete language on what the commit does in the commit message.
+While we currently don't have a strict commit message style, we do have established some requirements:
 
-### Avoid Changing History That Has Been Pushed to Remote Repository
+* Every contribution must conform to the [Developer Certificate of Origin](https://elinux.org/Developer_Certificate_Of_Origin), version 1.1 or more recent version, and is signed off using the `Signed-off-by: ` tag
+* Use English for commit messages
+
+For summary line format, [refer and mimic the commit log](https://github.com/slacka/WoeUSB/commits/master).  Also check out the [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/) article for additional info on writing commit messages.
