@@ -1,5 +1,5 @@
 # Contributing Guidelines
-This document explains how to contribute to this project in many aspects. Please make sure to read this thoroughly before making any contributions.
+This document explains how to contribute to this project in many aspects. Please make sure to read the relating sections thoroughly before making any contributions.
 
 ## Reporting Issues
 The so-called "issue" includes but is not limited to software bugs and suggestions
