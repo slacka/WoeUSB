@@ -33,7 +33,7 @@ Refer to the following articles for reference on writing manpages:
 There are so many aspects of the code that can be improved, however, please consider the following topics while doing so.
 
 ### Coding Style
-It is required to mimic the coding style of the current code
+While we don't really have a strictly unifeid style throughout the codebsae, it is required to *mimic the coding style of the code in context*.
 
 #### Indentation
 This project uses tab characters for indentation as it's width can be flexibly configured in many text editors
