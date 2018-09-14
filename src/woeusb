@@ -1345,7 +1345,7 @@ copy_filesystem_files(){
 	util_check_function_parameters_quantity 3 "${#}"
 	local source_fs_mountpoint="${1}"; shift
 	local target_fs_mountpoint="${1}"; shift
-	local -ir only_for_gui="${1}"
+	local -r only_for_gui="${1}"
 
 	local -i total_size
 	total_size=$(
