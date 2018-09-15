@@ -1174,7 +1174,7 @@ check_fat32_filesize_limitation(){
 				red \
 				'Error: File "%s" in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.\n' \
 				"${file}"
-			prntf_with_color \
+			printf_with_color \
 				red \
 				'Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.\n'
 			return 1
