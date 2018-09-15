@@ -92,6 +92,13 @@ declare -i pulse_current_pid=0
 ## NOTE: Need to pass to traps, so need to be global
 declare current_state=pre-init
 
+## Supported filesystems
+## A associated array with supported filesystem's identifier as key and its description as value
+declare -A ENUM_SUPPORTED_FILESYSTEMS=(
+	[FS_FAT]='File Allocation Table(FAT)'
+	[FS_NTFS]='New Technology File System(NTFS)'
+)
+
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias \
 	echo_with_color=util_echo_with_color \
@@ -144,7 +151,7 @@ init(){
 
 	local workaround_bios_boot_flag=false
 
-	local target_filesystem_type='FAT'
+	local target_filesystem_type=FS_FAT
 
 	source_fs_mountpoint="/media/woeusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/woeusb_target_$(date +%s)_$$"
@@ -246,7 +253,7 @@ init(){
 		exit 1
 	fi
 
-	if [ "${target_filesystem_type}" == FAT ]; then
+	if [ "${target_filesystem_type}" == FS_FAT ]; then
 		if ! check_fat32_filesize_limitation \
 				"${source_fs_mountpoint}"; then
 			exit 1
@@ -266,7 +273,7 @@ init(){
 			"${command_mkdosfs}" \
 			"${command_mkntfs}"
 
-		if [ "${target_filesystem_type}" == NTFS ]; then
+		if [ "${target_filesystem_type}" == FS_NTFS ]; then
 			create_uefi_ntfs_support_partition \
 				"${target_device}"
 			install_uefi_ntfs_support_partition \
@@ -460,6 +467,9 @@ process_commandline_parameters(){
 		enable_debugging_internal_function_call=false \
 		enable_target_filesystem=false
 
+	# Inputs that requires sanitation
+	local target_filesystem_type_input
+
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
 			--help \
@@ -568,7 +578,13 @@ process_commandline_parameters(){
 						'ERROR: --target-filesystem option requires 1 argument.'
 					return 1
 				fi
-				target_filesystem_type_ref="${parameters[0]}"
+				target_filesystem_type_input="$(
+					# Normalize input to uppercase
+					tr \
+						'[:lower:]' \
+						'[:upper:]' \
+					"${parameters[0]}"
+				)"
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
@@ -609,6 +625,27 @@ process_commandline_parameters(){
 		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --target-filesystem option only can be used with --device creation method"
 		return 1
+	fi
+
+	## --target-filesystem should be supported
+	if \
+		[ "${enable_target_filesystem}" = true ]; then
+		case "${target_filesystem_type_input}" in
+			FAT)
+				target_filesystem_type_ref=FS_FAT
+			;;
+			NTFS)
+				target_filesystem_type_ref=FS_NTFS
+			;;
+			*)
+				printf \
+					-- \
+					'%s: Error: Target filesystem not supported.\n' \
+					"${FUNCNAME[0]}" \
+					>&2
+				return 1
+			;;
+		esac
 	fi
 
 	if [ "${verbose}" = true ] && [ "${enable_debug}" != true ]; then
@@ -968,7 +1005,10 @@ workaround_make_system_realize_partition_table_changed(){
 create_target_partition(){
 	util_check_function_parameters_quantity 5 $#
 	local -r target_partition="$1"; shift
+
+	# ENUM_SUPPORTED_FILESYSTEMS
 	local -r filesystem_type="$1"; shift
+
 	local -r filesystem_label="$1"; shift
 	local -r command_mkdosfs="$1"; shift
 	local -r command_mkntfs="$1"
@@ -977,10 +1017,10 @@ create_target_partition(){
 	# Refer: sudo parted --script /dev/sda help mkpart
 	local parted_mkpart_fs_type
 	case "${filesystem_type}" in
-		FAT|vfat)
+		FS_FAT)
 			parted_mkpart_fs_type=fat32
 			;;
-		NTFS|ntfs)
+		FS_NTFS)
 			parted_mkpart_fs_type=ntfs
 			;;
 		*)
@@ -1032,13 +1072,13 @@ create_target_partition(){
 
 	# Format target partition's filesystem
 	case "${filesystem_type}" in
-		FAT|vfat)
+		FS_FAT)
 			"${command_mkdosfs}" \
 				-F 32 \
 				-n "${filesystem_label}" \
 				"${target_partition}"
 			;;
-		NTFS|ntfs)
+		FS_NTFS)
 			"${command_mkntfs}" \
 				--quick \
 				--label "${filesystem_label}" \
@@ -1252,6 +1292,8 @@ mount_target_filesystem(){
 	util_check_function_parameters_quantity 3 $#
 	local target_partition="$1"; shift
 	local target_fs_mountpoint="$1"; shift
+
+	# ENUM_SUPPORTED_FILESYSTEMS
 	local target_fs_type="$1"
 
 	local mount_options='defaults'
@@ -1268,10 +1310,10 @@ mount_target_filesystem(){
 
 	# Determine proper mount options according to filesystem type
 	case "${target_fs_type}" in
-		FAT)
+		FS_FAT)
 			mount_options='utf8=1'
 		;;
-		NTFS)
+		FS_NTFS)
 			:
 		;;
 		*)
