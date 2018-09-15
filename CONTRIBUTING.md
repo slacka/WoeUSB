@@ -1,5 +1,5 @@
 # Contributing Guidelines
-This document explains how to contribute to this project in many aspects. Please make sure to read this thoroughly before making any contributions.
+This document explains how to contribute to this project in many aspects. Please make sure to read the relating sections thoroughly before making any contributions.
 
 ## Reporting Issues
 The so-called "issue" includes but is not limited to software bugs and suggestions
@@ -33,7 +33,7 @@ Refer to the following articles for reference on writing manpages:
 There are so many aspects of the code that can be improved, however, please consider the following topics while doing so.
 
 ### Coding Style
-It is required to mimic the coding style of the current code
+While we don't really have a strictly unifeid style throughout the codebsae, it is required to *mimic the coding style of the code in context*.
 
 #### Indentation
 This project uses tab characters for indentation as it's width can be flexibly configured in many text editors
@@ -54,20 +54,23 @@ NOTE: This currently only applies to the GNU Bash shell scripts.
 * Function parameters should be caught by `local` parameters instead of directly referenced using positional parameter syntax
 * To increase code reusability, avoid referencing global variables from a function, alway pass it by function arguments
 
-### Character Encoding of Files
-We use UTF-8 encoding for all of our files
+### Character Encoding of Plaintext Files
+[UTF-8 everywhere!](https://utf8everywhere.org)  (Unless otherwise mandated by its specification)
 
 ## Promote This Project to Others
-It is appreciated if you share this project with others.  Also, if you write an article about this project, plese share it with us, we'd love to hear about it!
+It is appreciated if you share this project with others.  Also, if you write an article about this project, plese [share it with us](https://github.com/slacka/WoeUSB/wiki/Public-Reactions), we'd love to hear about it!
 
 ## Design Artwork/Logos for This Software
-All current artwork is stored under src/data.  Please only use materials that are under a free license.
+All current artwork is stored under src/data.  **Please only use materials that are under a free license.**
 
-## Hints on Using the Git VCS
-### Create commits based on minimal independent changes
+## Guidelines in Using Git SCM
+### Create Commits Based on Minimal Independent Changes
 Avoid creating commits that do multiple things at once as this will help other developers understand the change history.
 
 ### Write Comprehensible Commit Messages
-Use concrete language on what the commit does in the commit message.
+While we currently don't have a strict commit message style, we do have established some requirements:
 
-### Avoid Changing History That Has Been Pushed to Remote Repository
+* Every contribution must conform to the [Developer Certificate of Origin](https://elinux.org/Developer_Certificate_Of_Origin), version 1.1 or more recent version, and is signed off using the `Signed-off-by: ` tag
+* Use English for commit messages
+
+For summary line format, [refer and mimic the commit log](https://github.com/slacka/WoeUSB/commits/master).  Also check out the [How to Write a Git Commit Message](https://chris.beams.io/posts/git-commit/) article for additional info on writing commit messages.
