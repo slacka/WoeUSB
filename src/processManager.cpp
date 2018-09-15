@@ -57,7 +57,7 @@ int PipeManager::Close()
 bool PipeManager::GetLine(std::string &line)
 {
     line = "";
-    char letter = '\0';
+    int letter = '\0';
 
     while(not feof(m_pipe))
     {
