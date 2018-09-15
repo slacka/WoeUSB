@@ -92,6 +92,13 @@ declare -i pulse_current_pid=0
 ## NOTE: Need to pass to traps, so need to be global
 declare current_state=pre-init
 
+## Supported filesystems
+## A associated array with supported filesystem's identifier as key and its description as value
+declare -A ENUM_SUPPORTED_FILESYSTEMS=(
+	[FS_FAT]='File Allocation Table(FAT)'
+	[FS_NTFS]='New Technology File System(NTFS)'
+)
+
 ## For some reason alias won't be recognized in function if it's definition's LINENO is greater then it's reference in function, so we define it here:
 alias \
 	echo_with_color=util_echo_with_color \
@@ -144,7 +151,7 @@ init(){
 
 	local workaround_bios_boot_flag=false
 
-	local target_filesystem_type='FAT'
+	local target_filesystem_type=FS_FAT
 
 	source_fs_mountpoint="/media/woeusb_source_$(date +%s)_$$"
 	target_fs_mountpoint="/media/woeusb_target_$(date +%s)_$$"
@@ -246,7 +253,7 @@ init(){
 		exit 1
 	fi
 
-	if [ "${target_filesystem_type}" == FAT ]; then
+	if [ "${target_filesystem_type}" == FS_FAT ]; then
 		if ! check_fat32_filesize_limitation \
 				"${source_fs_mountpoint}"; then
 			exit 1
@@ -266,7 +273,7 @@ init(){
 			"${command_mkdosfs}" \
 			"${command_mkntfs}"
 
-		if [ "${target_filesystem_type}" == NTFS ]; then
+		if [ "${target_filesystem_type}" == FS_NTFS ]; then
 			create_uefi_ntfs_support_partition \
 				"${target_device}"
 			install_uefi_ntfs_support_partition \
@@ -460,6 +467,9 @@ process_commandline_parameters(){
 		enable_debugging_internal_function_call=false \
 		enable_target_filesystem=false
 
+	# Inputs that requires sanitation
+	local target_filesystem_type_input
+
 	while [ "${#parameters[@]}" -ne 0 ]; do
 		case "${parameters[0]}" in
 			--help \
@@ -568,7 +578,13 @@ process_commandline_parameters(){
 						'ERROR: --target-filesystem option requires 1 argument.'
 					return 1
 				fi
-				target_filesystem_type_ref="${parameters[0]}"
+				target_filesystem_type_input="$(
+					# Normalize input to uppercase
+					tr \
+						'[:lower:]' \
+						'[:upper:]' \
+					"${parameters[0]}"
+				)"
 				;;
 			*)
 				echo_with_color red "ERROR: Unknown command-line argument \"${parameters[0]}\"" >&2
@@ -609,6 +625,27 @@ process_commandline_parameters(){
 		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --target-filesystem option only can be used with --device creation method"
 		return 1
+	fi
+
+	## --target-filesystem should be supported
+	if \
+		[ "${enable_target_filesystem}" = true ]; then
+		case "${target_filesystem_type_input}" in
+			FAT)
+				target_filesystem_type_ref=FS_FAT
+			;;
+			NTFS)
+				target_filesystem_type_ref=FS_NTFS
+			;;
+			*)
+				printf \
+					-- \
+					'%s: Error: Target filesystem not supported.\n' \
+					"${FUNCNAME[0]}" \
+					>&2
+				return 1
+			;;
+		esac
 	fi
 
 	if [ "${verbose}" = true ] && [ "${enable_debug}" != true ]; then
@@ -839,10 +876,10 @@ check_source_and_target_not_busy(){
 	local target_device="$1"; shift
 	local target_partition="$1"
 
-	if [ "$(mount\
-			| grep\
-			--count\
-			--fixed-strings\
+	if [ "$(mount \
+			| grep \
+			--count \
+			--fixed-strings \
 			"${source_media}"
 		)" != 0 ]; then
 		echo_with_color red "Error: Source media is currently mounted, unmount the partition then try again"
@@ -850,10 +887,10 @@ check_source_and_target_not_busy(){
 	fi
 
 	if [ "${install_mode}" = partition ]; then
-		if [ "$(mount\
-				| grep\
-				--count\
-				--fixed-strings\
+		if [ "$(mount \
+				| grep \
+				--count \
+				--fixed-strings \
 				"${target_partition}"
 			)" != 0 ]; then
 			echo_with_color red "Error: Target partition is currently mounted, unmount the partition then try again"
@@ -874,7 +911,7 @@ wipe_existing_partition_table_and_filesystem_signatures(){
 	echo_with_color green "Wiping all existing partition table and filesystem signatures in ${target_device}..."
 	wipefs --all "${target_device}"
 
-	check_if_the_drive_is_really_wiped\
+	check_if_the_drive_is_really_wiped \
 		"${target_device}"
 
 	return $?
@@ -886,24 +923,24 @@ check_if_the_drive_is_really_wiped(){
 	util_check_function_parameters_quantity 1 $#
 	local -r target_device="$1"
 
-	printf_with_color\
-		green\
-		'Ensure that %s is really wiped...\n'\
+	printf_with_color \
+		green \
+		'Ensure that %s is really wiped...\n' \
 		"${target_device}"
 
-	if [ \
-		"$(lsblk\
-		--pairs\
-		--output NAME,TYPE\
-		"${target_device}"\
-		| grep\
-			--count\
-			--fixed-strings\
+	if [  \
+		"$(lsblk \
+		--pairs \
+		--output NAME,TYPE \
+		"${target_device}" \
+		| grep \
+			--count \
+			--fixed-strings \
 			' TYPE="part"'
 		)" -ne 0 ]; then
-		printf_with_color\
-			red\
-			'Error: %s: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.\n'\
+		printf_with_color \
+			red \
+			'Error: %s: Partition is still detected after wiping all signatures, this indicates that the drive might be locked into readonly mode due to end of lifespan.\n' \
 			"${FUNCNAME[0]}"
 		return 1
 	else
@@ -926,23 +963,23 @@ create_target_partition_table(){
 			;;
 		gpt|guid)
 			parted_partiton_table_argument=gpt
-			echo_with_color\
-				red\
+			echo_with_color \
+				red \
 				"${FUNCNAME[0]}: Error: Currently GUID partition table is not supported."
 			return 2
 			;;
 		*)
-			echo_with_color\
-				red\
+			echo_with_color \
+				red \
 				"${FUNCNAME[0]}: Error: Partition table not supported."
 			return 2
 			;;
 	esac
 
 	# Create partition table(and overwrite the old one, whatever it was)
-	parted --script\
-		"${target_device}"\
-		mklabel\
+	parted --script \
+		"${target_device}" \
+		mklabel \
 		"${parted_partiton_table_argument}"
 }; declare -fr create_target_partition_table
 
@@ -951,14 +988,14 @@ workaround_make_system_realize_partition_table_changed(){
 	util_check_function_parameters_quantity 1 $#
 	local -r target_device="$1"
 
-	printf_with_color\
-		green\
-		'%s\n'\
+	printf_with_color \
+		green \
+		'%s\n' \
 		'Making system realize that partition table has changed...'
 
-	blockdev\
-		--rereadpt\
-		"${target_device}"\
+	blockdev \
+		--rereadpt \
+		"${target_device}" \
 		|| true
 	echo 'Wait 3 seconds for block device nodes to populate...'
 	sleep 3
@@ -968,7 +1005,10 @@ workaround_make_system_realize_partition_table_changed(){
 create_target_partition(){
 	util_check_function_parameters_quantity 5 $#
 	local -r target_partition="$1"; shift
+
+	# ENUM_SUPPORTED_FILESYSTEMS
 	local -r filesystem_type="$1"; shift
+
 	local -r filesystem_label="$1"; shift
 	local -r command_mkdosfs="$1"; shift
 	local -r command_mkntfs="$1"
@@ -977,10 +1017,10 @@ create_target_partition(){
 	# Refer: sudo parted --script /dev/sda help mkpart
 	local parted_mkpart_fs_type
 	case "${filesystem_type}" in
-		FAT|vfat)
+		FS_FAT)
 			parted_mkpart_fs_type=fat32
 			;;
-		NTFS|ntfs)
+		FS_NTFS)
 			parted_mkpart_fs_type=ntfs
 			;;
 		*)
@@ -989,8 +1029,8 @@ create_target_partition(){
 			;;
 	esac
 
-	printf_with_color green\
-		'%s\n'\
+	printf_with_color green \
+		'%s\n' \
 		'Creating target partition...'
 
 	# Create target partition
@@ -998,50 +1038,50 @@ create_target_partition(){
 	# If NTFS filesystem is used we leave a 512KiB partition at the end for installing UEFI:NTFS partition for NTFS support
 	case "${parted_mkpart_fs_type}" in
 		fat32)
-			parted --script\
-				"${target_device}"\
-				mkpart\
-				primary\
-				"${parted_mkpart_fs_type}"\
-				4MiB\
+			parted --script \
+				"${target_device}" \
+				mkpart \
+				primary \
+				"${parted_mkpart_fs_type}" \
+				4MiB \
 				-- -1s # last sector of the disk
 			;;
 		ntfs)
 			# Major partition for storing user files
 			# NOTE: Microsoft Windows has a bug that only recognize the first partition for removable storage devices, that's why this partition should always be the first one
-			parted --script\
-				"${target_device}"\
-				mkpart\
-				primary\
-				"${parted_mkpart_fs_type}"\
-				4MiB\
+			parted --script \
+				"${target_device}" \
+				mkpart \
+				primary \
+				"${parted_mkpart_fs_type}" \
+				4MiB \
 				-- -1025s # Leave 512KiB==1024sector in traditional 512bytes/sector disk, disks with sector with more than 512bytes only result in partition size greater than 512KiB and is intentionally let-it-be.
 				# FIXME: Leave exact 512KiB in all circumstances is better, but the algorithm to do so is quite brainkilling.
 			;;
 		*)
-			printf_with_color\
-				red\
-				'%s\n'\
+			printf_with_color \
+				red \
+				'%s\n' \
 				"${FUNCNAME[0]}: FATAL: Illegal parted_mkpart_fs_type, please report bug."
 			;;
 	esac
 	unset parted_mkpart_fs_type
 
-	workaround_make_system_realize_partition_table_changed\
+	workaround_make_system_realize_partition_table_changed \
 		"${target_device}"
 
 	# Format target partition's filesystem
 	case "${filesystem_type}" in
-		FAT|vfat)
-			"${command_mkdosfs}"\
-				-F 32\
+		FS_FAT)
+			"${command_mkdosfs}" \
+				-F 32 \
 				-n "${filesystem_label}" \
 				"${target_partition}"
 			;;
-		NTFS|ntfs)
-			"${command_mkntfs}"\
-				--quick\
-				--label "${filesystem_label}"\
+		FS_NTFS)
+			"${command_mkntfs}" \
+				--quick \
+				--label "${filesystem_label}" \
 				"${target_partition}"
 			;;
 		*)
@@ -1063,15 +1103,15 @@ create_uefi_ntfs_support_partition(){
 
 	# FIXME: The partition type should be `fat12` but `fat12` isn't recognized by Parted...
 	# NOTE: The --align is set to none because this partition is indeed misaligned, but ignored due to it's small size
-	parted\
-		--align none\
-		--script\
-		"${target_device}"\
-		mkpart\
-		primary\
-		fat16\
-		-- \
-		-1024s\
+	parted \
+		--align none \
+		--script \
+		"${target_device}" \
+		mkpart \
+		primary \
+		fat16 \
+		--  \
+		-1024s \
 		-1s
 
 	return "$?"
@@ -1089,19 +1129,19 @@ install_uefi_ntfs_support_partition(){
 	local -r download_directory="$1"; shift
 	local -r target_device="$1"
 
-	if ! wget\
-		--directory-prefix="${download_directory}"\
+	if ! wget \
+		--directory-prefix="${download_directory}" \
 		https://github.com/pbatard/rufus/raw/master/res/uefi/uefi-ntfs.img; then
-		printf_with_color yellow\
-			'%s: %s\n'\
-			"${FUNCNAME[0]}"\
+		printf_with_color yellow \
+			'%s: %s\n' \
+			"${FUNCNAME[0]}" \
 			"Warning: Unable to download UEFI:NTFS partition image from GitHub, installation skipped.  Target device might not be bootable if the UEFI firmware doesn't support NTFS filesystem."
 		return 0
 	fi
 	
 	# Write partition image to partition
-	dd\
-		if="${download_directory}/uefi-ntfs.img"\
+	dd \
+		if="${download_directory}/uefi-ntfs.img" \
 		of="${uefi_ntfs_partition}"
 
 }; declare -fr install_uefi_ntfs_support_partition
@@ -1112,12 +1152,12 @@ workaround_buggy_motherboards_that_ignore_disks_without_boot_flag_toggled(){
 
 	local -r target_device="$1"
 
-	printf_with_color\
-		yellow\
-		'%s\n'\
+	printf_with_color \
+		yellow \
+		'%s\n' \
 		'Applying workaround for buggy motherboards that will ignore disks with no partitions with the boot flag toggled'
-	parted --script\
-		"${target_device}"\
+	parted --script \
+		"${target_device}" \
 		set 1 boot on
 	
 	return $?
@@ -1130,12 +1170,12 @@ check_fat32_filesize_limitation(){
 
 	while IFS= read -r -d '' file; do
 		if (( "$(stat -c '%s' "${file}")" > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
-			printf_with_color\
-				red\
-				'Error: File "%s" in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.\n'\
+			printf_with_color \
+				red \
+				'Error: File "%s" in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.\n' \
 				"${file}"
-			printf_with_color\
-				red\
+			printf_with_color \
+				red \
 				'Refer: https://github.com/slacka/WoeUSB/wiki/Limitations#fat32-filesystem-4gib-single-file-size-limitation for more info.\n'
 			return 1
 		fi
@@ -1155,9 +1195,9 @@ check_target_partition(){
 
 	local target_filesystem
 	target_filesystem="$(
-		lsblk\
-			--output FSTYPE\
-			--noheadings\
+		lsblk \
+			--output FSTYPE \
+			--noheadings \
 			"${target_partition}"
 	)"
 
@@ -1166,12 +1206,12 @@ check_target_partition(){
 			: # supported
 			;;
 		ntfs)
-			check_uefi_ntfs_support_partition\
+			check_uefi_ntfs_support_partition \
 				"${target_device}"
 			;;
 		*)
-			printf_with_color red\
-				'%s\n'\
+			printf_with_color red \
+				'%s\n' \
 				"${FUNCNAME[0]}: Error: Target filesystem not supported, currently supported filesystem: FAT, NTFS."
 			return 1
 			;;
@@ -1187,23 +1227,23 @@ check_uefi_ntfs_support_partition(){
 
 	local -r target_device="$1"
 
-	if\
-		!\
-		lsblk\
-			--output LABEL\
-			--noheadings\
-			"${target_device}"\
-		| grep\
-			--fixed-strings\
-			--silent\
+	if \
+		! \
+		lsblk \
+			--output LABEL \
+			--noheadings \
+			"${target_device}" \
+		| grep \
+			--fixed-strings \
+			--silent \
 			'UEFI_NTFS'; then
-		printf_with_color yellow\
-			'%s: %s\n'\
-			"${FUNCNAME[0]}"\
+		printf_with_color yellow \
+			'%s: %s\n' \
+			"${FUNCNAME[0]}" \
 			"Warning: Your device doesn't seems to have an UEFI:NTFS partition, UEFI booting will fail if the motherboard firmware itself doesn't support NTFS filesystem!"
-		printf --\
-			'%s: %s\n'\
-			"${FUNCNAME[0]}"\
+		printf -- \
+			'%s: %s\n' \
+			"${FUNCNAME[0]}" \
 			'Info: You may recreate disk with an UEFI:NTFS partition by using the --device creation method'
 	fi
 }; declare -fr check_uefi_ntfs_support_partition
@@ -1215,28 +1255,28 @@ mount_source_filesystem(){
 
 	echo_with_color green 'Mounting source filesystem...'
 
-	mkdir\
-		--parents\
-		"${source_fs_mountpoint}"\
+	mkdir \
+		--parents \
+		"${source_fs_mountpoint}" \
 		|| (
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${source_fs_mountpoint}\" mountpoint directory"
 			return 1
 		)
 	if [ -f "${source_media}" ]; then # ${source_media} is an ISO image
-		mount\
-			--options loop,ro\
-			--types udf,iso9660\
-			"${source_media}"\
-			"${source_fs_mountpoint}"\
+		mount \
+			--options loop,ro \
+			--types udf,iso9660 \
+			"${source_media}" \
+			"${source_fs_mountpoint}" \
 		|| (
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
 			return 1
 		)
 	else # ${source_media} is a real optical disk drive (block device)
-		mount\
-			--options ro\
-			"${source_media}"\
-			"${source_fs_mountpoint}"\
+		mount \
+			--options ro \
+			"${source_media}" \
+			"${source_fs_mountpoint}" \
 		|| (
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount source media"
 			return 1
@@ -1252,15 +1292,17 @@ mount_target_filesystem(){
 	util_check_function_parameters_quantity 3 $#
 	local target_partition="$1"; shift
 	local target_fs_mountpoint="$1"; shift
+
+	# ENUM_SUPPORTED_FILESYSTEMS
 	local target_fs_type="$1"
 
 	local mount_options='defaults'
 
 	echo_with_color green 'Mounting target filesystem...'
 
-	mkdir\
-		--parents\
-		"${target_fs_mountpoint}"\
+	mkdir \
+		--parents \
+		"${target_fs_mountpoint}" \
 		|| (
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to create \"${target_fs_mountpoint}\" mountpoint directory"
 			return 1
@@ -1268,25 +1310,25 @@ mount_target_filesystem(){
 
 	# Determine proper mount options according to filesystem type
 	case "${target_fs_type}" in
-		FAT)
+		FS_FAT)
 			mount_options='utf8=1'
 		;;
-		NTFS)
+		FS_NTFS)
 			:
 		;;
 		*)
-			printf_with_color\
-				red\
-				'Fatal: %s: Unsupported target_fs_type, please report bug.\n'\
+			printf_with_color \
+				red \
+				'Fatal: %s: Unsupported target_fs_type, please report bug.\n' \
 				"${FUNCNAME[0]}"
 			exit 1
 		;;
 	esac
 
-	mount\
-		--options "${mount_options}"\
-		"${target_partition}"\
-		"${target_fs_mountpoint}"\
+	mount \
+		--options "${mount_options}" \
+		"${target_partition}" \
+		"${target_fs_mountpoint}" \
 		|| (
 			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
 			return 1
@@ -1299,35 +1341,35 @@ check_target_filesystem_free_space(){
 	local -r source_fs_mountpoint="${1}"
 
 	free_space=$(
-		df\
-			--block-size=1\
-			"${target_fs_mountpoint}"\
-		| grep\
-			--fixed-strings\
-			"${target_fs_mountpoint}"\
+		df \
+			--block-size=1 \
+			"${target_fs_mountpoint}" \
+		| grep \
+			--fixed-strings \
+			"${target_fs_mountpoint}" \
 		| awk '{print $4}'
 	)
 	free_space_human_readable=$(
-		df\
-			--human-readable\
-			"${target_fs_mountpoint}"\
-		| grep\
-			--fixed-strings\
-			"${target_fs_mountpoint}"\
+		df \
+			--human-readable \
+			"${target_fs_mountpoint}" \
+		| grep \
+			--fixed-strings \
+			"${target_fs_mountpoint}" \
 		| awk '{print $4}'
 	)
 	needed_space=$(
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
+		du \
+			--summarize \
+			--bytes \
+			"${source_fs_mountpoint}" \
 		| awk '{print $1}'
 	)
 	needed_space_human_readable=$(
-		du\
-			--summarize\
-			--human-readable\
-			"${source_fs_mountpoint}"\
+		du \
+			--summarize \
+			--human-readable \
+			"${source_fs_mountpoint}" \
 		| awk '{print $1}'
 	)
 	additional_space_required_for_grub_installation="$((1000 * 1000 * 10))" # 10MiB
@@ -1349,16 +1391,16 @@ copy_filesystem_files(){
 
 	local -i total_size
 	total_size=$(
-		du\
-			--summarize\
-			--bytes\
-			"${source_fs_mountpoint}"\
+		du \
+			--summarize \
+			--bytes \
+			"${source_fs_mountpoint}" \
 		| awk '{print $1}'
 	)
 
 	# FIXME: Why do we `trigger_wxGenericProgressDialog_pulse off` and on here?
-	trigger_wxGenericProgressDialog_pulse\
-		off\
+	trigger_wxGenericProgressDialog_pulse \
+		off \
 		"${only_for_gui}"
 
 	echo_with_color green 'Copying files from source media...'
@@ -1369,8 +1411,8 @@ copy_filesystem_files(){
 		dest_file="${target_fs_mountpoint}/${source_file}"
 
 		source_file_size=$(
-			stat\
-				--format=%s\
+			stat \
+				--format=%s \
 				"${source_file}"
 		)
 
@@ -1383,10 +1425,10 @@ copy_filesystem_files(){
 			if [ "${source_file_size}" -lt "${DD_BLOCK_SIZE}" ]; then
 				cp "${source_file}" "${dest_file}"
 			else
-				copy_large_file\
-					"${source_file}"\
-					"${dest_file}"\
-					"${copied_size}"\
+				copy_large_file \
+					"${source_file}" \
+					"${dest_file}" \
+					"${copied_size}" \
 					"${total_size}"
 			fi
 		else
@@ -1400,17 +1442,17 @@ copy_filesystem_files(){
 		((copied_size = copied_size + source_file_size)) || true
 		((percentage = (copied_size * 100) / total_size)) || true
 		echo -en "${percentage}%\\r"
-	done < <(\
-		find\
-			.\
-			-not -path "."\
-			-print0\
+	done < <( \
+		find \
+			. \
+			-not -path "." \
+			-print0 \
 	); unset source_file dest_file source_file_size copied_size percentage
 
 	popd >/dev/null
 
-	trigger_wxGenericProgressDialog_pulse\
-		on\
+	trigger_wxGenericProgressDialog_pulse \
+		on \
 		"${only_for_gui}"
 
 	return 0
@@ -1428,8 +1470,8 @@ copy_large_file(){
 
 	local -i source_file_size
 	source_file_size=$(
-		stat\
-		--format=%s\
+		stat \
+		--format=%s \
 		"${source_file}"
 	)
 
@@ -1444,13 +1486,13 @@ copy_large_file(){
 
 	# Copy file block by block
 	local -i i=0 copied_size_total percentage; while [ "${i}" -lt "${block_number}" ]; do
-		dd\
-			if="${source_file}"\
-			bs="${DD_BLOCK_SIZE}"\
-			skip="${i}"\
-			seek="${i}"\
-			of="${dest_file}"\
-			count=1\
+		dd \
+			if="${source_file}" \
+			bs="${DD_BLOCK_SIZE}" \
+			skip="${i}" \
+			seek="${i}" \
+			of="${dest_file}" \
+			count=1 \
 			2> /dev/null
 		((i = i + 1))
 
@@ -1475,11 +1517,11 @@ workaround_support_windows_7_uefi_boot(){
 	local target_fs_mountpoint="${1}"
 
 	# Apply workaround only if the source is based on Windows 7, and EFI version of bootmgr is in place
-	if ! grep\
-			--extended-regexp\
-			--quiet\
-			'^MinServer=7[0-9]{3}\.[0-9]'\
-			"${source_fs_mountpoint}/sources/cversion.ini"\
+	if ! grep \
+			--extended-regexp \
+			--quiet \
+			'^MinServer=7[0-9]{3}\.[0-9]' \
+			"${source_fs_mountpoint}/sources/cversion.ini" \
 		|| ! [ -f "${source_fs_mountpoint}/bootmgr.efi" ]; then
 		return 0
 	fi
@@ -1491,85 +1533,85 @@ workaround_support_windows_7_uefi_boot(){
 	fi
 
 	# Detect **case-insensitive** existing efi directories according to UEFI spec
-	local\
-		test_efi_directory\
+	local \
+		test_efi_directory \
 		efi_directory
 	test_efi_directory="$(
-		find\
-			"${target_fs_mountpoint}"\
+		find \
+			"${target_fs_mountpoint}" \
 			-ipath "${target_fs_mountpoint}/efi"
 	)"
 	if [ -z "${test_efi_directory}" ]; then
 		efi_directory="${target_fs_mountpoint}/efi"
 		if [ "${verbose}" = true ]; then
-			printf --\
-				"%s: DEBUG: Can't find efi directory, use %s.\\n"\
-				"${FUNCNAME[0]}"\
+			printf -- \
+				"%s: DEBUG: Can't find efi directory, use %s.\\n" \
+				"${FUNCNAME[0]}" \
 				"${efi_directory}"
 		fi
 	else # efi directory(case don't care) exists
 		efi_directory="${test_efi_directory}"
 		if [ "${verbose}" = true ]; then
-			printf --\
-				'%s: DEBUG: %s detected.\n'\
-				"${FUNCNAME[0]}"\
+			printf -- \
+				'%s: DEBUG: %s detected.\n' \
+				"${FUNCNAME[0]}" \
 				"${efi_directory}"
 		fi
 	fi
 	unset test_efi_directory
 
-	local\
-		test_efi_boot_directory\
+	local \
+		test_efi_boot_directory \
 		efi_boot_directory
 	test_efi_boot_directory="$(
-		find\
-			"${target_fs_mountpoint}"\
+		find \
+			"${target_fs_mountpoint}" \
 			-ipath "${efi_directory}/boot"
 	)"
 	if [ -z "${test_efi_boot_directory}" ]; then
 		efi_boot_directory="${efi_directory}/boot"
 		if [ "${verbose}" = true ]; then
-			printf --\
-				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n"\
-				"${FUNCNAME[0]}"\
+			printf -- \
+				"%s: DEBUG: Can't find efi/boot directory, use %s.\\n" \
+				"${FUNCNAME[0]}" \
 				"${efi_boot_directory}"
 		fi
 	else # boot directory(case don't care) exists
 		efi_boot_directory="${test_efi_boot_directory}"
 		if [ "${verbose}" = true ]; then
-			printf --\
-				'%s: DEBUG: %s detected.\n'\
-				"${FUNCNAME[0]}"\
+			printf -- \
+				'%s: DEBUG: %s detected.\n' \
+				"${FUNCNAME[0]}" \
 				"${efi_boot_directory}"
 		fi
 	fi
-	unset\
-		efi_directory\
+	unset \
+		efi_directory \
 		test_efi_boot_directory
 
 	# If there's already an EFI bootloader existed, skip the workaround
 	local test_efi_bootloader
 	test_efi_bootloader="$(
-		find\
-			"${target_fs_mountpoint}"\
+		find \
+			"${target_fs_mountpoint}" \
 			-ipath "${target_fs_mountpoint}/efi/boot/boot*.efi"
 	)"
 	if [ -n "${test_efi_bootloader}" ]; then
-		printf --\
+		printf -- \
 			'INFO: Detected existing EFI bootloader, workaround skipped.\n'
 		return 0
 	fi
 
-	mkdir\
-		--parents\
+	mkdir \
+		--parents \
 		"${efi_boot_directory}"
 
 	# Skip workaround if EFI bootloader already exist in efi_boot_directory
-	7z\
-		e\
-		-so\
-		"${source_fs_mountpoint}/sources/install.wim"\
-		"Windows/Boot/EFI/bootmgfw.efi"\
+	7z \
+		e \
+		-so \
+		"${source_fs_mountpoint}/sources/install.wim" \
+		"Windows/Boot/EFI/bootmgfw.efi" \
 		> "${efi_boot_directory}/bootx64.efi"
 }; declare -fr workaround_support_windows_7_uefi_boot
 
@@ -1586,23 +1628,23 @@ workaround_linux_make_writeback_buffering_not_suck(){
 
 	case "${mode}" in
 		apply)
-			echo_with_color\
-				yellow\
+			echo_with_color \
+				yellow \
 				'Applying workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.'
 			echo "${VM_DIRTY_BACKGROUND_BYTES}" > /proc/sys/vm/dirty_background_bytes
 			echo "${VM_DIRTY_BYTES}" > /proc/sys/vm/dirty_bytes
 		;;
 		reset)
-			echo_with_color\
-				yellow\
+			echo_with_color \
+				yellow \
 				'Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.'
 			echo 0 > /proc/sys/vm/dirty_background_bytes
 			echo 0 > /proc/sys/vm/dirty_bytes
 		;;
 		*)
-			printf_with_color\
-				red\
-				'Fatal: %s: Unexpected *mode* encountered, please report bug.\n'\
+			printf_with_color \
+				red \
+				'Fatal: %s: Unexpected *mode* encountered, please report bug.\n' \
 				"${FUNCNAME[0]}"
 		;;
 	esac
@@ -1615,9 +1657,9 @@ install_legacy_pc_bootloader_grub(){
 	local -r command_grubinstall="${1}"
 
 	echo_with_color green 'Installing GRUB bootloader for legacy PC booting support...'
-	"${command_grubinstall}"\
-		--target=i386-pc\
-		--boot-directory="${target_fs_mountpoint}"\
+	"${command_grubinstall}" \
+		--target=i386-pc \
+		--boot-directory="${target_fs_mountpoint}" \
 		--force "${target_device}"
 
 
@@ -1635,15 +1677,15 @@ install_legacy_pc_bootloader_grub_config(){
 	echo_with_color green 'Installing custom GRUB config for legacy PC booting...'
 	local -r grub_cfg="${target_fs_mountpoint}/${name_grub_prefix}/grub.cfg"
 	local target_fs_uuid; target_fs_uuid=$(
-		lsblk\
-			--noheadings\
-			--raw\
-			--output UUID,MOUNTPOINT\
-		| grep\
-			--extended-regexp\
-			"${target_fs_mountpoint}"$\
-		| cut\
-			--fields=1\
+		lsblk \
+			--noheadings \
+			--raw \
+			--output UUID,MOUNTPOINT \
+		| grep \
+			--extended-regexp \
+			"${target_fs_mountpoint}"$ \
+		| cut \
+			--fields=1 \
 			--delimiter=' '
 	)
 
@@ -1664,7 +1706,7 @@ cleanup_mountpoint(){
 	local -r only_for_gui="${1}"; shift
 
 	# In copy_filesystem_files, we use `pushd` to changed the working directory into source_fs_mountpoint in order to get proper source and target file path, proactively `popd` to ensure we are not in source_fs_mountpoint and preventing source filesystem to unmount
-	popd &>/dev/null\
+	popd &>/dev/null \
 		|| true
 
 	if [ -e "${fs_mountpoint}" ]; then
@@ -1755,27 +1797,27 @@ trap_exit(){
 	local flag_unsafe=false
 
 	# FIXME: Why `trigger_wxGenericProgressDialog_pulse off` here?
-	trigger_wxGenericProgressDialog_pulse\
-		off\
+	trigger_wxGenericProgressDialog_pulse \
+		off \
 		"${global_only_for_gui}"
 
 	case "${current_state}" in
 		copying-filesystem|finished)
-			workaround_linux_make_writeback_buffering_not_suck\
+			workaround_linux_make_writeback_buffering_not_suck \
 				reset
 		;;
 	esac
 
-	if util_is_parameter_set_and_not_empty\
+	if util_is_parameter_set_and_not_empty \
 		source_fs_mountpoint; then
-		if ! cleanup_mountpoint \
-			"${source_fs_mountpoint}" \
+		if ! cleanup_mountpoint  \
+			"${source_fs_mountpoint}"  \
 			"${global_only_for_gui}"; then
 			flag_unclean=true
 		fi
 	fi
 
-	if util_is_parameter_set_and_not_empty\
+	if util_is_parameter_set_and_not_empty \
 		target_fs_mountpoint; then
 		if ! cleanup_mountpoint \
 			"${target_fs_mountpoint}" \
@@ -1816,8 +1858,8 @@ trap_exit(){
 		fi
 	fi
 
-	rm\
-		--recursive\
+	rm \
+		--recursive \
 		"${temp_directory}"
 
 	if [ "${current_state}" = finished ]; then
@@ -1838,10 +1880,10 @@ trap_return(){
 	util_check_function_parameters_quantity 1 "${#}"
 	local returning_function="${1}"
 
-	for ignored_function in\
-		util_check_function_parameters_quantity\
-		util_is_parameter_set_and_not_empty\
-		switch_terminal_text_color\
+	for ignored_function in \
+		util_check_function_parameters_quantity \
+		util_is_parameter_set_and_not_empty \
+		switch_terminal_text_color \
 		echo_with_color; do
 		if [ "${returning_function}" == "${ignored_function}" ]; then
 			return 0
@@ -1951,9 +1993,9 @@ util_switch_terminal_text_color(){
 			tput sgr0
 			;;
 		*)
-			printf --\
-				'Fatal: %s: Illegal parameter, please report bug.'\
-				"${FUNCNAME[0]}"\
+			printf -- \
+				'Fatal: %s: Illegal parameter, please report bug.' \
+				"${FUNCNAME[0]}" \
 				1>&2
 			exit 1
 			;;
@@ -1981,8 +2023,8 @@ util_printf_with_color(){
 		if [ "${no_color}" == false ]; then
 			switch_terminal_text_color red
 		fi
-		printf --\
-			'Fatal: %s: Parameter quantity illegal, please report bug.\n'\
+		printf -- \
+			'Fatal: %s: Parameter quantity illegal, please report bug.\n' \
 			"${FUNCNAME[0]}"
 		if [ "${no_color}" == false ]; then
 			switch_terminal_text_color none
@@ -1995,13 +2037,13 @@ util_printf_with_color(){
 	if [ "${no_color}" == true ]; then
 		# False positive: not format string(ShellCheck #1028)
 		# shellcheck disable=SC2059
-		printf --\
+		printf -- \
 			"${printf_parameters[@]}"
 	else # no_color = false
 		switch_terminal_text_color "${color}"
 		# False positive: not format string(ShellCheck #1028)
 		# shellcheck disable=SC2059
-		printf --\
+		printf -- \
 			"${printf_parameters[@]}"
 		switch_terminal_text_color none
 	fi
@@ -2051,11 +2093,11 @@ util_is_parameter_set_and_not_empty(){
 ## NOTE: non-static function parameter quantity(e.g. either 2 or 3) is not supported
 util_check_function_parameters_quantity(){
 	if [ "${#}" -ne 2 ]; then
-		printf_with_color\
-			red\
-			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
-			"${FUNCNAME[0]}"\
-			2\
+		printf_with_color \
+			red \
+			'%s: FATAL: Function requires %u parameters, but %u is given\n' \
+			"${FUNCNAME[0]}" \
+			2 \
 			"${#}"
 		exit 1
 	fi
@@ -2066,12 +2108,12 @@ util_check_function_parameters_quantity(){
 	local -i given_parameter_quantity="${1}"
 
 	if [ "${given_parameter_quantity}" -ne "${expected_parameter_quantity}" ]; then
-		printf_with_color\
-			red\
-			'%s: FATAL: Function requires %u parameters, but %u is given\n'\
-			"${FUNCNAME[1]}"\
-			"${expected_parameter_quantity}"\
-			"${given_parameter_quantity}"\
+		printf_with_color \
+			red \
+			'%s: FATAL: Function requires %u parameters, but %u is given\n' \
+			"${FUNCNAME[1]}" \
+			"${expected_parameter_quantity}" \
+			"${given_parameter_quantity}" \
 			1>&2
 		exit 1
 	fi
@@ -2082,6 +2124,6 @@ trap trap_exit EXIT
 trap trap_errexit ERR
 trap trap_interrupt INT
 
-init\
-	"${RUNTIME_EXECUTABLE_NAME}"\
+init \
+	"${RUNTIME_EXECUTABLE_NAME}" \
 	global_only_for_gui
