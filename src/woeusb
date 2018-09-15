@@ -583,7 +583,7 @@ process_commandline_parameters(){
 					tr \
 						'[:lower:]' \
 						'[:upper:]' \
-					"${parameters[0]}"
+					<<< "${parameters[0]}"
 				)"
 				;;
 			*)
