@@ -605,7 +605,7 @@ process_commandline_parameters(){
 			"${FUNCNAME[0]}: Error: No creation method specified!" >&2
 		return 1
 	elif \
-		[ "${enable_device}" == false ]  \
+		[ "${enable_device}" == true ]  \
 		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --device and --partition creation method are mutual-exclusive." >&2
 		return 1
