@@ -19,11 +19,11 @@ msgstr ""
 
 #: ../MainFrame.cpp:41
 msgid "Show all drives"
-msgstr "顯示所有硬碟"
+msgstr "顯示所有磁碟機"
 
 #: ../MainFrame.cpp:41
 msgid "Show all drives, even those not detected as USB stick."
-msgstr "顯示所有硬碟，就算沒有識別為 USB 記憶碟也一樣。"
+msgstr "顯示所有磁碟機，就算沒有識別為 USB 記憶碟也一樣。"
 
 #: ../MainFrame.cpp:53
 msgid "&File"
