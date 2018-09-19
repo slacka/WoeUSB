@@ -29,6 +29,7 @@ Note that prebuilt packages are not necessarily the latest release and we are NO
 
 #### Official Distribution Packages
 * [Fedora](https://src.fedoraproject.org/rpms/WoeUSB) packages maintained by mprahl
+* [openSUSE](https://software.opensuse.org/package/WoeUSB) packages maintained by [guoyunhe](https://guoyunhe.me/)
 
 #### Third-party Distribution Packages
 * [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
