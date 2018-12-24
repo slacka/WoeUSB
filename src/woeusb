@@ -962,15 +962,15 @@ check_if_the_drive_is_really_wiped(){
 		'Ensure that %s is really wiped...\n' \
 		"${target_device}"
 
-	if [  \
-		"$(lsblk \
-		--pairs \
-		--output NAME,TYPE \
+	if [ "$(env LANG=C \
+		lsblk \
+		--noheadings \
+		--output TYPE \
 		"${target_device}" \
 		| grep \
 			--count \
 			--fixed-strings \
-			' TYPE="part"'
+			part
 		)" -ne 0 ]; then
 		printf_with_color \
 			red \
