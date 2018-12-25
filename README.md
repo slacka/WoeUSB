@@ -64,6 +64,9 @@ $ sudo dnf install wxGTK3-devel
 
 # For Fedora 22
 $ sudo dnf install wxGTK-devel dh-autoreconf.noarch
+
+# For Gentoo
+# The Kernel has to be compiled with both CONFIG_UDF_FS and CONFIG_UDF_NLS set to y
 ```
 #### Build & Install WoeUSB
 ```shell
