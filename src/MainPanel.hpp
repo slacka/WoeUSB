@@ -76,7 +76,7 @@ private:
 
     wxRadioButton *m_isoChoice, *m_dvdChoice;
 
-    wxRadioBox *mFsRadio;
+    wxRadioBox *m_FsRadio;
 
     //std::vector<std::pair<std::string, std::string> > m_list;
 };
