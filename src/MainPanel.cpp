@@ -245,9 +245,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
             iso = m_dvdDriveDevList.at(m_dvdDriveList->GetSelection());
         }
 
-        wxString pipecmd(wxT("pkexec sh -c 'woeusb --no-color --for-gui --target-filesystem " + m_FsRadio->GetString(m_FsRadio->GetSelection()) + " --device \"" + iso + "\" \"" + device + "\" 2>&1'"));
-        std::string strpipecmd = std::string(pipecmd.mb_str());
-        PipeManager pipe(strpipecmd);
+        PipeManager pipe(std::string("pkexec sh -c 'woeusb --no-color --for-gui --target-filesystem " + StrWxToStd(m_FsRadio->GetString(m_FsRadio->GetSelection())) + " --device \"" + iso + "\" \"" + device + "\" 2>&1'"));
 
         wxProgressDialog *dialog = new wxProgressDialog(_("Installing..."), _("Please wait..."), 100, GetParent(), wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_CAN_ABORT);
 
