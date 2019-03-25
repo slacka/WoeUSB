@@ -76,6 +76,10 @@ private:
 
     wxRadioButton *m_isoChoice, *m_dvdChoice;
 
+    wxRadioBox *mFsRadio;
+
+    wxRadioButton *m_fsFat32, *m_fsNtfs;
+
     //std::vector<std::pair<std::string, std::string> > m_list;
 };
 
