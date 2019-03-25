@@ -65,9 +65,9 @@ MainPanel::MainPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const 
     MainSizer->Add(tmpSizer, 1, wxEXPAND, 0);
 
     // File system
-    const wxString rbxFs[] = { "FAT", "NTFS" };
-    mFsRadio = new wxRadioBox(this, wxID_ANY, wxT("File system"), wxDefaultPosition, wxDefaultSize, WXSIZEOF(rbxFs), rbxFs);
-    MainSizer->Add(mFsRadio, 0, wxEXPAND | wxALL | wxALIGN_CENTER, 20);
+    const wxString rbxFs[] = { _("FAT"), _("NTFS") };
+    m_FsRadio = new wxRadioBox(this, wxID_ANY, wxT("File system"), wxDefaultPosition, wxDefaultSize, WXSIZEOF(rbxFs), rbxFs);
+    MainSizer->Add(m_FsRadio, 0, wxEXPAND | wxALL | wxALIGN_CENTER, 20);
 
     // Target
     MainSizer->AddSpacer(30);
@@ -245,7 +245,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
             iso = m_dvdDriveDevList.at(m_dvdDriveList->GetSelection());
         }
 
-        PipeManager pipe(std::string("pkexec sh -c 'woeusb --no-color --for-gui --target-filesystem " + mFsRadio->GetString(mFsRadio->GetSelection()) + " --device \"" + iso + "\" \"" + device + "\" 2>&1'"));
+        PipeManager pipe(std::string(_("pkexec sh -c 'woeusb --no-color --for-gui --target-filesystem " + m_FsRadio->GetString(m_FsRadio->GetSelection()) + " --device \"" + iso + "\" \"" + device + "\" 2>&1'")));
 
         wxProgressDialog *dialog = new wxProgressDialog(_("Installing..."), _("Please wait..."), 100, GetParent(), wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_CAN_ABORT);
 
