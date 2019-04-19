@@ -64,6 +64,9 @@ $ sudo dnf install wxGTK3-devel
 
 # For Fedora 22
 $ sudo dnf install wxGTK-devel dh-autoreconf.noarch
+
+# For Opensuse
+$ sudo zypper in wxGTK3-3_2-devel dh-autoreconf devscripts
 ```
 #### Build & Install WoeUSB
 ```shell
