@@ -25,6 +25,7 @@ Depends: bash (>=4.3),
          policykit-1,
          realpath | coreutils (>= 8.23),
          wget,
+         wimtools,
          ${misc:Depends},
          ${shlibs:Depends}
 Description: Bootable Windows installation/PE USB storage creator
