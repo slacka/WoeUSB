@@ -1463,7 +1463,7 @@ copy_filesystem_files(){
 			if [ "${verbose}" = true ]; then
 				echo -e "\\nINFO: Copying \"${source_file}\"..."
 			fi
-      if [[ "${source_file}" == */install.wim ]]; then
+      if [ "$source_file_size" -gt 4294967295 ] && [[ "${source_file}" == */install.wim ]]; then
         echo -e "\\nSplitting large install.wim image"
         wimsplit "${source_file}" "$(echo "${dest_file}" | sed 's/install.wim$/install.swm/g')" 3800
       else
