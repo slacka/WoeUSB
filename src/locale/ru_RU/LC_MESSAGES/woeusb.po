@@ -1,0 +1,149 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: winusb\n"
+"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/issues>\n"
+"POT-Creation-Date: 2011-07-14 00:08+0100\n"
+"PO-Revision-Date: 2016-07-09 20:51+0800\n"
+"Last-Translator: Artyom Bystrov <arbars@altlinux.org>\n"
+"Language-Team: \n"
+"Language: ru_RU\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: .\n"
+"Plural-Forms: nplurals=1; plural=0;\n"
+"X-Generator: Poedit 1.8.7.1\n"
+"X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drives"
+msgstr "Отобразить все устройства"
+
+#: ../../../MainFrame.cpp:41
+msgid "Show all drives, even those not detected as USB stick."
+msgstr "Отобразить все устройства, даже если они не определились как USB накопители"
+
+#: ../../../MainFrame.cpp:53
+msgid "&File"
+msgstr "Файл(&F)"
+
+#: ../../../MainFrame.cpp:54
+msgid "&Help"
+msgstr "Справка(&H)"
+
+#: ../../../App.cpp:82
+msgid "Error : "
+msgstr "Ошибка : "
+
+#: ../../../App.cpp:82 ../../../App.cpp:124
+msgid "Error..."
+msgstr "Ошибка..."
+
+#: ../../../App.cpp:117
+msgid "Unknown error as occurred!"
+msgstr "Обнаружена неизвестная ошибка!"
+
+#: ../../../App.cpp:124
+msgid "Fatal error : "
+msgstr "Фатальная ошибка : "
+
+#: ../../../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr "%s версии"
+
+#: ../../../DialogAbout.cpp:55
+msgid "Developer"
+msgstr "Разработчик"
+
+#: ../../../DialogAbout.cpp:58
+#, c-format
+msgid ""
+"%s is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with %s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+"%s является свободным программным обеспечением.  Вы вправе распространять её и/или модифицировать в соответствии с условиями  версии 2 либо по вашему выбору с условиями более поздней версии  Стандартной Общественной Лицензии GNU, опубликованной Free Software Foundation.\n"
+"\n"
+"%sраспространяется в надежде на то, что она будет вам полезной,  однако НЕ ПРЕДОСТАВЛЯЕМ НА НЕЁ НИКАКИХ ГАРАНТИЙ,  в том числе ГАРАНТИИ ТОВАРНОГО СОСТОЯНИЯ ПРИ ПРОДАЖЕ  и ПРИГОДНОСТИ ДЛЯ ИСПОЛЬЗОВАНИЯ В КОНКРЕТНЫХ ЦЕЛЯХ.  Для получения более подробной информации ознакомьтесь со Стандартной  Общественной Лицензией GNU.\n"
+"\n"
+"Вместе с данной программой вы должны были получить экземпляр  Стандартной Общественной Лицензии GNU. Если вы его не получили,  сообщите об этом в Free Software Foundation, <http://www.gnu.org/licenses/>."
+
+#: ../../../DialogAbout.cpp:73
+msgid "License"
+msgstr "Лицензия"
+
+#: ../../../MainPanel.cpp:45
+msgid "Source :"
+msgstr "Источник :"
+
+#: ../../../MainPanel.cpp:48
+msgid "From a disk image (iso)"
+msgstr "Образ диска (iso)"
+
+#: ../../../MainPanel.cpp:53
+msgid "Please select a disk image"
+msgstr "Выберите образ диска"
+
+#: ../../../MainPanel.cpp:58
+msgid "From a CD/DVD drive"
+msgstr "Диск CD/DVD"
+
+#: ../../../MainPanel.cpp:70
+msgid "Target device :"
+msgstr "Целевое устройство :"
+
+#: ../../../MainPanel.cpp:81
+msgid "Install"
+msgstr "Установить"
+
+#: ../../../MainPanel.cpp:247
+msgid "Installing.."
+msgstr "Установка..."
+
+#: ../../../MainPanel.cpp:247
+msgid "Please wait..."
+msgstr "Пожалуйста, подождите..."
+
+#: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
+msgid "Are you sure you want to cancel the installation?"
+msgstr "Вы уверены, что хотите отменить установку?"
+
+#: ../../../MainPanel.cpp:270 ../../../MainPanel.cpp:289
+msgid "Cancel"
+msgstr "Отменить"
+
+#: ../../../MainPanel.cpp:312
+msgid "Installation succeeded!"
+msgstr "Установка выполнена успешно!"
+
+#: ../../../MainPanel.cpp:312 ../../../MainPanel.cpp:316
+msgid "Installation"
+msgstr "Установка"
+
+#: ../../../MainPanel.cpp:316
+msgid "Installation failed!"
+msgstr "Установка не удалась!"
+
+#: ../../../findFile.cpp:54
+msgid "File not Found : "
+msgstr "Файл не найден"
+
+#: ../../../findFile.cpp:54
+msgid "Error"
+msgstr "Ошибка"
+
+#: ../../../strWxStdConv.hpp:106
+msgid "bytes"
+msgstr "байт"
+
+#: ../../../AppConfig.hpp:7
+msgid "WinUSB"
+msgstr "WinUSB"
+
+#: ../../../DialogAbout.hpp:68
+msgid "About"
+msgstr "О программе"
