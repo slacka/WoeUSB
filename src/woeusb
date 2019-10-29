@@ -1362,6 +1362,7 @@ mount_target_filesystem(){
 
 	mount \
 		--options "${mount_options}" \
+		-t ntfs-3g \
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
