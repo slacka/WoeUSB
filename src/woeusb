@@ -764,17 +764,20 @@ check_runtime_dependencies(){
 		result=failed
 	fi
 
-	if command -v grub-install &> /dev/null; then
-		command_grubinstall_ref=grub-install
-		name_grub_prefix_ref=grub
-	elif command -v grub2-install &> /dev/null; then
-		command_grubinstall_ref=grub2-install
-		name_grub_prefix_ref=grub2
-	else
-		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result=failed
-	fi
+    	if command -v grub-install.unsupported &> /dev/null; then
+        	command_grubinstall_ref=grub-install.unsupported
+        	name_grub_prefix_ref=grub
+    	elif command -v grub-install &> /dev/null; then
+        	command_grubinstall_ref=grub-install
+        	name_grub_prefix_ref=grub
+    	elif command -v grub2-install &> /dev/null; then
+        	command_grubinstall_ref=grub2-install
+        	name_grub_prefix_ref=grub2
+    	else
+        	echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+        	echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+        	result=failed
+    	fi
 
 	if [ "${result}" == failed ]; then
 		return 1
