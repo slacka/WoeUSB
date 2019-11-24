@@ -29,6 +29,8 @@ Note that prebuilt packages are not necessarily the latest release and we are NO
 
 #### Official Distribution Packages
 * [Fedora](https://src.fedoraproject.org/rpms/WoeUSB) packages maintained by mprahl
+* [openSUSE](https://software.opensuse.org/package/WoeUSB) packages maintained by [guoyunhe](https://guoyunhe.me/)
+* [Gentoo](https://packages.gentoo.org/packages/sys-boot/woeusb) packages maintained by pacho
 
 #### Third-party Distribution Packages
 * [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
@@ -62,6 +64,9 @@ $ sudo dnf install wxGTK3-devel
 
 # For Fedora 22
 $ sudo dnf install wxGTK-devel dh-autoreconf.noarch
+
+# For Opensuse
+$ sudo zypper in wxGTK3-3_2-devel dh-autoreconf devscripts
 ```
 #### Build & Install WoeUSB
 ```shell

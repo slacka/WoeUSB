@@ -236,7 +236,8 @@ init(){
 		"${install_mode}" \
 		"${target_media}" \
 		target_device \
-		target_partition
+		target_partition \
+		target_filesystem_type
 
 	check_source_and_target_not_busy \
 		"${install_mode}" \
@@ -763,17 +764,20 @@ check_runtime_dependencies(){
 		result=failed
 	fi
 
-	if command -v grub-install &> /dev/null; then
-		command_grubinstall_ref=grub-install
-		name_grub_prefix_ref=grub
-	elif command -v grub2-install &> /dev/null; then
-		command_grubinstall_ref=grub2-install
-		name_grub_prefix_ref=grub2
-	else
-		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-		result=failed
-	fi
+    	if command -v grub-install.unsupported &> /dev/null; then
+        	command_grubinstall_ref=grub-install.unsupported
+        	name_grub_prefix_ref=grub
+    	elif command -v grub-install &> /dev/null; then
+        	command_grubinstall_ref=grub-install
+        	name_grub_prefix_ref=grub
+    	elif command -v grub2-install &> /dev/null; then
+        	command_grubinstall_ref=grub2-install
+        	name_grub_prefix_ref=grub2
+    	else
+        	echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+        	echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+        	result=failed
+    	fi
 
 	if [ "${result}" == failed ]; then
 		return 1
@@ -831,16 +835,46 @@ check_runtime_parameters(){
 }; declare -fr check_runtime_parameters
 
 determine_target_parameters(){
-	util_check_function_parameters_quantity 4 $#
+	util_check_function_parameters_quantity 5 $#
 	local install_mode="${1}"; shift
 	local target_media="${1}"; shift
 	local -n target_device_ref="${1}"; shift
 	local -n target_partition_ref="${1}"; shift
+	local -n target_filesystem_type_ref="${1}"; shift
 
 	if [ "${install_mode}" = partition ]; then
+		local target_filesystem_type_libblkid
+
 		target_partition_ref="${target_media}"
 		# BASHDOC: Basic Shell Features » Shell Expansions » Shell Parameter Expansion(`${PARAMETER/PATTERN/STRING}')
 		target_device_ref="${target_media/%[0-9]/}"
+
+		# Detect target filesystem
+		target_filesystem_type_libblkid="$(
+				lsblk \
+					--noheadings \
+					--output FSTYPE \
+					"${target_partition_ref}"
+		)"
+
+		case "${target_filesystem_type_libblkid}" in
+			vfat)
+				target_filesystem_type_ref=FS_FAT
+			;;
+			ntfs)
+				target_filesystem_type_ref=FS_NTFS
+			;;
+			*)
+				printf -- \
+					'%s: Error: Unsupported target filesystem "%s", currently supported target filesystems: %s, %s' \
+					"${FUNCNAME[0]}" \
+					"${target_filesystem_type_libblkid}" \
+					"${ENUM_SUPPORTED_FILESYSTEMS[FS_FAT]}" \
+					"${ENUM_SUPPORTED_FILESYSTEMS[FS_NTFS]}"
+				return 1
+			;;
+		esac
+		unset target_filesystem_type_libblkid
 	else # install_mode = device
 		target_device_ref="${target_media}"
 		target_partition_ref="${target_device}1"
@@ -849,6 +883,9 @@ determine_target_parameters(){
 	if [ "${verbose}" = true ]; then
 		echo "${FUNCNAME[0]}: Info: Target device is '${target_device_ref}'."
 		echo "${FUNCNAME[0]}: Info: Target partition is '${target_partition_ref}'."
+		if [ "${install_mode}" = partition ]; then
+			echo "${FUNCNAME[0]}: Info: Target filesystem is '${ENUM_SUPPORTED_FILESYSTEMS[$target_filesystem_type]}'."
+		fi
 	fi
 	return 0
 }; declare -fr determine_target_parameters
@@ -928,15 +965,16 @@ check_if_the_drive_is_really_wiped(){
 		'Ensure that %s is really wiped...\n' \
 		"${target_device}"
 
-	if [  \
-		"$(lsblk \
-		--pairs \
-		--output NAME,TYPE \
-		"${target_device}" \
-		| grep \
-			--count \
-			--fixed-strings \
-			' TYPE="part"'
+	if [ "$(
+		env LANG=C \
+			lsblk \
+				--noheadings \
+				--output TYPE \
+				"${target_device}" \
+			| grep \
+				--count \
+				--fixed-strings \
+				part
 		)" -ne 0 ]; then
 		printf_with_color \
 			red \
@@ -1327,6 +1365,7 @@ mount_target_filesystem(){
 
 	mount \
 		--options "${mount_options}" \
+		-t ntfs-3g \
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
@@ -1638,8 +1677,9 @@ workaround_linux_make_writeback_buffering_not_suck(){
 			echo_with_color \
 				yellow \
 				'Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.'
-			echo 0 > /proc/sys/vm/dirty_background_bytes
-			echo 0 > /proc/sys/vm/dirty_bytes
+
+			{ echo 0 > /proc/sys/vm/dirty_background_bytes; } || { echo_with_color yellow 'Warning!: command "echo 0 > /proc/sys/vm/dirty_background_bytes" - returned code  $?'; }
+			{ echo 0 > /proc/sys/vm/dirty_bytes; } || { echo_with_color yellow 'Warning: command "echo 0 > /proc/sys/vm/dirty_bytes" - returned code  $?'; }
 		;;
 		*)
 			printf_with_color \

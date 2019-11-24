@@ -39,37 +39,42 @@ using namespace std;
 MainPanel::MainPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style ) : wxPanel( parent, id, pos, size, style )
 {
     // Controls
-	wxBoxSizer *MainSizer = new wxBoxSizer( wxVERTICAL );
+    wxBoxSizer *MainSizer = new wxBoxSizer( wxVERTICAL );
 
-	// Iso / CD
-	MainSizer->Add(new wxStaticText(this, wxID_ANY, _("Source :")), 0, wxALL, 3);
+    // Iso / CD
+    MainSizer->Add(new wxStaticText(this, wxID_ANY, _("Source :")), 0, wxALL, 3);
 
     // Iso
-	m_isoChoice = new wxRadioButton(this, wxID_ANY, _("From a disk image (iso)"));
-	MainSizer->Add(m_isoChoice, 0, wxALL, 3);
+    m_isoChoice = new wxRadioButton(this, wxID_ANY, _("From a disk image (iso)"));
+    MainSizer->Add(m_isoChoice, 0, wxALL, 3);
 
-	wxBoxSizer *tmpSizer = new wxBoxSizer( wxHORIZONTAL );
-	tmpSizer->AddSpacer(20);
-	m_isoFile = new wxFilePickerCtrl(this, wxID_ANY, _T(""), _("Please select a disk image"), _T("Iso images (*.iso)|*.iso;*.ISO|All files|*"));
-	tmpSizer->Add(m_isoFile, 1, wxLEFT | wxRIGHT | wxBOTTOM, 3);
-	MainSizer->Add(tmpSizer, 0, wxEXPAND, 0);
+    wxBoxSizer *tmpSizer = new wxBoxSizer( wxHORIZONTAL );
+    tmpSizer->AddSpacer(20);
+    m_isoFile = new wxFilePickerCtrl(this, wxID_ANY, _T(""), _("Please select a disk image"), _T("Iso images (*.iso)|*.iso;*.ISO|All files|*"));
+    tmpSizer->Add(m_isoFile, 1, wxLEFT | wxRIGHT | wxBOTTOM, 3);
+    MainSizer->Add(tmpSizer, 0, wxEXPAND, 0);
 
     // DVD
-	MainSizer->Add(m_dvdChoice = new wxRadioButton(this, wxID_ANY, _("From a CD/DVD drive")), 0, wxALL, 3);
+    MainSizer->Add(m_dvdChoice = new wxRadioButton(this, wxID_ANY, _("From a CD/DVD drive")), 0, wxALL, 3);
 
     // List
-	tmpSizer = new wxBoxSizer( wxHORIZONTAL );
-	tmpSizer->AddSpacer(20);
+    tmpSizer = new wxBoxSizer( wxHORIZONTAL );
+    tmpSizer->AddSpacer(20);
     m_dvdDriveList = new wxListBox(this, wxID_ANY);
     tmpSizer->Add(m_dvdDriveList, 1, wxEXPAND | wxLEFT | wxRIGHT | wxBOTTOM, 3);
-	MainSizer->Add(tmpSizer, 1, wxEXPAND, 0);
+    MainSizer->Add(tmpSizer, 1, wxEXPAND, 0);
+
+    // File system
+    wxString rbxFs[] = { wxT("FAT"), wxT("NTFS") };
+    m_fsRadio = new wxRadioBox(this, wxID_ANY, _("File system"), wxDefaultPosition, wxDefaultSize, WXSIZEOF(rbxFs), rbxFs);
+    MainSizer->Add(m_fsRadio, 0, wxEXPAND | wxALL | wxALIGN_CENTER, 20);
 
     // Target
     MainSizer->AddSpacer(30);
 
     MainSizer->Add(new wxStaticText(this, wxID_ANY, _("Target device :")), 0, wxALL, 3);
 
-        // List
+    // List
     m_usbStickList = new wxListBox(this, wxID_ANY);
     MainSizer->Add(m_usbStickList, 1, wxEXPAND | wxALL, 3);
 
@@ -83,26 +88,26 @@ MainPanel::MainPanel(wxWindow* parent, wxWindowID id, const wxPoint& pos, const 
     MainSizer->Add(BtSizer, 0, wxALIGN_RIGHT, 0);
 
     // Finition
-	SetSizer(MainSizer);
+    SetSizer(MainSizer);
 
     /*m_popupMenu = new wxMenu;
     m_popupMenu->Append(m_menuItemAddManually = MenuAddItem(m_popupMenu, wxString(_("Add Manually")) + _T("\tCtrl+N"), _T("add.png")));
     m_popupMenu->Append(m_menuItemAddAutodetect = MenuAddItem(m_popupMenu, wxString(_("Add with autodection")), _T("add.png")));*/
 
-	// Events
-	m_usbStickList->Connect( wxID_ANY, wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
-	m_dvdDriveList->Connect( wxID_ANY, wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
-	m_isoFile->Connect( wxID_ANY, wxEVT_COMMAND_FILEPICKER_CHANGED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
+    // Events
+    m_usbStickList->Connect( wxID_ANY, wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
+    m_dvdDriveList->Connect( wxID_ANY, wxEVT_COMMAND_LISTBOX_SELECTED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
+    m_isoFile->Connect( wxID_ANY, wxEVT_COMMAND_FILEPICKER_CHANGED, wxCommandEventHandler(MainPanel::OnListOrFileModified), NULL, this);
 
-	m_btInstall->Connect( wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainPanel::OnInstall), NULL, this);
-	m_btRefresh->Connect( wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainPanel::OnRefresh), NULL, this);
+    m_btInstall->Connect( wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainPanel::OnInstall), NULL, this);
+    m_btRefresh->Connect( wxID_ANY, wxEVT_COMMAND_BUTTON_CLICKED, wxCommandEventHandler(MainPanel::OnRefresh), NULL, this);
 
-	m_isoChoice->Connect( wxID_ANY, wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler(MainPanel::OnSourceOptionChanged), NULL, this);
-	m_dvdChoice->Connect( wxID_ANY, wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler(MainPanel::OnSourceOptionChanged), NULL, this);
+    m_isoChoice->Connect( wxID_ANY, wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler(MainPanel::OnSourceOptionChanged), NULL, this);
+    m_dvdChoice->Connect( wxID_ANY, wxEVT_COMMAND_RADIOBUTTON_SELECTED, wxCommandEventHandler(MainPanel::OnSourceOptionChanged), NULL, this);
 
-	// Content
-	RefreshListContent();
-	wxCommandEvent tmp;
+    // Content
+    RefreshListContent();
+    wxCommandEvent tmp;
     OnSourceOptionChanged(tmp);
     m_btInstall->Enable(IsInstallOk());
 }
@@ -240,7 +245,7 @@ void MainPanel::OnInstall(wxCommandEvent& event)
             iso = m_dvdDriveDevList.at(m_dvdDriveList->GetSelection());
         }
 
-        PipeManager pipe(std::string("pkexec sh -c 'woeusb --no-color --for-gui --device \"") + iso + "\" \"" + device + "\" 2>&1'");
+        PipeManager pipe(std::string("pkexec sh -c 'woeusb --no-color --for-gui --target-filesystem " + StrWxToStd(m_fsRadio->GetString(m_fsRadio->GetSelection())) + " --device \"" + iso + "\" \"" + device + "\" 2>&1'"));
 
         wxProgressDialog *dialog = new wxProgressDialog(_("Installing..."), _("Please wait..."), 100, GetParent(), wxPD_APP_MODAL | wxPD_SMOOTH | wxPD_CAN_ABORT);
 
