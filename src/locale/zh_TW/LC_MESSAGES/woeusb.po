@@ -1,12 +1,12 @@
+# pan93412 <pan93412@gmail.com>, 2019.
 msgid ""
 msgstr ""
 "Project-Id-Version: winusb\n"
-"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/"
-"issues>\n"
-"POT-Creation-Date: 2011-07-14 00:07+0100\n"
-"PO-Revision-Date: 2018-09-18 23:58+0800\n"
-"Last-Translator: Ｖ字龍 <Vdragon.Taiwan@gmail.com>\n"
-"Language-Team: chinese-l10n <chinese-l10n@googlegroups.com>\n"
+"Report-Msgid-Bugs-To: https://github.com/slacka/WoeUSB/issues\n"
+"POT-Creation-Date: 2019-11-25 02:20+0800\n"
+"PO-Revision-Date: 2019-11-25 02:23+0800\n"
+"Last-Translator: pan93412 <pan93412@gmail.com>\n"
+"Language-Team: Chinese <chinese-l10n@googlegroups.com>\n"
 "Language: zh_TW\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -14,8 +14,89 @@ msgstr ""
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-Basepath: .\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
-"X-Generator: Poedit 2.1.1\n"
+"X-Generator: Lokalize 19.11.80\n"
 "X-Poedit-SearchPath-0: ../../..\n"
+
+#: ../App.cpp:82
+msgid "Error : "
+msgstr "錯誤："
+
+#: ../App.cpp:82 ../App.cpp:124
+msgid "Error..."
+msgstr "錯誤…"
+
+#: ../App.cpp:117
+#| msgid "Unknown error as occured!"
+msgid "Unknown error as occurred!"
+msgstr "發生未知錯誤！"
+
+#: ../App.cpp:124
+msgid "Fatal error : "
+msgstr "致命錯誤："
+
+#: ../AppConfig.hpp:7
+msgid "WoeUSB"
+msgstr "WoeUSB"
+
+#: ../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr "第 %s 版"
+
+#: ../DialogAbout.cpp:55
+msgid "Authors"
+msgstr "作者"
+
+#: ../DialogAbout.cpp:57
+msgid "Original WinUSB Developer"
+msgstr "原本的 WinUSB 作者"
+
+#: ../DialogAbout.cpp:60
+#, c-format
+#| msgid ""
+#| "%s is free software: you can redistribute it and/or modifyit under the "
+#| "terms of the GNU General Public License as published by the Free Software "
+#| "Foundation, either version 3 of the License, or (at your option) any "
+#| "later version.\n"
+#| "\n"
+#| "%s is distributed in the hope that it will be useful, but WITHOUT ANY "
+#| "WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
+#| "FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more "
+#| "details.\n"
+#| "\n"
+#| "You should have received a copy of the GNU General Public Licensealong "
+#| "with %s.  If not, see <http://www.gnu.org/licenses/>."
+msgid ""
+"%s is free software: you can redistribute it and/or modifyit under the terms "
+"of the GNU General Public License as published bythe Free Software "
+"Foundation, either version 3 of the License, or(at your option) any later "
+"version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful,but WITHOUT ANY "
+"WARRANTY; without even the implied warranty ofMERCHANTABILITY or FITNESS FOR "
+"A PARTICULAR PURPOSE.  See theGNU General Public License for more details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with "
+"%s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+"%s 為自由軟體：您可以在 Free Software Foundation 所發表的 GNU General Public "
+"License 授權條款第 3 版或任意（您所中意之）更近期版本的規定下進行本軟體的再散"
+"佈與修改。\n"
+"\n"
+"%s 以其會有所用的期望下而散佈，但**不做任何擔保**；甚至於不包含暗示其對於**商"
+"業價值**或是**特定需求的適用性**的保證。更多相關細節請參考 GNU General "
+"Public License 授權條款。\n"
+"\n"
+"您應該已經隨 %s 得到一份 GNU General Public License 授權條款的副本。如果沒有"
+"的話請上 <http://www.gnu.org/licenses/> 瀏覽。"
+
+#: ../DialogAbout.cpp:75
+msgid "License"
+msgstr "授權條款"
+
+#: ../DialogAbout.hpp:68
+msgid "About"
+msgstr "關於本軟體"
 
 #: ../MainFrame.cpp:41
 msgid "Show all drives"
@@ -33,62 +114,6 @@ msgstr "檔案(&F)"
 msgid "&Help"
 msgstr "尋求協助(&H)"
 
-#: ../App.cpp:82
-msgid "Error : "
-msgstr "錯誤："
-
-#: ../App.cpp:82 ../App.cpp:124
-msgid "Error..."
-msgstr "錯誤…"
-
-#: ../App.cpp:117
-msgid "Unknown error as occured!"
-msgstr "發生了未知錯誤！"
-
-#: ../App.cpp:124
-msgid "Fatal error : "
-msgstr "致命錯誤："
-
-#: ../DialogAbout.cpp:46
-#, c-format
-msgid "Version %s"
-msgstr "第 %s 版"
-
-#: ../DialogAbout.cpp:55
-msgid "Developer"
-msgstr "軟體開發者"
-
-#: ../DialogAbout.cpp:58
-#, c-format
-msgid ""
-"%s is free software: you can redistribute it and/or modifyit under the terms "
-"of the GNU General Public License as published by the Free Software "
-"Foundation, either version 3 of the License, or (at your option) any later "
-"version.\n"
-"\n"
-"%s is distributed in the hope that it will be useful, but WITHOUT ANY "
-"WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
-"FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more "
-"details.\n"
-"\n"
-"You should have received a copy of the GNU General Public Licensealong with "
-"%s.  If not, see <http://www.gnu.org/licenses/>."
-msgstr ""
-"%s 為自由軟體：您可以在 Free Software Foundation 所發表的 GNU General Public "
-"License 授權條款第 3 版或任意（您所中意之）更近期版本的規定下進行本軟體的再散"
-"佈與修改。\n"
-"\n"
-"%s 以其會有所用的期望下而散佈，但**不做任何擔保**；甚至於不包含暗示其對於**商"
-"業價值**或是**特定需求的適用性**的保證。更多相關細節請參考 GNU General "
-"Public License 授權條款。\n"
-"\n"
-"您應該已經隨 %s 得到一份 GNU General Public License 授權條款的副本。如果沒有"
-"的話請上 <http://www.gnu.org/licenses/> 瀏覽。"
-
-#: ../DialogAbout.cpp:73
-msgid "License"
-msgstr "授權條款"
-
 #: ../MainPanel.cpp:45
 msgid "Source :"
 msgstr "可開機媒體來源："
@@ -103,49 +128,57 @@ msgstr "請選取一個光碟映像檔"
 
 #: ../MainPanel.cpp:58
 msgid "From a CD/DVD drive"
-msgstr "從 CD/DVD 光碟機裝置"
+msgstr "從 CD/DVD 光碟機"
 
-#: ../MainPanel.cpp:70
+#: ../MainPanel.cpp:69
+msgid "File system"
+msgstr "檔案系統"
+
+#: ../MainPanel.cpp:75
 msgid "Target device :"
 msgstr "目標裝置："
 
-#: ../MainPanel.cpp:81
+#: ../MainPanel.cpp:86
 msgid "Install"
 msgstr "開始安裝"
 
-#: ../MainPanel.cpp:247
-msgid "Installing.."
+#: ../MainPanel.cpp:250
+#, fuzzy
+#| msgid "Installing.."
+msgid "Installing..."
 msgstr "正在安裝…"
 
-#: ../MainPanel.cpp:247
+#: ../MainPanel.cpp:250
 msgid "Please wait..."
 msgstr "請稍候…"
 
-#: ../MainPanel.cpp:270 ../MainPanel.cpp:289
+#: ../MainPanel.cpp:275 ../MainPanel.cpp:295
 msgid "Are you sure you want to cancel the installation?"
-msgstr "確定取消安裝程序？"
+msgstr "是否要取消安裝程序？"
 
-#: ../MainPanel.cpp:270 ../MainPanel.cpp:289
+#: ../MainPanel.cpp:275 ../MainPanel.cpp:295
 msgid "Cancel"
 msgstr "取消"
 
-#: ../MainPanel.cpp:312
-msgid "Installation succeded!"
+#: ../MainPanel.cpp:318
+#, fuzzy
+#| msgid "Installation succeded!"
+msgid "Installation succeeded!"
 msgstr "安裝成功！"
 
-#: ../MainPanel.cpp:312 ../MainPanel.cpp:316
+#: ../MainPanel.cpp:318 ../MainPanel.cpp:322
 msgid "Installation"
 msgstr "安裝程序"
 
-#: ../MainPanel.cpp:316
+#: ../MainPanel.cpp:322
 msgid "Installation failed!"
 msgstr "安裝失敗！"
 
-#: ../findFile.cpp:54
+#: ../findFile.cpp:66
 msgid "File not Found : "
 msgstr "找不到檔案："
 
-#: ../findFile.cpp:54
+#: ../findFile.cpp:66
 msgid "Error"
 msgstr "錯誤"
 
@@ -153,13 +186,8 @@ msgstr "錯誤"
 msgid "bytes"
 msgstr "位元組"
 
-#: ../AppConfig.hpp:7
-msgid "WoeUSB"
-msgstr "WoeUSB"
-
-#: ../DialogAbout.hpp:68
-msgid "About"
-msgstr "關於本軟體"
+#~ msgid "Developer"
+#~ msgstr "軟體開發者"
 
 #~ msgid "WinUSB"
 #~ msgstr "WinUSB Windows 可開機 USB 製作工具"
