@@ -1,2 +1,2 @@
 # Il faut mettre les fichiers dans le sous dossier locale de share...
-SUBDIRS = fr zh_TW ru_RU
+SUBDIRS = fr zh_TW
