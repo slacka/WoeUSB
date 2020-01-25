@@ -26,6 +26,10 @@
 
 ## Makes debuggers' life easier - Unofficial Bash Strict Mode
 ## BASHDOC: Shell Builtin Commands - Modifying Shell Behavior - The Set Builtin
+
+# PATH addition suggested in https://github.com/slacka/WoeUSB/issues/239
+PATH="${PATH}:/usr/local/sbin"
+
 set \
 	-o errexit \
 	-o errtrace \
@@ -295,7 +299,7 @@ init(){
 
 	if ! mount_target_filesystem \
 		"${target_partition}" \
-		"${target_fs_mountpoint}"  \
+		"${target_fs_mountpoint}" \
 		"${target_filesystem_type}"; then
 		echo_with_color red 'Error: Unable to mount target filesystem'
 		exit 1
@@ -354,7 +358,7 @@ print_help(){
 	echo -e "${application_name} ${application_version} Help Information"
 	echo -e "======================================"
 	echo -e "${application_name} can create a bootable Microsoft Windows(R) USB storage device from an existing Windows optical disk or an ISO disk image."
-	echo -e 
+	echo -e
 	echo -e 'Currently two creation methods are supported:'
 	echo -e
 	echo -e '	--device, -d'
@@ -402,7 +406,7 @@ print_help(){
 	echo -e
 	echo -e '	--workaround-bios-boot-flag'
 	echo -e '		'"Workaround BIOS bug that won't include the device in boot menu if non of the partition's boot flag is toggled"
-	echo -e 
+	echo -e
 	echo -e '	--debugging-internal-function-call <function name> (function_argument)...'
 	echo -e '		''Development option for developers to test certain function without running the entire build'
 	echo -e
@@ -606,7 +610,7 @@ process_commandline_parameters(){
 			"${FUNCNAME[0]}: Error: No creation method specified!" >&2
 		return 1
 	elif \
-		[ "${enable_device}" == true ]  \
+		[ "${enable_device}" == true ] \
 		&& [ "${enable_partition}" == true ]; then
 		echo_with_color red "${FUNCNAME[0]}: Error: --device and --partition creation method are mutual-exclusive." >&2
 		return 1
@@ -764,20 +768,20 @@ check_runtime_dependencies(){
 		result=failed
 	fi
 
-    	if command -v grub-install.unsupported &> /dev/null; then
-        	command_grubinstall_ref=grub-install.unsupported
-        	name_grub_prefix_ref=grub
-    	elif command -v grub-install &> /dev/null; then
-        	command_grubinstall_ref=grub-install
-        	name_grub_prefix_ref=grub
-    	elif command -v grub2-install &> /dev/null; then
-        	command_grubinstall_ref=grub2-install
-        	name_grub_prefix_ref=grub2
-    	else
-        	echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
-        	echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
-        	result=failed
-    	fi
+	if command -v grub-install.unsupported &> /dev/null; then
+		command_grubinstall_ref=grub-install.unsupported
+		name_grub_prefix_ref=grub
+	elif command -v grub-install &> /dev/null; then
+		command_grubinstall_ref=grub-install
+		name_grub_prefix_ref=grub
+	elif command -v grub2-install &> /dev/null; then
+		command_grubinstall_ref=grub2-install
+		name_grub_prefix_ref=grub2
+	else
+		echo_with_color red "${FUNCNAME[0]}: Error: grub-install or grub2-install command not found!" >&2
+		echo_with_color red "${FUNCNAME[0]}: Error: Please make sure that GNU GRUB is properly installed!" >&2
+		result=failed
+	fi
 
 	if [ "${result}" == failed ]; then
 		return 1
@@ -1100,7 +1104,7 @@ create_target_partition(){
 			printf_with_color \
 				red \
 				'%s\n' \
-				"${FUNCNAME[0]}: FATAL: Illegal parted_mkpart_fs_type, please report bug."
+				"${FUNCNAME[0]}: FATAL: Illegal parted_mkpart_fs_type, please report bug at https://github.com/slacka/WoeUSB/issues\n"
 			;;
 	esac
 	unset parted_mkpart_fs_type
@@ -1148,7 +1152,7 @@ create_uefi_ntfs_support_partition(){
 		mkpart \
 		primary \
 		fat16 \
-		--  \
+		-- \
 		-1024s \
 		-1s
 
@@ -1210,7 +1214,7 @@ check_fat32_filesize_limitation(){
 		if (( "$(stat -c '%s' "${file}")" > 4294967295 )); then # Max fat32 file size is 2^32 - 1 bytes
 			printf_with_color \
 				red \
-				'Error: File "%s" in source image has exceed the FAT32 Filesystem 4GiB Single File Size Limitation and cannot be installed.  You must specify a different --target-filesystem.\n' \
+				'Error: File "%s" in source image exceeds the FAT32 4GiB single file size limitation.  Use "--target-filesystem NTFS".\n' \
 				"${file}"
 			printf_with_color \
 				red \
@@ -1335,6 +1339,7 @@ mount_target_filesystem(){
 	local target_fs_type="$1"
 
 	local mount_options='defaults'
+	local fstype_options=''
 
 	echo_with_color green 'Mounting target filesystem...'
 
@@ -1349,10 +1354,11 @@ mount_target_filesystem(){
 	# Determine proper mount options according to filesystem type
 	case "${target_fs_type}" in
 		FS_FAT)
-			mount_options='utf8=1'
+			mount_options+='utf8=1'
+			fstype_options="-t vfat"
 		;;
 		FS_NTFS)
-			:
+			fstype_options="-t ntfs-3g"
 		;;
 		*)
 			printf_with_color \
@@ -1365,10 +1371,11 @@ mount_target_filesystem(){
 
 	mount \
 		--options "${mount_options}" \
+		"${fstype_option}" \
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
-			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition\n"
 			return 1
 		)
 }; declare -fr mount_target_filesystem
@@ -1654,7 +1661,7 @@ workaround_support_windows_7_uefi_boot(){
 }; declare -fr workaround_support_windows_7_uefi_boot
 
 ## Currently WoeUSB indirectly causes severely unresponsive system on 64-bit architecture with large primary memory during file copy process due to a flaw of the writeback buffer size handling in Linux kernel, workaround it before it is fixed
-## Refer: 
+## Refer:
 ## - System lagging while copying data · Issue #113 · slacka/WoeUSB <https://github.com/slacka/WoeUSB/issues/113>
 ## - The pernicious USB-stick stall problem [LWN.net] <https://lwn.net/Articles/572911/>
 workaround_linux_make_writeback_buffering_not_suck(){
@@ -1676,9 +1683,8 @@ workaround_linux_make_writeback_buffering_not_suck(){
 			echo_with_color \
 				yellow \
 				'Resetting workaround to prevent 64-bit systems with big primary memory from being unresponsive during copying files.'
-
-			{ echo 0 > /proc/sys/vm/dirty_background_bytes; } || { echo_with_color yellow 'Warning!: command "echo 0 > /proc/sys/vm/dirty_background_bytes" - returned code  $?'; }
-			{ echo 0 > /proc/sys/vm/dirty_bytes; } || { echo_with_color yellow 'Warning: command "echo 0 > /proc/sys/vm/dirty_bytes" - returned code  $?'; }
+			{ echo -1 > /proc/sys/vm/dirty_background_bytes; } || { echo_with_color yellow 'Warning!: command "echo 0 > /proc/sys/vm/dirty_background_bytes" - returned code  $?'; }
+			{ echo -1 > /proc/sys/vm/dirty_bytes; } || { echo_with_color yellow 'Warning: command "echo 0 > /proc/sys/vm/dirty_bytes" - returned code  $?'; }
 		;;
 		*)
 			printf_with_color \
@@ -1695,7 +1701,7 @@ install_legacy_pc_bootloader_grub(){
 	local -r target_device="${1}"; shift 1
 	local -r command_grubinstall="${1}"
 
-	echo_with_color green 'Installing GRUB bootloader for legacy PC booting support...'
+	echo_with_color green 'Installing GRUB bootloader for legacy PC booting support. Please wait as this may take some time...'
 	"${command_grubinstall}" \
 		--target=i386-pc \
 		--boot-directory="${target_fs_mountpoint}" \
@@ -1849,8 +1855,8 @@ trap_exit(){
 
 	if util_is_parameter_set_and_not_empty \
 		source_fs_mountpoint; then
-		if ! cleanup_mountpoint  \
-			"${source_fs_mountpoint}"  \
+		if ! cleanup_mountpoint \
+			"${source_fs_mountpoint}" \
 			"${global_only_for_gui}"; then
 			flag_unclean=true
 		fi
@@ -2033,7 +2039,7 @@ util_switch_terminal_text_color(){
 			;;
 		*)
 			printf -- \
-				'Fatal: %s: Illegal parameter, please report bug.' \
+				'Fatal: %s: Illegal parameter, please report bug: ' \
 				"${FUNCNAME[0]}" \
 				1>&2
 			exit 1
@@ -2063,7 +2069,7 @@ util_printf_with_color(){
 			switch_terminal_text_color red
 		fi
 		printf -- \
-			'Fatal: %s: Parameter quantity illegal, please report bug.\n' \
+			'Fatal: %s: Parameter quantity illegal, please report bug: ' \
 			"${FUNCNAME[0]}"
 		if [ "${no_color}" == false ]; then
 			switch_terminal_text_color none
