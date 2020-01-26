@@ -5,3 +5,6 @@ dist_pkgdata_DATA = $(srcdir)/*.png
 
 bindir=${pkgdatadir}
 dist_bin_SCRIPTS = listUsb listDvdDrive
+
+all:
+	chmod 0755 listUsb listDvdDrive
