@@ -1371,7 +1371,7 @@ mount_target_filesystem(){
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
-			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition\n"
+			echo_with_color red "${FUNCNAME[0]}: Error: Unable to mount target partition"
 			return 1
 		)
 }; declare -fr mount_target_filesystem
