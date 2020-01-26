@@ -1354,7 +1354,7 @@ mount_target_filesystem(){
 	# Determine proper mount options according to filesystem type
 	case "${target_fs_type}" in
 		FS_FAT)
-			mount_options+='utf8=1'
+			mount_options+=',utf8=1'
 			fstype_options="-t vfat"
 		;;
 		FS_NTFS)
