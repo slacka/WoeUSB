@@ -1334,8 +1334,6 @@ mount_target_filesystem(){
 	# ENUM_SUPPORTED_FILESYSTEMS
 	local target_fs_type="$1"
 
-	local mount_options='defaults'
-
 	echo_with_color green 'Mounting target filesystem...'
 
 	mkdir \
@@ -1347,12 +1345,16 @@ mount_target_filesystem(){
 		)
 
 	# Determine proper mount options according to filesystem type
+	local mount_options='defaults'
+	local fstype_options=''
+
 	case "${target_fs_type}" in
 		FS_FAT)
-			mount_options='utf8=1'
+			mount_options+=',utf8=1'
+			fstype_options="-t vfat"
 		;;
 		FS_NTFS)
-			:
+			fstype_options="-t ntfs-3g"
 		;;
 		*)
 			printf_with_color \
@@ -1365,6 +1367,7 @@ mount_target_filesystem(){
 
 	mount \
 		--options "${mount_options}" \
+		"${fstype_options}" \
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
