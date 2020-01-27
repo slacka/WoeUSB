@@ -1367,7 +1367,7 @@ mount_target_filesystem(){
 
 	mount \
 		--options "${mount_options}" \
-		"${fstype_options}" \
+		${fstype_options} \
 		"${target_partition}" \
 		"${target_fs_mountpoint}" \
 		|| (
