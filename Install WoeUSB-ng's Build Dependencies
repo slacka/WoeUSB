@@ -1,0 +1,31 @@
+sudo apt install git p7zip-full python3-pip python3-wxgtk4.0 
+Ubuntu
+
+sudo apt install git p7zip-full python3-pip python3-wxgtk4.0 
+
+Arch
+
+sudo pacman -Suy p7zip python-pip python-wxpython
+
+Install WoeUSB-ng
+
+sudo pip3 install WoeUSB-ng
+
+Installation from source code
+
+git clone https://github.com/WoeUSB/WoeUSB-ng.git
+cd WoeUSB-ng
+sudo pip3 install .
+
+Uninstalling
+
+To remove WoeUSB-ng completely run:
+
+sudo pip3 uninstall WoeUSB-ng
+sudo rm /usr/share/icons/WoeUSB-ng/icon.ico \
+    /usr/share/applications/WoeUSB-ng.desktop \
+    /usr/local/bin/woeusbgui
+sudo rmdir /usr/share/icons/WoeUSB-ng/
+
+
+
