@@ -11,9 +11,11 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 	
 	<action id="com.github.slacka.woeusb.run-cli-using-pkexec">
 		<description>Run `woeusb` as SuperUser</description>
+		<description xml:lang="tr">'Woeusb' programını SuperUser olarak çalıştırın</description>
 		<description xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb`</description>
 		
 		<message>Authentication is required to run `woeusb` as SuperUser.</message>
+		<message xml:lang="tr">`Woeusb' programını SuperUser olarak çalıştırmak için kimlik doğrulama gereklidir.</message>
 		<message xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb` 需要通過身份驗證。</message>
 		
 		<defaults>
@@ -27,9 +29,11 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 	
 	<action id="com.github.slacka.woeusb.run-cli-using-pkexec-usr-local">
 		<description>Run `woeusb` as SuperUser</description>
+		<description xml:lang="tr">'Woeusb' programını SuperUser olarak çalıştır</description>
 		<description xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb`</description>
 		
 		<message>Authentication is required to run `woeusb` as SuperUser.</message>
+		<message xml:lang="tr">`Woeusb' programını SuperUser olarak çalıştırmak için kimlik doğrulama gereklidir.</message>
 		<message xml:lang="zh_TW">以超級使用者(SuperUser)身份執行 `woeusb` 需要通過身份驗證。</message>
 		
 		<defaults>
@@ -43,9 +47,11 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 	
 	<action id="com.github.slacka.woeusb.format-mode">
 		<description>WoeUSB running in --format mode.</description>
+		<description xml:lang="tr">WoeUSB --format modunda çalışıyor</description>
 		<description xml:lang="zh_TW">WoeUSB 以 --format 模式運行</description>
 		
 		<message>Superuser privilege is required for WoeUSB to modify your target device's partition table, create target partiton, format target filesystem, mount and unmount target filesystem, install bootloader and etc.</message>
+		<message xml:lang="tr">WoeUSB'nin hedef aygıtınızın bölüm tablosunu değiştirmesi, hedef bölüm oluşturması, hedef dosya sistemini biçimlendirmesi, hedef dosya sistemini bağlaması ve ayırması, önyükleyiciyi kurması vb. için süper kullanıcı ayrıcalığı gerekir.</message>
 		<message xml:lang="zh_TW">WoeUSB 需要「超級使用者(SuperUser)」權限以修改您目標裝置的分區表、建立目標分區、格式化目標檔案系統、掛載與解除掛載目標檔案系統、安裝開機載入器以及其他操作。</message>
 		
 		<defaults>
@@ -57,9 +63,11 @@ DOC: https://www.freedesktop.org/software/polkit/docs/latest/polkit.8.html
 	
 	<action id="com.github.slacka.woeusb.install-mode">
 		<description>WoeUSB running in --install mode.</description>
+		<description xml:lang="tr">WoeUSB --install modunda çalışıyor.</description>
 		<description xml:lang="zh_TW">WoeUSB 以 --install 模式運行</description>
 		
 		<message>Superuser privilege is required for WoeUSB to mount and unmount target filesystem, install bootloader and etc.</message>
+		<message xml:lang="tr">WoeUSB'nin hedef dosya sistemini bağlaması ve ayırması, önyükleyici yükleyebilmesi vb. için süper kullanıcı ayrıcalığı gerekir.</message>
 		<message xml:lang="zh_TW">WoeUSB 需要「超級使用者(SuperUser)」權限以掛載與解除掛載目標檔案系統、安裝開機載入器以及其他操作。</message>
 		
 		<defaults>

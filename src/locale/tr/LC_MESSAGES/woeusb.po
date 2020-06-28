@@ -1,0 +1,166 @@
+#
+# Yaşar Çiv <yasarciv@protonmail.com>, 2020.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: woeusb\n"
+"Report-Msgid-Bugs-To: WoeUSB Issue Tracker <https://github.com/slacka/WoeUSB/"
+"issues>\n"
+"POT-Creation-Date: 2011-07-14 00:07+0100\n"
+"PO-Revision-Date: 2020-06-28 13:27+0300\n"
+"Last-Translator: Yaşar Çiv <yasarciv@protonmail.com>\n"
+"Language-Team: Turkish <yasarciv@protonmail.com>\n"
+"Language: tr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: ..\n"
+"Plural-Forms: nplurals=1; plural=0\n"
+"X-Generator: Gtranslator 3.36.0\n"
+
+#: ../MainFrame.cpp:41
+msgid "Show all drives"
+msgstr "Tüm sürücüleri göster"
+
+#: ../MainFrame.cpp:41
+msgid "Show all drives, even those not detected as USB stick."
+msgstr "USB bellek olarak algılanmamış olanlar dahil tüm sürücüleri göster."
+
+#: ../MainFrame.cpp:53
+msgid "&File"
+msgstr "&Dosya"
+
+#: ../MainFrame.cpp:54
+msgid "&Help"
+msgstr "&Yardım"
+
+#: ../App.cpp:82
+msgid "Error : "
+msgstr "Hata : "
+
+#: ../App.cpp:82 ../App.cpp:124
+msgid "Error..."
+msgstr "Hata..."
+
+#: ../App.cpp:117
+msgid "Unknown error as occured!"
+msgstr "Bilinmeyen hata oluştu!"
+
+#: ../App.cpp:124
+msgid "Fatal error : "
+msgstr "Ölümcül hata : "
+
+#: ../DialogAbout.cpp:46
+#, c-format
+msgid "Version %s"
+msgstr "Sürüm %s"
+
+#: ../DialogAbout.cpp:55
+msgid "Developer"
+msgstr "Geliştirici"
+
+#: ../DialogAbout.cpp:58
+#, c-format
+msgid ""
+"%s is free software: you can redistribute it and/or modifyit under the terms "
+"of the GNU General Public License as published by the Free Software "
+"Foundation, either version 3 of the License, or (at your option) any later "
+"version.\n"
+"\n"
+"%s is distributed in the hope that it will be useful, but WITHOUT ANY "
+"WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS "
+"FOR A PARTICULAR PURPOSE.  See theGNU General Public License for more "
+"details.\n"
+"\n"
+"You should have received a copy of the GNU General Public Licensealong with "
+"%s.  If not, see <http://www.gnu.org/licenses/>."
+msgstr ""
+"%s ücretsiz bir yazılımdır: Özgür Yazılım Vakfı tarafından Lisansın 3. "
+"sürümünde veya (isteğe bağlı olarak) herhangi bir sonraki sürümde yayınlanan "
+"GNU Genel Kamu Lisansı koşulları altında yeniden dağıtabilir ve/veya "
+"değiştirebilirsiniz.\n"
+"\n"
+"%s, yararlı olacağı ümidiyle dağıtılır, ancak HERHANGİ BİR GARANTİSİ YOKTUR; "
+"BELİRLİ BİR AMACA UYGUNLUK veya UYGUNLUK için zımni bir garanti olmaksızın. "
+"Daha fazla ayrıntı için GNU Genel Kamu Lisansı'na bakın.\n"
+"\n"
+"%s ile birlikte GNU Genel Kamu Lisansının bir kopyasını almış olmalısınız. "
+"Değilse, bkz. <http://www.gnu.org/licenses/>."
+
+#: ../DialogAbout.cpp:73
+msgid "License"
+msgstr "Lisans"
+
+#: ../MainPanel.cpp:45
+msgid "Source :"
+msgstr "Kaynak :"
+
+#: ../MainPanel.cpp:48
+msgid "From a disk image (iso)"
+msgstr "Disk kalıbından (iso)"
+
+#: ../MainPanel.cpp:53
+msgid "Please select a disk image"
+msgstr "Lütfen bir disk kalıbı seçin"
+
+#: ../MainPanel.cpp:58
+msgid "From a CD/DVD drive"
+msgstr "CD/DVD sürücüsünden"
+
+#: ../MainPanel.cpp:70
+msgid "Target device :"
+msgstr "Hedef aygıt :"
+
+#: ../MainPanel.cpp:81
+msgid "Install"
+msgstr "Yükle"
+
+#: ../MainPanel.cpp:247
+msgid "Installing.."
+msgstr "Yükleniyor..."
+
+#: ../MainPanel.cpp:247
+msgid "Please wait..."
+msgstr "Lütfen bekleyin..."
+
+#: ../MainPanel.cpp:270 ../MainPanel.cpp:289
+msgid "Are you sure you want to cancel the installation?"
+msgstr "Yüklemeyi iptal etmek istediğinizden emin misiniz?"
+
+#: ../MainPanel.cpp:270 ../MainPanel.cpp:289
+msgid "Cancel"
+msgstr "İptal Et"
+
+#: ../MainPanel.cpp:312
+msgid "Installation succeded!"
+msgstr "Yükleme başarılı!"
+
+#: ../MainPanel.cpp:312 ../MainPanel.cpp:316
+msgid "Installation"
+msgstr "Yükleme"
+
+#: ../MainPanel.cpp:316
+msgid "Installation failed!"
+msgstr "Yükleme başarısız oldu!"
+
+#: ../findFile.cpp:54
+msgid "File not Found : "
+msgstr "Dosya Bulunamadı : "
+
+#: ../findFile.cpp:54
+msgid "Error"
+msgstr "Hata"
+
+#: ../strWxStdConv.hpp:106
+msgid "bytes"
+msgstr "bayt"
+
+#: ../AppConfig.hpp:7
+msgid "WoeUSB"
+msgstr "WoeUSB"
+
+#: ../DialogAbout.hpp:68
+msgid "About"
+msgstr "Hakkında"
