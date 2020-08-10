@@ -35,6 +35,7 @@ Note that prebuilt packages are not necessarily the latest release and we are NO
 #### Third-party Distribution Packages
 * [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
 * [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages maintained by [WebUpd8](http://www.webupd8.org/)
+* [Debian](https://software.opensuse.org//download.html?project=home%3AProvessor&package=woeusb) packages maintained by provessor
 
 ### Build from Source
 The following are the instructions to install WoeUSB if prebuilt version is not available or too old.
