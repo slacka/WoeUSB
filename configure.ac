@@ -36,8 +36,10 @@ AC_OUTPUT([Makefile
 	src/locale/Makefile
 	src/locale/fr/Makefile
 	src/locale/zh_TW/Makefile
+	src/locale/tr/Makefile
 	src/locale/fr/LC_MESSAGES/Makefile
 	src/locale/zh_TW/LC_MESSAGES/Makefile
+	src/locale/tr/LC_MESSAGES/Makefile
 	debian/Makefile
 	innoSetup/Makefile])
 
