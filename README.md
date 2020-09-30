@@ -82,5 +82,7 @@ $ make
 $ sudo make install
 ```
 
+When you go to use the program, if you get an error message with a code of 256, it means you need to format the disk you intend to flash the ISO to, and wipe it with no partition table. You can do this with GParted, or another wonderful tool.
+
 ## License
 WoeUSB is distributed under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
