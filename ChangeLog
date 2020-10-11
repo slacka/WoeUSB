@@ -1,3 +1,0 @@
-2017-06-13 林博仁 <Buo.Ren.Lin@gmail.com>
-
-	* We no longer use ChangeLog as we use Git as our VCS, please refer `git log` or refer Commits · slacka/WoeUSB <https://github.com/slacka/WoeUSB/commits/master> for changelog of WoeUSB.
