@@ -30,7 +30,7 @@ Please kindly file it again to the corresponding WoeUSB project, thank you!
 
 * Please refer to the new GitHub projects for the source code and contacts.
 * It is recommended to use `woeusb` as the package name of the `woeusb` Bash core utility, and a separate package of `woeusb-frontend-wxgtk` for the wxWidgets wrapper.  The `woeusb-frontend-wxgtk` package should not ship the `woeusb` program and relies on a dependency for the `woeusb` package.
-* If you want to package the current source feel free to do so, after the descretion of the namespace conflict problem.
+* If you want to package the current source feel free to do so, after the descretion of the namespace conflict problem.  The current source is available at [the `obsoleted` branch](https://github.com/slacka/WoeUSB/tree/obsoleted).
 
 ## Credits
 
