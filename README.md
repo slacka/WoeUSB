@@ -1,6 +1,6 @@
 # There Is No WoeUSB
 
-Well there _was_ one, but it is now moved to the new home <https://github.com/WoeUSB>.
+Well there _was_ one, but it is now moved to the new home: <https://github.com/WoeUSB>.
 
 ## What happened
 
@@ -20,7 +20,7 @@ Please refer to <https://github.com/WoeUSB/WoeUSB> for new software releases, th
 
 Unfortunately due to technical difficulties we are unable to migrate old issues to the new project, please kindly file a new issue and link it to the old counterpart.
 
-This is also a good time to ensure the issue is still reproducible/relavent.
+This is also a good time to ensure the issue is still reproducible/relevant.
 
 ### I've filed an unresolved pull request to WoeUSB
 
@@ -36,4 +36,4 @@ Please kindly file it again to the corresponding WoeUSB project, thank you!
 
 We would like to thank @slacka and countless contributors for making the project alive, and thrive through these years.
 
-The new title is inspired from [the There Is No Game : Wrong Dimension non-game](https://store.steampowered.com/app/1240210/There_Is_No_Game__Wrong_Dimension/)
+The new title is inspired from [the There Is No Game : Wrong Dimension non-game](https://store.steampowered.com/app/1240210/There_Is_No_Game__Wrong_Dimension/), by Draw Me A Pixel.
