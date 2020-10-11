@@ -1,86 +1,39 @@
-# WoeUSB
-[![Latest Release](https://img.shields.io/github/release/slacka/WoeUSB.svg)](https://github.com/slacka/WoeUSB/releases)
-[![WoeUSB License](https://img.shields.io/badge/license-gpl-blue.svg)](https://github.com/slacka/WoeUSB/blob/master/COPYING)
-[![Build Status](https://travis-ci.org/slacka/WoeUSB.svg?branch=master)](https://travis-ci.org/slacka/WoeUSB)
+# There Is No WoeUSB
 
-![brand](src/data/woeusb-logo.png)[![thumbnail of GUI wrapper screenshot](dev/woeusbgui-screenshot.thumbnail.png)](dev/woeusbgui-screenshot.png)[![thumbnail of CLI application screenshot](dev/woeusb-screenshot.thumbnail.png)](dev/woeusb-screenshot.png)
+Well there _was_ one, but it is now moved to the new home <https://github.com/WoeUSB>.
 
-_A Linux program to create a Windows USB stick installer from a real Windows DVD or image._
+## What happened
 
-This package contains two programs:
+WoeUSB is moving to a new GitHub organization to fulfill new needs and expectations, refer [The future of WoeUSB · Issue #209 · slacka/WoeUSB](https://github.com/slacka/WoeUSB/issues/209) for more info.
 
-* woeusb: A command-line utility that enables you to create your own bootable Windows installation USB storage device from an existing Windows Installation disc or disk image
-* woeusbgui: A GUI wrapper of woeusb based on WxWidgets
+* The self-sustaining `woeusb` program has been splitted from the current source to <https://github.com/WoeUSB/WoeUSB>, and the development will continue as usual.
+* The current repository that comprises mostly the wxWidgets wrapper code for `woeusb`, is _forked_ to <https://github.com/WoeUSB/WoeUSB-frontend-wxgtk>, in its unmaintained form.
+* @WaxyMocha implemented an independent, Python port of WoeUSB which is named WoeUSB-ng, and the project is located at <https://github.com/WoeUSB/WoeUSB-ng>.
 
-Supported images:
+## What should I do
 
-Windows Vista, Windows 7, Window 8.x, Windows 10. All languages and any version (home, pro...) and Windows PE are supported.
+### I'm a user of WoeUSB
 
-Supported bootmodes:
+Please refer to <https://github.com/WoeUSB/WoeUSB> for new software releases, the wxWidgets GUI is no longer well-maintained thus not recommended for usage.
 
-* Legacy/MBR-style/IBM PC compatible bootmode
-* Native UEFI booting is supported for Windows 7 and later images (limited to the FAT filesystem as the target)
+### I've filed an unresolved issue to WoeUSB
 
-This project is a fork of [Congelli501's WinUSB software](http://en.congelli.eu/prog_info_winusb.html), which has not been maintained since 2012, according to the official website.
+Unfortunately due to technical difficulties we are unable to migrate old issues to the new project, please kindly file a new issue and link it to the old counterpart.
 
-## Installation
-### Prebuilt Packages
-Note that prebuilt packages are not necessarily the latest release and we are NOT responsible for the trustworthiness of these packages.  Regarding any related issues contact its maintainer first.
+This is also a good time to ensure the issue is still reproducible/relavent.
 
-#### Official Distribution Packages
-* [Fedora](https://src.fedoraproject.org/rpms/WoeUSB) packages maintained by mprahl
-* [openSUSE](https://software.opensuse.org/package/WoeUSB) packages maintained by [guoyunhe](https://guoyunhe.me/)
-* [Gentoo](https://packages.gentoo.org/packages/sys-boot/woeusb) packages maintained by pacho
+### I've filed an unresolved pull request to WoeUSB
 
-#### Third-party Distribution Packages
-* [Arch Linux](https://aur.archlinux.org/packages/woeusb-git/) packages maintained by darkfm
-* [Ubuntu](https://launchpad.net/%7Enilarimogard/+archive/ubuntu/webupd8) packages maintained by [WebUpd8](http://www.webupd8.org/)
-* [Debian](https://software.opensuse.org//download.html?project=home%3AProvessor&package=woeusb) packages maintained by provessor
+Please kindly file it again to the corresponding WoeUSB project, thank you!
 
-### Build from Source
-The following are the instructions to install WoeUSB if prebuilt version is not available or too old.
+### I'm a package maintainer of WoeUSB
 
-#### Acquire WoeUSB's Source Code
-Clone WoeUSB's Git repository to your local machine using `git clone https://github.com/slacka/WoeUSB.git`
+* Please refer to the new GitHub projects for the source code and contacts.
+* It is recommended to use `woeusb` as the package name of the `woeusb` Bash core utility, and a separate package of `woeusb-frontend-wxgtk` for the wxWidgets wrapper.  The `woeusb-frontend-wxgtk` package should not ship the `woeusb` program and relies on a dependency for the `woeusb` package.
+* If you want to package the current source feel free to do so, after the descretion of the namespace conflict problem.
 
-NOTE: We no longer support building from source archives provided in the GitHub Releases page as the software version is not set.
+## Credits
 
-#### Setting the Application Version String
-This step is required for generating the proper version name based on the Git tags. This step should be repeated if the version is changed.
+We would like to thank @slacka and countless contributors for making the project alive, and thrive through these years.
 
-```shell
-$ ./setup-development-environment.bash
-```
-
-#### Install WoeUSB's Build Dependencies
-```shell
-# For Debian-based distributions (NOTE: For your convenience, this package is already provided in the release page)
-$ sudo apt-get install devscripts equivs gdebi-core
-$ cd <WoeUSB source tree directory, the folder that contains the `src` folder>
-$ mk-build-deps # NOTE: Currently, due to Debian Bug #679101, this command will fail if the source path contains spaces.
-$ sudo gdebi woeusb-build-deps_<version>_all.deb
-
-# For Fedora > 22
-$ sudo dnf install wxGTK3-devel
-
-# For Fedora 22
-$ sudo dnf install wxGTK-devel dh-autoreconf.noarch
-
-# For Opensuse
-$ sudo zypper in wxGTK3-3_2-devel dh-autoreconf devscripts
-```
-#### Build & Install WoeUSB
-```shell
-# For Debian-based distributions
-$ dpkg-buildpackage -uc -b # NOTE: Currently, due to a bug in the build system, this command will fail if the source's path contains space or single quotes, refer to issue #84 for details
-$ sudo gdebi ../woeusb_<version>_<architecture>.deb
-
-# Generic method
-$ autoreconf --force --install # Most non-Debian derived distros will need this
-$ ./configure
-$ make
-$ sudo make install
-```
-
-## License
-WoeUSB is distributed under the [GPL license](https://github.com/slacka/WoeUSB/blob/master/COPYING).
+The new title is inspired from [the There Is No Game : Wrong Dimension non-game](https://store.steampowered.com/app/1240210/There_Is_No_Game__Wrong_Dimension/)
