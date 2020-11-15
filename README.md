@@ -14,7 +14,9 @@ WoeUSB is moving to a new GitHub organization to fulfill new needs and expectati
 
 ### I'm a user of WoeUSB
 
-Please refer to <https://github.com/WoeUSB/WoeUSB> for new software releases, the wxWidgets GUI is no longer well-maintained thus not recommended for usage.
+Please refer to <https://github.com/WoeUSB/WoeUSB> for new software releases, the wxWidgets GUI wrapper program is dropped due to its unmaintained status.
+
+We also recommend @WaxyMocha's [WoeUSB-ng](https://github.com/WoeUSB/WoeUSB-ng), which rewritten WoeUSB using Python (including the GUI, yay!) and has a better future than the currently Bash-based WoeUSB.
 
 ### I've filed an unresolved issue to WoeUSB
 
