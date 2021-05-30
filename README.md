@@ -6,7 +6,7 @@ Well there _was_ one, but it is now moved to the new home: <https://github.com/W
 
 WoeUSB is moving to a new GitHub organization to fulfill new needs and expectations, refer [The future of WoeUSB · Issue #209 · slacka/WoeUSB](https://github.com/slacka/WoeUSB/issues/209) for more info.
 
-* The self-sustaining `woeusb` program has been splitted from the current source to <https://github.com/WoeUSB/WoeUSB>, and the development will continue as usual.
+* The self-sustaining `woeusb` program has been split from the current source to <https://github.com/WoeUSB/WoeUSB>, and the development will continue as usual.
 * The current repository that comprises mostly the wxWidgets wrapper code for `woeusb`, is _forked_ to <https://github.com/WoeUSB/WoeUSB-frontend-wxgtk>, in its unmaintained form.
 * @WaxyMocha implemented an independent, Python port of WoeUSB which is named WoeUSB-ng, and the project is located at <https://github.com/WoeUSB/WoeUSB-ng>.
 
